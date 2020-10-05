@@ -76,26 +76,28 @@ uint8_t MyUSART_WriteUntil(uint8_t* str,uint8_t endChar) // similar to the MyUSA
 
 uint8_t MyUSART_ReadChar(void)
 {
+    if(MyUSART_bufferPos!=0)
+        MyUSART_bufferPos--;
+    return MyUSART_buffer[MyUSART_bufferPos];
+}
+
+uint8_t MyUSART_PeekChar(void)
+{
     if(MyUSART_bufferPos==0)
         return MyUSART_buffer[MYUSART_MAX_LEN-1];
     return MyUSART_buffer[MyUSART_bufferPos-1];
 }
 
-uint32_t MyUSART_Read(uint8_t* str, uint16_t len)
+uint32_t MyUSART_Read(uint8_t* str, uint16_t maxLen)
 {
-    if(len>MYUSART_MAX_LEN)
-        return 0;
+    maxLen=maxLen<MyUSART_bufferPos?maxLen:MyUSART_bufferPos;
     uint32_t i,j;
-    for(i=0;i<len;i++)
+    for(i=0;i<maxLen;i++)
     {
         *(str+i)=MyUSART_buffer[i];
     }
-    for(j=0;j<MYUSART_MAX_LEN-i;j++)
-    {
-        MyUSART_buffer[j]=MyUSART_buffer[i+j];
-    }
-    __MyUSART_Shift(i);
-    return i;
+    __MyUSART_Shift(maxLen);
+    return maxLen;
 }
 
 uint32_t MyUSART_ReadStr(uint8_t* str)
@@ -106,7 +108,7 @@ uint32_t MyUSART_ReadStr(uint8_t* str)
 uint32_t MyUSART_ReadLine(uint8_t* str)
 {
     uint32_t i,j;
-    for(i=0;i<MYUSART_MAX_LEN;i++)
+    for(i=0;i<MyUSART_bufferPos;i++)
     {
         *(str+i)=MyUSART_buffer[i];
         if(i>0 && *(str+i-1)=='\r'&&*(str+i)=='\n')
@@ -117,13 +119,12 @@ uint32_t MyUSART_ReadLine(uint8_t* str)
     }
     __MyUSART_Shift(i);
     return i;
-
 }
 
 uint32_t MyUSART_ReadUntil(uint8_t* str,uint16_t endChar)
 {
     uint32_t i,j;
-    for(i=0;i<MYUSART_MAX_LEN;i++)
+    for(i=0;i<MyUSART_bufferPos;i++)
     {
         *(str+i)=MyUSART_buffer[i];
         if(*(str+i)==endChar)

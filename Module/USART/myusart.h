@@ -24,7 +24,8 @@ uint8_t MyUSART_WriteStr(uint8_t* str); // the \0 will BE sent;
 uint8_t MyUSART_WriteLine(uint8_t* str); // the \0 of the string will not be sent, and the transimitted data ends with \r\n(no \0 at the end)
 uint8_t MyUSART_WriteUntil(uint8_t* str,uint8_t endChar); // similar to the MyUSART_WriteStr() with the customized EndChar
 uint8_t MyUSART_ReadChar(void);
-uint32_t MyUSART_Read(uint8_t* str, uint16_t len);
+uint8_t MyUSART_PeekChar(void);
+uint32_t MyUSART_Read(uint8_t* str, uint16_t maxLen);
 uint32_t MyUSART_ReadStr(uint8_t* str);
 uint32_t MyUSART_ReadUntil(uint8_t* str,uint16_t endChar);
 uint32_t MyUSART_ReadLine(uint8_t* str);

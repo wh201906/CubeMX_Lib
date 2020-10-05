@@ -123,32 +123,35 @@ int main(void)
       switch(key)
       {
           case 0:
-              MyUSART_WriteChar(MyUSART_ReadChar());
-          break;
-          case 1:
               MyUSART_ClearBuffer();
           break;
+          case 1:
+              MyUSART_WriteChar(MyUSART_ReadChar());
+          break;
           case 2:
+              MyUSART_WriteChar(MyUSART_PeekChar());
+          break;
+          case 3:
               receivedLen=MyUSART_Read(buffer,20);
               MyUSART_Write(buffer,receivedLen);
           break;
-          case 3:
+          case 4:
               receivedLen=MyUSART_ReadStr(buffer);
               MyUSART_Write(buffer,receivedLen);
           break;
-          case 4:
+          case 5:
               receivedLen=MyUSART_ReadLine(buffer);
               MyUSART_Write(buffer,receivedLen);
           break;
-          case 5:
+          case 6:
               receivedLen=MyUSART_ReadUntil(buffer,'>');
               MyUSART_Write(buffer,receivedLen);
           break;
-          case 6:
+          case 7:
               receivedLen=MyUSART_ReadAll(buffer);
               MyUSART_Write(buffer,receivedLen);
           break;
-          case 7:
+          case 8:
               __MyUSART_DumpAll();
           
       }
