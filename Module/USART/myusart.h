@@ -7,9 +7,12 @@
 #define MYUSART_MAX_LEN 40
 #define MYUSART_CURR_USART USART1
 
-#define __MYUSART_ENABLE_IT(__INTERRUPT__)   ((((__INTERRUPT__) >> 28U) == UART_CR1_REG_INDEX)? ((MYUSART_CURR_USART)->CR1 |= ((__INTERRUPT__) & UART_IT_MASK)): \
-                                              (((__INTERRUPT__) >> 28U) == UART_CR2_REG_INDEX)? ((MYUSART_CURR_USART)->CR2 |= ((__INTERRUPT__) & UART_IT_MASK)): \
-                                              ((MYUSART_CURR_USART)->CR3 |= ((__INTERRUPT__) & UART_IT_MASK)))
+#ifdef STM32H750xx
+#define __MYUSART_ENABLE_IT() ((MYUSART_CURR_USART)->CR1 |= (USART_CR1_RXNEIE_RXFNEIE))
+#endif
+#ifdef STM32F407xx
+#define __MYUSART_ENABLE_IT() ((MYUSART_CURR_USART)->CR1 |= ((UART_IT_RXNE) & UART_IT_MASK))
+#endif
 
 // used for bytes, lines and strings
 // for Writexx() functions, the 0 represents false, and the function can be wrapped with single if()
@@ -26,6 +29,8 @@ uint8_t MyUSART_WriteUntil(uint8_t* str,uint8_t endChar); // similar to the MyUS
 uint8_t MyUSART_ReadChar(void);
 uint8_t MyUSART_PeekChar(void);
 uint32_t MyUSART_Read(uint8_t* str, uint16_t maxLen);
+
+//for ReadStr(), ReadUntil() and ReadLine(), you can use if(buffer[MyUSART_Readxx(buffer)-1]==xx) to check the result 
 uint32_t MyUSART_ReadStr(uint8_t* str);
 uint32_t MyUSART_ReadUntil(uint8_t* str,uint16_t endChar);
 uint32_t MyUSART_ReadLine(uint8_t* str);

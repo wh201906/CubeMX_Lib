@@ -18,7 +18,7 @@ int fputc(int ch, FILE *f)
 
 void MyUSART_Init(void)
 {
-    __MYUSART_ENABLE_IT(UART_IT_RXNE);
+    __MYUSART_ENABLE_IT();
 }
 
 void MyUSART_WriteChar(uint8_t ch)
@@ -78,6 +78,8 @@ uint8_t MyUSART_ReadChar(void)
 {
     if(MyUSART_bufferPos!=0)
         MyUSART_bufferPos--;
+    else
+        MyUSART_buffer[0]=0;
     return MyUSART_buffer[MyUSART_bufferPos];
 }
 
