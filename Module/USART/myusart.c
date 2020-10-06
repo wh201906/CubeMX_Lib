@@ -2,6 +2,7 @@
 
 uint8_t MyUSART_buffer[MYUSART_MAX_LEN];
 uint32_t MyUSART_bufferPos=0;
+uint8_t MyUSART_bufferOverflowFlag=0;
 
 FILE __stdout;       
 
@@ -92,10 +93,37 @@ uint8_t MyUSART_PeekChar(void)
     return MyUSART_buffer[MyUSART_bufferPos-1];
 }
 
+uint8_t MyUSART_CanReadLine()
+{
+    uint32_t i;
+    for(i=1;i<MyUSART_bufferPos;i++)
+    {
+        if(MyUSART_buffer[i-1]=='\r'&&MyUSART_buffer[i]=='\n')
+            return 1;
+    }
+    return 0;
+}
+
+uint8_t MyUSART_CanReadUntil(uint16_t endChar)
+{
+    uint32_t i;
+    for(i=0;i<MyUSART_bufferPos;i++)
+    {
+        if(MyUSART_buffer[i]==endChar)
+            return 1;
+    }
+    return 0;
+}
+
+uint8_t MyUSART_CanReadStr()
+{
+    return MyUSART_CanReadUntil('\0');
+}
+
 uint32_t MyUSART_Read(uint8_t* str, uint16_t maxLen)
 {
     maxLen=maxLen<MyUSART_bufferPos?maxLen:MyUSART_bufferPos;
-    uint32_t i,j;
+    uint32_t i;
     for(i=0;i<maxLen;i++)
     {
         *(str+i)=MyUSART_buffer[i];
@@ -111,7 +139,9 @@ uint32_t MyUSART_ReadStr(uint8_t* str)
 
 uint32_t MyUSART_ReadLine(uint8_t* str)
 {
-    uint32_t i,j;
+    if(!MyUSART_CanReadLine())
+        return 0;
+    uint32_t i;
     for(i=0;i<MyUSART_bufferPos;i++)
     {
         *(str+i)=MyUSART_buffer[i];
@@ -127,7 +157,9 @@ uint32_t MyUSART_ReadLine(uint8_t* str)
 
 uint32_t MyUSART_ReadUntil(uint8_t* str,uint16_t endChar)
 {
-    uint32_t i,j;
+    if(!MyUSART_CanReadUntil(endChar))
+        return 0;
+    uint32_t i;
     for(i=0;i<MyUSART_bufferPos;i++)
     {
         *(str+i)=MyUSART_buffer[i];
@@ -192,5 +224,9 @@ void MyUSART_IRQHandler(USART_TypeDef* source)
     MyUSART_buffer[MyUSART_bufferPos++]=MYUSART_CURR_USART->DR;  
 #endif
     if(MyUSART_bufferPos==MYUSART_MAX_LEN)
+    {
         MyUSART_bufferPos=0;
+        MyUSART_bufferOverflowFlag=1;
+    }
+
 }

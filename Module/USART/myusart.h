@@ -30,7 +30,11 @@ uint8_t MyUSART_ReadChar(void);
 uint8_t MyUSART_PeekChar(void);
 uint32_t MyUSART_Read(uint8_t* str, uint16_t maxLen);
 
-//for ReadStr(), ReadUntil() and ReadLine(), you can use if(buffer[MyUSART_Readxx(buffer)-1]==xx) to check the result 
+uint8_t MyUSART_CanReadLine();
+uint8_t MyUSART_CanReadUntil(uint16_t endChar);
+uint8_t MyUSART_CanReadStr();
+
+//for ReadStr(), ReadUntil() and ReadLine(), if the EndSequence doesn't match, they will return 0 and the bufferPos will not change.
 uint32_t MyUSART_ReadStr(uint8_t* str);
 uint32_t MyUSART_ReadUntil(uint8_t* str,uint16_t endChar);
 uint32_t MyUSART_ReadLine(uint8_t* str);
