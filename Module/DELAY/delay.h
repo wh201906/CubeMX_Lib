@@ -2,8 +2,8 @@
 #define _DELAY_H
 #include "main.h" 
 
-void delay_init(uint16_t SYSCLK);
-void delay_ms(uint16_t nms);
-void delay_us(uint32_t nus);
+void Delay_Init(uint16_t SYSCLK);
+void Delay_ms(uint16_t nms);
+void Delay_us(uint32_t nus);
 #endif
 

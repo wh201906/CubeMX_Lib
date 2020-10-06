@@ -24,9 +24,9 @@ void IIC_Start(void)
 	SDA_OUT();     //sda线输出
 	IIC_SDA(1);	  	  
 	IIC_SCL(1);
-	delay_us(4);
+	Delay_us(4);
  	IIC_SDA(0);//START:when CLK is high,DATA change form high to low 
-	delay_us(4);
+	Delay_us(4);
 	IIC_SCL(0);//钳住I2C总线，准备发送或接收数据 
 }	  
 //产生IIC停止信号
@@ -35,10 +35,10 @@ void IIC_Stop(void)
 	SDA_OUT();//sda线输出
 	IIC_SCL(0);
 	IIC_SDA(0);//STOP:when CLK is high DATA change form low to high
- 	delay_us(4);
+ 	Delay_us(4);
 	IIC_SCL(1); 
 	IIC_SDA(1);//发送I2C总线结束信号
-	delay_us(4);							   	
+	Delay_us(4);							   	
 }
 //等待应答信号到来
 //返回值：1，接收应答失败
@@ -47,8 +47,8 @@ uint8_t IIC_Wait_Ack(void)
 {
 	uint8_t ucErrTime=0;
 	SDA_IN();      //SDA设置为输入  
-	IIC_SDA(1);delay_us(1);	   
-	IIC_SCL(1);delay_us(1);	 
+	IIC_SDA(1);Delay_us(1);	   
+	IIC_SCL(1);Delay_us(1);	 
 	while(READ_SDA)
 	{
 		ucErrTime++;
@@ -67,9 +67,9 @@ void IIC_Ack(void)
 	IIC_SCL(0);
 	SDA_OUT();
 	IIC_SDA(0);
-	delay_us(2);
+	Delay_us(2);
 	IIC_SCL(1);
-	delay_us(2);
+	Delay_us(2);
 	IIC_SCL(0);
 }
 //不产生ACK应答		    
@@ -78,9 +78,9 @@ void IIC_NAck(void)
 	IIC_SCL(0);
 	SDA_OUT();
 	IIC_SDA(1);
-	delay_us(2);
+	Delay_us(2);
 	IIC_SCL(1);
-	delay_us(2);
+	Delay_us(2);
 	IIC_SCL(0);
 }					 				     
 //IIC发送一个字节
@@ -96,26 +96,26 @@ void IIC_Send_Byte(uint8_t txd)
     {              
         IIC_SDA((txd&0x80)>>7);
         txd<<=1; 	  
-		delay_us(2);   //对TEA5767这三个延时都是必须的
+		Delay_us(2);   //对TEA5767这三个延时都是必须的
 		IIC_SCL(1);
-		delay_us(2); 
+		Delay_us(2); 
 		IIC_SCL(0);	
-		delay_us(2);
+		Delay_us(2);
     }	 
 } 	    
 //读1个字节，ack=1时，发送ACK，ack=0，发送nACK   
-uint8_t IIC_Read_Byte(unsigned char ack)
+uint8_t IIC_Read_Byte(uint8_t ack)
 {
-	unsigned char i,receive=0;
+	uint8_t i,receive=0;
 	SDA_IN();//SDA设置为输入
     for(i=0;i<8;i++ )
 	{
         IIC_SCL(0); 
-        delay_us(2);
+        Delay_us(2);
 		IIC_SCL(1);
         receive<<=1;
         if(READ_SDA)receive++;   
-		delay_us(1); 
+		Delay_us(1); 
     }					 
     if (!ack)
         IIC_NAck();//发送nACK

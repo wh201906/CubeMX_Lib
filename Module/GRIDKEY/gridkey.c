@@ -15,7 +15,7 @@ uint8_t GridKey_scan(uint8_t gridType)
         
     if(isKeyDown==GPIO_PIN_SET && isAllKeyReleased)
     {
-        delay_ms(20); // prevent jitter
+        Delay_ms(20); // prevent jitter
         if(!(isKeyDown==GPIO_PIN_SET && isAllKeyReleased))
             return 0xFFu;
         isAllKeyReleased=0;
@@ -37,7 +37,7 @@ uint8_t GridKey_scan(uint8_t gridType)
     }
     else if(isKeyDown==GPIO_PIN_RESET)
     {
-        delay_ms(20); // prevent jitter
+        Delay_ms(20); // prevent jitter
         if(!(isKeyDown==GPIO_PIN_RESET))
             return 0xFFu;
         isAllKeyReleased=1;

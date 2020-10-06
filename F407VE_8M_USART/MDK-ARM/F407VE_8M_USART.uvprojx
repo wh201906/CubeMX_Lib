@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include"; ../../Module</IncludePath>
+              <IncludePath>../Core/Inc;  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include";  ../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -419,9 +419,9 @@
               <FilePath>..\..\Module\OLED\myiic.c</FilePath>
             </File>
             <File>
-              <FileName>OLED_I2C.c</FileName>
+              <FileName>oled_iic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\OLED\OLED_I2C.c</FilePath>
+              <FilePath>..\..\Module\OLED\oled_iic.c</FilePath>
             </File>
           </Files>
         </Group>

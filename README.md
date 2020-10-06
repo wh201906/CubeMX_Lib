@@ -3,3 +3,6 @@ Display:I2C总线128x64 OLED屏幕驱动代码，PE4为SCL,PE5为SDA，支持所
 
 GridKey:4*4矩阵键盘代码，可自定义GPIO,改变GPIO顺序,带20ms消抖
 所需Module:OLED, DELAY，GRIDKEY
+
+USART:串口读写代码，支持裸byte，字符串，行，自定义结束字符，操作模式类似Arduino
+所需Module:OLED, DELAY，GRIDKEY，USART

@@ -1,8 +1,8 @@
-#include "OLED/OLED_I2C.h"
+#include "OLED/oled_iic.h"
 #include "OLED/codetab.h"
 
 uint8_t RevState=1;
-unsigned char brightness=0xff;
+uint8_t brightness=0xff;
 
 void I2C_WriteByte(uint8_t addr,uint8_t data)
 {
@@ -32,7 +32,7 @@ void WriteDat(uint8_t I2C_Data, uint8_t reverse)//写数据
 void OLED_Init(void)
 {
 	IIC_Init();
-	delay_ms(100); //这里的延时很重要
+	Delay_ms(100); //这里的延时很重要
 	
 	WriteCmd(0xAE); //display off
 	WriteCmd(0x20);	//Set Memory Addressing Mode	
@@ -68,16 +68,16 @@ void OLED_Init(void)
     OLED_CLS();
 }
 
-void OLED_SetPos(unsigned char x, unsigned char y) //设置起始点坐标
+void OLED_SetPos(uint8_t x, uint8_t y) //设置起始点坐标
 { 
 	WriteCmd(0xb0+y);
 	WriteCmd(((x&0xf0)>>4)|0x10);
 	WriteCmd((x&0x0f)|0x01);
 }
 
-void OLED_Fill(unsigned char fill_Data)//全屏填充
+void OLED_Fill(uint8_t fill_Data)//全屏填充
 {
-	unsigned char m,n;
+	uint8_t m,n;
 	for(m=0;m<8;m++)
 	{
 		WriteCmd(0xb0+m);		//page0-page1
@@ -122,14 +122,14 @@ void OLED_OFF(void)
 }
 
 //--------------------------------------------------------------
-// Prototype      : void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char ch[], unsigned char TextSize)
+// Prototype      : void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize)
 // Calls          : 
 // Parameters     : x,y -- 起始点坐标(x:0~127, y:0~7); ch[] -- 要显示的字符串; TextSize -- 字符大小(1:6*8 ; 2:8*16)
 // Description    : 显示codetab.h中的ASCII字符,有6*8和8*16可选择
 //--------------------------------------------------------------
-void OLED_ShowStr(unsigned char x, unsigned char y, unsigned char ch[], unsigned char TextSize, uint8_t reverse)
+void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t reverse)
 {
-	unsigned char c = 0,i = 0,j = 0;
+	uint8_t c = 0,i = 0,j = 0;
 	switch(TextSize)
 	{
 		case 1:
@@ -173,14 +173,14 @@ void OLED_ShowStr(unsigned char x, unsigned char y, unsigned char ch[], unsigned
 }
 
 //--------------------------------------------------------------
-// Prototype      : void OLED_ShowCN(unsigned char x, unsigned char y, unsigned char index)
+// Prototype      : void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index)
 // Calls          : 
 // Parameters     : x,y -- 起始点坐标(x:0~127, y:0~7); index:汉字在codetab.h中的索引
 // Description    : 显示codetab.h中的汉字,16*16点阵
 //--------------------------------------------------------------
-void OLED_ShowCN(unsigned char x, unsigned char y, unsigned char index, uint8_t reverse)
+void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index, uint8_t reverse)
 {
-	unsigned char wm=0;
+	uint8_t wm=0;
 	unsigned int  adder=32*index;
 	OLED_SetPos(x , y);
 	for(wm = 0;wm < 16;wm++)
@@ -197,15 +197,15 @@ void OLED_ShowCN(unsigned char x, unsigned char y, unsigned char index, uint8_t 
 }
 
 //--------------------------------------------------------------
-// Prototype      : void OLED_DrawBMP(unsigned char x0,unsigned char y0,unsigned char x1,unsigned char y1,unsigned char BMP[]);
+// Prototype      : void OLED_DrawBMP(uint8_t x0,uint8_t y0,uint8_t x1,uint8_t y1,uint8_t BMP[]);
 // Calls          : 
 // Parameters     : x0,y0 -- 起始点坐标(x0:0~127, y0:0~7); x1,y1 -- 起点对角线(结束点)的坐标(x1:1~128,y1:1~8)
 // Description    : 显示BMP位图
 //--------------------------------------------------------------
-void OLED_DrawBMP(unsigned char x0,unsigned char y0,unsigned char x1,unsigned char y1,unsigned char BMP[], uint8_t reverse)
+void OLED_DrawBMP(uint8_t x0,uint8_t y0,uint8_t x1,uint8_t y1,uint8_t BMP[], uint8_t reverse)
 {
 	unsigned int j=0;
-	unsigned char x,y;
+	uint8_t x,y;
 
   if(y1%8==0)
 		y = y1/8;
@@ -221,9 +221,9 @@ void OLED_DrawBMP(unsigned char x0,unsigned char y0,unsigned char x1,unsigned ch
 	}
 }
 
-void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char ch, unsigned char TextSize, uint8_t reverse)
+void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch, uint8_t TextSize, uint8_t reverse)
 {
-	unsigned char i = 0;
+	uint8_t i = 0;
 	switch(TextSize)
 	{
 		case 1:
@@ -246,9 +246,9 @@ void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char ch, unsigned 
 	}
 }
 
-int OLED_ShowInt(unsigned char x, unsigned char y, int val, unsigned char TextSize, uint8_t reverse)
+int OLED_ShowInt(uint8_t x, uint8_t y, int val, uint8_t TextSize, uint8_t reverse)
 {
-	unsigned char str[12], ch;
+	uint8_t str[12], ch;
 	int i, n;
 	if (val == 0)
 	{
@@ -286,7 +286,7 @@ int OLED_ShowInt(unsigned char x, unsigned char y, int val, unsigned char TextSi
 	}
 }
 
-int OLED_ShowFloat(unsigned char x, unsigned char y, double val, unsigned char TextSize, uint8_t reverse)
+int OLED_ShowFloat(uint8_t x, uint8_t y, double val, uint8_t TextSize, uint8_t reverse)
 {
 	char out[16];
 	sprintf(out,"%.3lf",val);
@@ -294,7 +294,7 @@ int OLED_ShowFloat(unsigned char x, unsigned char y, double val, unsigned char T
 	OLED_ShowStr(x,y,out,TextSize,reverse);
 	return(strlen(out));
 }
-void OLED_SetBrightness(unsigned char val)
+void OLED_SetBrightness(uint8_t val)
 {
 	WriteCmd(0xAE);
 	WriteCmd(0x81);

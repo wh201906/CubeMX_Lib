@@ -27,7 +27,7 @@
 #include "DELAY/delay.h"
 #include "USART/myusart.h"
 #include "GRIDKEY/gridkey.h"
-#include "OLED/OLED_I2C.h"
+#include "OLED/oled_iic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,7 +92,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-    delay_init(168);
+    Delay_Init(168);
     OLED_Init();
     MyUSART_Init();
     printf("01234\r\n");
@@ -103,7 +103,7 @@ int main(void)
     MyUSART_WriteUntil("9012345678",'5');
     MyUSART_WriteLine("");
     MyUSART_WriteStr("");
-    delay_ms(1000);
+    Delay_ms(1000);
     
   /* USER CODE END 2 */
 
