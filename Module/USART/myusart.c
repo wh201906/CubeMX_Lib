@@ -3,6 +3,8 @@
 uint8_t MyUSART_buffer[MYUSART_MAX_LEN];
 uint32_t MyUSART_bufferPos=0;
 
+FILE __stdout;       
+
 int fputc(int ch, FILE *f)
 { 	
 #ifdef STM32H750xx

@@ -95,7 +95,7 @@ int main(void)
     delay_init(480);
     OLED_Init();
     MyUSART_Init();
-    //printf("01234\r\n"); // crash
+    printf("01234\r\n");
     MyUSART_WriteChar('5');
     MyUSART_Write("678\r\n666",5);
     MyUSART_WriteStr("90123");
