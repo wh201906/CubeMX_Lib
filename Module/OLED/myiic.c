@@ -3,16 +3,16 @@
 //IIC初始化
 void IIC_Init(void)
 {
-    GPIO_InitTypeDef GPIO_Initure;
+    GPIO_InitTypeDef GPIO_Initer;
     
     __HAL_RCC_GPIOE_CLK_ENABLE();   //使能GPIOE时钟
     
-    //PE2,3初始化设置
-    GPIO_Initure.Pin=GPIO_PIN_4|GPIO_PIN_5;
-    GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //推挽输出
-    GPIO_Initure.Pull=GPIO_PULLUP;          //上拉
-    GPIO_Initure.Speed=GPIO_SPEED_FREQ_VERY_HIGH;    //快速
-    HAL_GPIO_Init(GPIOE,&GPIO_Initure);
+    //PE4,5初始化设置
+    GPIO_Initer.Pin=GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_Initer.Mode=GPIO_MODE_OUTPUT_PP;  //推挽输出
+    GPIO_Initer.Pull=GPIO_PULLUP;          //上拉
+    GPIO_Initer.Speed=GPIO_SPEED_FREQ_VERY_HIGH;    //快速
+    HAL_GPIO_Init(GPIOE,&GPIO_Initer);
     
     IIC_SDA(1);
     IIC_SCL(1);  

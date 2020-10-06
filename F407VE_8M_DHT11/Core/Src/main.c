@@ -24,7 +24,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "OLED/oled_iic.h"
+#include "DHT11/dht11.h"
+#include "DELAY/delay.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,7 +90,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+    Delay_Init(168);
+    OLED_Init();
+    DHT11_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +102,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+      Delay_ms(500);
+      if(!DHT11_Refresh())
+          continue;
+      OLED_CLS();
+      OLED_ShowFloat(0,0,DHT11_GetTemp(),TEXTSIZE_SMALL,REVERSE_OFF);
+      OLED_ShowFloat(0,1,DHT11_GetHumid(),TEXTSIZE_SMALL,REVERSE_OFF);
+      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_6);
   }
   /* USER CODE END 3 */
 }
