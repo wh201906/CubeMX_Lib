@@ -3,10 +3,12 @@
 TIM_HandleTypeDef WaveGen_TIM_Handler;
 DMA_HandleTypeDef WaveGen_DMA_Handler;
 DAC_HandleTypeDef WaveGen_DAC_Handler;
+TIM_OC_InitTypeDef TIM_OCIniter={0};
+
 
 WaveGen_WaveType WaveGen_currentWaveType;
 
-uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_SIZE];
+uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_MAX_SIZE];
 
 void WaveGen_DACInit()
 {
@@ -43,7 +45,6 @@ void WaveGen_DMAInit()
 void WaveGen_TimerInit()
 {   
     TIM_MasterConfigTypeDef TIM_MasterConf={0};
-    TIM_OC_InitTypeDef TIM_OCIniter={0};
     TIM_ClockConfigTypeDef TIM_CLKSourceConf = {0};
     
     __HAL_RCC_TIM2_CLK_ENABLE();
@@ -51,8 +52,8 @@ void WaveGen_TimerInit()
     
     WaveGen_TIM_Handler.Instance=TIM2;
     WaveGen_TIM_Handler.Init.CounterMode=TIM_COUNTERMODE_UP;
-    WaveGen_TIM_Handler.Init.Prescaler=9;
-    WaveGen_TIM_Handler.Init.Period=42;
+    WaveGen_TIM_Handler.Init.Prescaler=8;
+    WaveGen_TIM_Handler.Init.Period=1;
     WaveGen_TIM_Handler.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
     WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     HAL_TIM_PWM_Init(&WaveGen_TIM_Handler);
@@ -66,15 +67,7 @@ void WaveGen_TimerInit()
     HAL_TIMEx_MasterConfigSynchronization(&WaveGen_TIM_Handler,&TIM_MasterConf);
     
     
-    TIM_OCIniter.OCMode=TIM_OCMODE_PWM1;
-    TIM_OCIniter.OCPolarity=TIM_OCPOLARITY_HIGH;
-    TIM_OCIniter.Pulse=21; // must be higher than 0;
-    TIM_OCIniter.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&WaveGen_TIM_Handler,&TIM_OCIniter,TIM_CHANNEL_1);
-    HAL_TIM_OC_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
-    
-    //HAL_TIM_Base_Start(&WaveGen_TIM_Handler);
+
 }
 
 void WaveGen_setPWMState(uint8_t state)
@@ -85,11 +78,18 @@ void WaveGen_setPWMState(uint8_t state)
     GPIO_Initer.Speed=GPIO_SPEED_FREQ_VERY_HIGH;
     if(state)
     {
+
+        TIM_OCIniter.OCMode=TIM_OCMODE_PWM1;
+        TIM_OCIniter.OCPolarity=TIM_OCPOLARITY_HIGH;
+        TIM_OCIniter.Pulse=1; // must be higher than 0;
+        TIM_OCIniter.OCFastMode = TIM_OCFAST_DISABLE;
+        HAL_TIM_PWM_ConfigChannel(&WaveGen_TIM_Handler,&TIM_OCIniter,TIM_CHANNEL_1);
+        HAL_TIM_OC_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         
-        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used before __HAL_RCC_DMA1_CLK_DISABLE()
+        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used BEFORE __HAL_RCC_DMA1_CLK_DISABLE()
         
-        __HAL_RCC_DMA1_CLK_DISABLE(); // necessary, and MUST be used after HAL_DAC_Stop_DMA()
-        __HAL_RCC_DAC_CLK_DISABLE(); // necessary, and MUST be used after HAL_DAC_Stop_DMA()
+        __HAL_RCC_DMA1_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
+        __HAL_RCC_DAC_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
         
         GPIO_Initer.Mode=GPIO_MODE_AF_PP;
         GPIO_Initer.Alternate=GPIO_AF1_TIM2;
@@ -99,16 +99,17 @@ void WaveGen_setPWMState(uint8_t state)
     }
     else
     {
-        __HAL_RCC_DMA1_CLK_ENABLE();
-        __HAL_RCC_DAC_CLK_ENABLE();
+        __HAL_RCC_DMA1_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
+        __HAL_RCC_DAC_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
         
-        //WaveGen_DACInit();
-        //WaveGen_DMAInit();
-        
-        HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R); // necessary
+        HAL_DAC_Start(&WaveGen_DAC_Handler,DAC_CHANNEL_2);
+        DAC->CR |= DAC_CR_DMAEN2;
+        HAL_DMA_Start(&WaveGen_DMA_Handler,(uint32_t)WaveGen_dataBuffer,(uint32_t)(&(DAC->DHR12R2)),WAVEGEN_BUFFER_MAX_SIZE);
+        //HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_MAX_SIZE,DAC_ALIGN_12B_R); // necessary , and MUST be used AFTER __HAL_RCC_DMA1_CLK_ENABLE()
 
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
+        HAL_TIM_OC_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         HAL_TIM_Base_Start(&WaveGen_TIM_Handler);
     }
@@ -123,7 +124,7 @@ void WaveGen_setTimerState(uint8_t state)
         HAL_TIM_Base_Stop(&WaveGen_TIM_Handler);
 }
 
-void WaveGen_setDataBuffer(WaveGen_WaveType waveType,uint16_t vpp) // 0~4096 -> 0~3.3V
+void WaveGen_setDataBuffer(WaveGen_WaveType waveType,uint16_t vpp,uint16_t len) // 0~4096 -> 0~3.3V
 {
     uint16_t base = 2048;
     if (vpp > 3300)
@@ -132,27 +133,38 @@ void WaveGen_setDataBuffer(WaveGen_WaveType waveType,uint16_t vpp) // 0~4096 -> 
     uint16_t i;
     if (waveType == WAVEGEN_WAVETYPE_SINE)
     {
-        for (i = 0; i < WAVEGEN_BUFFER_SIZE; i++)
+        for (i = 0; i < len; i++)
         {
-            WaveGen_dataBuffer[i] = (uint16_t)(base + sin((double)i / WAVEGEN_BUFFER_SIZE * 6.283185307) * amp);
+            WaveGen_dataBuffer[i] = (uint16_t)(base + sin((double)i * 6.283185307 / len) * amp);
         }
     }
     else if (waveType == WAVEGEN_WAVETYPE_RAMP)
     {
-        for (i = 0; i < WAVEGEN_BUFFER_SIZE; i++)
+        for (i = 0; i < len; i++)
         {
-            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / WAVEGEN_BUFFER_SIZE - 0.5) * 2 * amp);
+            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / len - 0.5) * 2 * amp);
+        }
+    }
+    else if (waveType == WAVEGEN_WAVETYPE_SQUARE)
+    {
+        for (i = 0; i < len / 2; i++)
+        {
+            WaveGen_dataBuffer[i] = base + amp;
+        }
+        for (i = len / 2; i < len; i++)
+        {
+            WaveGen_dataBuffer[i] = base - amp;
         }
     }
     else if (waveType == WAVEGEN_WAVETYPE_TRIANGLE)
     {
-        for (i = 0; i < WAVEGEN_BUFFER_SIZE / 2; i++)
+        for (i = 0; i < len / 2; i++)
         {
-            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / WAVEGEN_BUFFER_SIZE - 0.25) * 4 * amp);
+            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / len - 0.25) * 4 * amp);
         }
-        for (i = WAVEGEN_BUFFER_SIZE / 2; i < WAVEGEN_BUFFER_SIZE; i++)
+        for (i = len / 2; i < len; i++)
         {
-            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)(WAVEGEN_BUFFER_SIZE - i) / WAVEGEN_BUFFER_SIZE - 0.25) * 4 * amp);
+            WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)(len - i) / len - 0.25) * 4 * amp);
         }
     }
 }

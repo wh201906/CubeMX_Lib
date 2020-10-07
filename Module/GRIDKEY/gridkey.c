@@ -3,7 +3,7 @@
 
 uint8_t isAllKeyReleased=1;
 
-uint8_t GridKey_scan(uint8_t gridType)
+uint8_t GridKey_Scan(uint8_t gridType)
 {
     GPIO_PinState gridState[4][4];
     
