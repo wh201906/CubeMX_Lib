@@ -48,10 +48,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_SIZE];
-extern TIM_HandleTypeDef WaveGen_TIM_Handler;
-extern DAC_HandleTypeDef WaveGen_DAC_Handler;
-extern DMA_HandleTypeDef WaveGen_DMA_Handler;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,6 +96,8 @@ int main(void)
   //MX_DAC_Init();
   /* USER CODE BEGIN 2 */
     WaveGen_TimerInit();
+    WaveGen_DACInit();
+    WaveGen_DMAInit();
     Delay_Init(168);
     WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095);
   /* USER CODE END 2 */

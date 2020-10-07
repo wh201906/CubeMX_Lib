@@ -85,10 +85,12 @@ void WaveGen_setPWMState(uint8_t state)
     GPIO_Initer.Speed=GPIO_SPEED_FREQ_VERY_HIGH;
     if(state)
     {
-        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary
-
-        __HAL_RCC_DMA1_CLK_DISABLE();
-        __HAL_RCC_DAC_CLK_DISABLE();
+        
+        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used before __HAL_RCC_DMA1_CLK_DISABLE()
+        
+        __HAL_RCC_DMA1_CLK_DISABLE(); // necessary, and MUST be used after HAL_DAC_Stop_DMA()
+        __HAL_RCC_DAC_CLK_DISABLE(); // necessary, and MUST be used after HAL_DAC_Stop_DMA()
+        
         GPIO_Initer.Mode=GPIO_MODE_AF_PP;
         GPIO_Initer.Alternate=GPIO_AF1_TIM2;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
@@ -97,13 +99,14 @@ void WaveGen_setPWMState(uint8_t state)
     }
     else
     {
-        WaveGen_DACInit();
-        WaveGen_DMAInit();
+        __HAL_RCC_DMA1_CLK_ENABLE();
+        __HAL_RCC_DAC_CLK_ENABLE();
+        
+        //WaveGen_DACInit();
+        //WaveGen_DMAInit();
         
         HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R); // necessary
 
-        __HAL_RCC_DMA1_CLK_ENABLE();
-        __HAL_RCC_DAC_CLK_ENABLE();
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
         HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
