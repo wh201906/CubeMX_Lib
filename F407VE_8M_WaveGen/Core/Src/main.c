@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dac.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -47,7 +48,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_SIZE];
+extern TIM_HandleTypeDef WaveGen_TIM_Handler;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,6 +91,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   //MX_TIM2_Init();
   MX_DAC_Init();
@@ -96,6 +99,9 @@ int main(void)
     Delay_Init(168);
     WaveGen_TimerInit();
     WaveGen_setPWMState(1);
+    WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095);
+    HAL_TIM_PWM_Start(&WaveGen_TIM_Handler,TIM_CHANNEL_1);
+    //HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,9 +112,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
       Delay_ms(5000);
-      WaveGen_setPWMState(0);
-      Delay_ms(5000);
+      WaveGen_TimerInit();
       WaveGen_setPWMState(1);
+      HAL_TIM_PWM_Start(&WaveGen_TIM_Handler,TIM_CHANNEL_1);
+      HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R);
+      Delay_ms(5000);
+      WaveGen_TimerInit();
+      WaveGen_setPWMState(0);
+      HAL_TIM_PWM_Start(&WaveGen_TIM_Handler,TIM_CHANNEL_1);
+      HAL_DAC_Stop_DMA(&hdac,DAC_CHANNEL_2);
   }
   /* USER CODE END 3 */
 }

@@ -2,6 +2,9 @@
 #define _WAVEGEN_H
 
 #include "main.h"
+#include "math.h"
+
+#define WAVEGEN_BUFFER_SIZE 4096
 
 typedef enum _WaveGen_WaveType
 {
@@ -13,6 +16,7 @@ typedef enum _WaveGen_WaveType
 
 void WaveGen_TimerInit(void);
 void WaveGen_setPWMState(uint8_t state);
+void WaveGen_setDataBuffer(WaveGen_WaveType waveType,uint16_t vpp);
 
 
 #endif
