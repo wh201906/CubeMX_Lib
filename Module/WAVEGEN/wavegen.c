@@ -2,14 +2,42 @@
 
 TIM_HandleTypeDef WaveGen_TIM_Handler;
 DMA_HandleTypeDef WaveGen_DMA_Handler;
+DAC_HandleTypeDef WaveGen_DAC_Handler;
 
 WaveGen_WaveType WaveGen_currentWaveType;
 
 uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_SIZE];
 
+void WaveGen_DACInit()
+{
+    DAC_ChannelConfTypeDef DAC_ChannerConf={0};
+    
+    __HAL_RCC_DAC_CLK_ENABLE();
+    
+    WaveGen_DAC_Handler.Instance=DAC;
+    HAL_DAC_Init(&WaveGen_DAC_Handler);
+    
+    DAC_ChannerConf.DAC_Trigger = DAC_TRIGGER_T2_TRGO;
+    DAC_ChannerConf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+    HAL_DAC_ConfigChannel(&WaveGen_DAC_Handler, &DAC_ChannerConf, DAC_CHANNEL_2);
+}
+
 void WaveGen_DMAInit()
 {
-    __HAL_RCC_DMA2_CLK_ENABLE();
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    WaveGen_DMA_Handler.Instance = DMA1_Stream6;
+    WaveGen_DMA_Handler.Init.Channel = DMA_CHANNEL_7;
+    WaveGen_DMA_Handler.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    WaveGen_DMA_Handler.Init.PeriphInc = DMA_PINC_DISABLE;
+    WaveGen_DMA_Handler.Init.MemInc = DMA_MINC_ENABLE;
+    WaveGen_DMA_Handler.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    WaveGen_DMA_Handler.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    WaveGen_DMA_Handler.Init.Mode = DMA_CIRCULAR;
+    WaveGen_DMA_Handler.Init.Priority = DMA_PRIORITY_LOW;
+    WaveGen_DMA_Handler.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    HAL_DMA_Init(&WaveGen_DMA_Handler);
+    __HAL_LINKDMA(&WaveGen_DAC_Handler,DMA_Handle2,WaveGen_DMA_Handler);
+
 }
 
 void WaveGen_TimerInit()
@@ -57,16 +85,22 @@ void WaveGen_setPWMState(uint8_t state)
     GPIO_Initer.Speed=GPIO_SPEED_FREQ_VERY_HIGH;
     if(state)
     {
+        __HAL_RCC_DMA1_CLK_DISABLE();
+        __HAL_RCC_DAC_CLK_DISABLE();
         GPIO_Initer.Mode=GPIO_MODE_AF_PP;
         GPIO_Initer.Alternate=GPIO_AF1_TIM2;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
+        HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         HAL_TIM_PWM_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
     }
     else
     {
+        __HAL_RCC_DMA1_CLK_ENABLE();
+        __HAL_RCC_DAC_CLK_ENABLE();
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
         HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
+        HAL_TIM_Base_Start(&WaveGen_TIM_Handler);
     }
     
 }
