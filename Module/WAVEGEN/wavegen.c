@@ -20,7 +20,7 @@ void WaveGen_DACInit()
     HAL_DAC_Init(&WaveGen_DAC_Handler);
     
     DAC_ChannerConf.DAC_Trigger = DAC_TRIGGER_NONE;
-    DAC_ChannerConf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+    DAC_ChannerConf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
     HAL_DAC_ConfigChannel(&WaveGen_DAC_Handler, &DAC_ChannerConf, DAC_CHANNEL_2);
 }
 
@@ -52,7 +52,7 @@ void WaveGen_TimerInit()
     
     WaveGen_TIM_Handler.Instance=TIM2;
     WaveGen_TIM_Handler.Init.CounterMode=TIM_COUNTERMODE_UP;
-    WaveGen_TIM_Handler.Init.Prescaler=8;
+    WaveGen_TIM_Handler.Init.Prescaler=4;
     WaveGen_TIM_Handler.Init.Period=1;
     WaveGen_TIM_Handler.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
     WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
