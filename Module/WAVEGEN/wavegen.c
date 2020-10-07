@@ -19,7 +19,7 @@ void WaveGen_DACInit()
     WaveGen_DAC_Handler.Instance=DAC;
     HAL_DAC_Init(&WaveGen_DAC_Handler);
     
-    DAC_ChannerConf.DAC_Trigger = DAC_TRIGGER_T2_TRGO;
+    DAC_ChannerConf.DAC_Trigger = DAC_TRIGGER_NONE;
     DAC_ChannerConf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
     HAL_DAC_ConfigChannel(&WaveGen_DAC_Handler, &DAC_ChannerConf, DAC_CHANNEL_2);
 }
@@ -27,8 +27,8 @@ void WaveGen_DACInit()
 void WaveGen_DMAInit()
 {
     __HAL_RCC_DMA1_CLK_ENABLE();
-    WaveGen_DMA_Handler.Instance = DMA1_Stream6;
-    WaveGen_DMA_Handler.Init.Channel = DMA_CHANNEL_7;
+    WaveGen_DMA_Handler.Instance = DMA1_Stream1;
+    WaveGen_DMA_Handler.Init.Channel = DMA_CHANNEL_3;
     WaveGen_DMA_Handler.Init.Direction = DMA_MEMORY_TO_PERIPH;
     WaveGen_DMA_Handler.Init.PeriphInc = DMA_PINC_DISABLE;
     WaveGen_DMA_Handler.Init.MemInc = DMA_MINC_ENABLE;
@@ -86,7 +86,7 @@ void WaveGen_setPWMState(uint8_t state)
         HAL_TIM_PWM_ConfigChannel(&WaveGen_TIM_Handler,&TIM_OCIniter,TIM_CHANNEL_1);
         HAL_TIM_OC_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         
-        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used BEFORE __HAL_RCC_DMA1_CLK_DISABLE()
+        HAL_DAC_Stop(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used BEFORE __HAL_RCC_DMA1_CLK_DISABLE()
         
         __HAL_RCC_DMA1_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
         __HAL_RCC_DAC_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
@@ -103,9 +103,9 @@ void WaveGen_setPWMState(uint8_t state)
         __HAL_RCC_DAC_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
         
         HAL_DAC_Start(&WaveGen_DAC_Handler,DAC_CHANNEL_2);
-        DAC->CR |= DAC_CR_DMAEN2;
+        __HAL_TIM_ENABLE_DMA(&WaveGen_TIM_Handler, TIM_DMA_UPDATE);
         HAL_DMA_Start(&WaveGen_DMA_Handler,(uint32_t)WaveGen_dataBuffer,(uint32_t)(&(DAC->DHR12R2)),WAVEGEN_BUFFER_MAX_SIZE);
-        //HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_MAX_SIZE,DAC_ALIGN_12B_R); // necessary , and MUST be used AFTER __HAL_RCC_DMA1_CLK_ENABLE()
+        HAL_DAC_Start(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary , and MUST be used AFTER __HAL_RCC_DMA1_CLK_ENABLE()
 
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
