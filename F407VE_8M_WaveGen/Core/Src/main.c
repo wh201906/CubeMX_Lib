@@ -98,11 +98,9 @@ int main(void)
   //MX_TIM2_Init();
   //MX_DAC_Init();
   /* USER CODE BEGIN 2 */
-    WaveGen_DACInit();
-    WaveGen_DMAInit();
+    WaveGen_TimerInit();
     Delay_Init(168);
     WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095);
-    //HAL_DAC_Start_DMA(&hdac,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,19 +110,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-      Delay_ms(5000);
-      WaveGen_TimerInit();
-      //HAL_TIM_PWM_Start(&WaveGen_TIM_Handler,TIM_CHANNEL_1);
-      HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2);
-      //HAL_TIM_PWM_Start(&WaveGen_TIM_Handler,TIM_CHANNEL_1);
+      Delay_ms(2000);
       WaveGen_setPWMState(1);
       
-      Delay_ms(5000);
-      WaveGen_TimerInit();
-      WaveGen_DACInit();
-      WaveGen_DMAInit();
-      //HAL_TIM_Base_Start(&WaveGen_TIM_Handler);
-      HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R);
+      Delay_ms(2000);
       WaveGen_setPWMState(0);
   }
   /* USER CODE END 3 */

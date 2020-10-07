@@ -85,6 +85,8 @@ void WaveGen_setPWMState(uint8_t state)
     GPIO_Initer.Speed=GPIO_SPEED_FREQ_VERY_HIGH;
     if(state)
     {
+        HAL_DAC_Stop_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary
+
         __HAL_RCC_DMA1_CLK_DISABLE();
         __HAL_RCC_DAC_CLK_DISABLE();
         GPIO_Initer.Mode=GPIO_MODE_AF_PP;
@@ -95,6 +97,11 @@ void WaveGen_setPWMState(uint8_t state)
     }
     else
     {
+        WaveGen_DACInit();
+        WaveGen_DMAInit();
+        
+        HAL_DAC_Start_DMA(&WaveGen_DAC_Handler,DAC_CHANNEL_2,(uint32_t*)WaveGen_dataBuffer,WAVEGEN_BUFFER_SIZE,DAC_ALIGN_12B_R); // necessary
+
         __HAL_RCC_DMA1_CLK_ENABLE();
         __HAL_RCC_DAC_CLK_ENABLE();
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
