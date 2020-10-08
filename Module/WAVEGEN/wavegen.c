@@ -14,21 +14,39 @@ void WaveGen_DACInit()
 {
     DAC_ChannelConfTypeDef DAC_ChannerConf={0};
     
+#ifdef STM32F407xx
     __HAL_RCC_DAC_CLK_ENABLE();
-    
     WaveGen_DAC_Handler.Instance=DAC;
+#endif
+#ifdef STM32H750xx
+    __HAL_RCC_DAC12_CLK_ENABLE();
+    WaveGen_DAC_Handler.Instance=DAC1;
+#endif
+    
     HAL_DAC_Init(&WaveGen_DAC_Handler);
     
     DAC_ChannerConf.DAC_Trigger = DAC_TRIGGER_NONE;
     DAC_ChannerConf.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
+#ifdef STM32H750xx
+    DAC_ChannerConf.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+    DAC_ChannerConf.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+    DAC_ChannerConf.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+#endif
     HAL_DAC_ConfigChannel(&WaveGen_DAC_Handler, &DAC_ChannerConf, DAC_CHANNEL_2);
 }
 
 void WaveGen_DMAInit()
 {
     __HAL_RCC_DMA1_CLK_ENABLE();
+#ifdef STM32F407xx
     WaveGen_DMA_Handler.Instance = DMA1_Stream1;
     WaveGen_DMA_Handler.Init.Channel = DMA_CHANNEL_3;
+#endif
+#ifdef STM32H750xx
+    WaveGen_DMA_Handler.Instance = DMA1_Stream0;
+    WaveGen_DMA_Handler.Init.Request = DMA_REQUEST_TIM2_UP;
+#endif
+
     WaveGen_DMA_Handler.Init.Direction = DMA_MEMORY_TO_PERIPH;
     WaveGen_DMA_Handler.Init.PeriphInc = DMA_PINC_DISABLE;
     WaveGen_DMA_Handler.Init.MemInc = DMA_MINC_ENABLE;
@@ -52,7 +70,7 @@ void WaveGen_TimerInit()
     
     WaveGen_TIM_Handler.Instance=TIM2;
     WaveGen_TIM_Handler.Init.CounterMode=TIM_COUNTERMODE_UP;
-    WaveGen_TIM_Handler.Init.Prescaler=4;
+    WaveGen_TIM_Handler.Init.Prescaler=120;
     WaveGen_TIM_Handler.Init.Period=1;
     WaveGen_TIM_Handler.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
     WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -89,8 +107,13 @@ void WaveGen_setPWMState(uint8_t state)
         HAL_DAC_Stop(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary, and MUST be used BEFORE __HAL_RCC_DMA1_CLK_DISABLE()
         
         __HAL_RCC_DMA1_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
+#ifdef STM32F407xx
         __HAL_RCC_DAC_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
-        
+#endif
+#ifdef STM32H750xx
+        __HAL_RCC_DAC12_CLK_DISABLE(); // necessary, and MUST be used AFTER HAL_DAC_Stop_DMA()
+#endif
+    
         GPIO_Initer.Mode=GPIO_MODE_AF_PP;
         GPIO_Initer.Alternate=GPIO_AF1_TIM2;
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
@@ -100,11 +123,20 @@ void WaveGen_setPWMState(uint8_t state)
     else
     {
         __HAL_RCC_DMA1_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
+#ifdef STM32F407xx
         __HAL_RCC_DAC_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
-        
+#endif
+#ifdef STM32H750xx
+        __HAL_RCC_DAC12_CLK_ENABLE(); // necessary, and MUST be used BEFORE HAL_DAC_Start_DMA()
+#endif        
         HAL_DAC_Start(&WaveGen_DAC_Handler,DAC_CHANNEL_2);
         __HAL_TIM_ENABLE_DMA(&WaveGen_TIM_Handler, TIM_DMA_UPDATE);
+#ifdef STM32F407xx
         HAL_DMA_Start(&WaveGen_DMA_Handler,(uint32_t)WaveGen_dataBuffer,(uint32_t)(&(DAC->DHR12R2)),WAVEGEN_BUFFER_MAX_SIZE);
+#endif
+#ifdef STM32H750xx
+        HAL_DMA_Start(&WaveGen_DMA_Handler,(uint32_t)WaveGen_dataBuffer,(uint32_t)(&(DAC1->DHR12R2)),WAVEGEN_BUFFER_MAX_SIZE); 
+#endif        
         HAL_DAC_Start(&WaveGen_DAC_Handler,DAC_CHANNEL_2); // necessary , and MUST be used AFTER __HAL_RCC_DMA1_CLK_ENABLE()
 
         GPIO_Initer.Mode=GPIO_MODE_ANALOG;
