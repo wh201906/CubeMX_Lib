@@ -18,7 +18,7 @@
           <Vendor>STMicroelectronics</Vendor>
           <PackID>Keil.STM32H7xx_DFP.2.6.0</PackID>
           <PackURL>https://www.keil.com/pack/</PackURL>
-          <Cpu>IRAM(0x20000000-0x2001FFFF) IRAM2(0x24000000-0x2407FFFF) IROM(0x8000000-0x801FFFF) CLOCK(12000000) FPU3(DFPU) CPUTYPE("Cortex-M7") ELITTLE</Cpu>
+          <Cpu>IRAM(0x20000000-0x2001FFFF) IRAM2(0x24000000-0x2407FFFF) IROM(0x8000000-0x801FFFF)  CLOCK(12000000) FPU3(DFPU) CPUTYPE("Cortex-M7") ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
           <FlashDriverDll></FlashDriverDll>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32H750xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/STM32H7xx_HAL_Driver/Inc";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Include";../../Module</IncludePath>
+              <IncludePath>../Core/Inc; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/STM32H7xx_HAL_Driver/Inc"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.8.0/Drivers/CMSIS/Include"; ../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -544,9 +544,9 @@
               <FilePath>..\..\Module\OLED\myiic.c</FilePath>
             </File>
             <File>
-              <FileName>OLED_I2C.c</FileName>
+              <FileName>oled_iic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\OLED\OLED_I2C.c</FilePath>
+              <FilePath>..\..\Module\OLED\oled_iic.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -574,9 +574,9 @@
           <GroupName>Module/USART</GroupName>
           <Files>
             <File>
-              <FileName>myusart.c</FileName>
+              <FileName>myusart1.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\USART\myusart.c</FilePath>
+              <FilePath>..\..\Module\USART\myusart1.c</FilePath>
             </File>
           </Files>
         </Group>

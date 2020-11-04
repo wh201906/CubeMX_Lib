@@ -399,9 +399,9 @@
               <FilePath>..\..\Module\OLED\myiic.c</FilePath>
             </File>
             <File>
-              <FileName>OLED_I2C.c</FileName>
+              <FileName>oled_iic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\OLED\OLED_I2C.c</FilePath>
+              <FilePath>..\..\Module\OLED\oled_iic.c</FilePath>
             </File>
           </Files>
         </Group>

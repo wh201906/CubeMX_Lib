@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "OLED/OLED_I2C.h"
+#include "OLED/oled_iic.h"
 #include "GRIDKEY/gridkey.h"
 #include "DELAY/delay.h"
 /* USER CODE END Includes */
@@ -88,10 +88,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  delay_init(168);
+  Delay_Init(168);
   OLED_Init();
   OLED_ShowStr(0,0,"GridKey Test",TEXTSIZE_SMALL,REVERSE_OFF);
-  delay_ms(500);
+  Delay_ms(500);
   int counter=0;
   int val=255;
   /* USER CODE END 2 */
@@ -103,13 +103,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-      val=GridKey_scan(1);
+      val=GridKey_Scan(1);
       if(val!=255)
       {
           OLED_ShowChar(counter*6,0,val+'0',TEXTSIZE_SMALL,REVERSE_OFF);
           counter++;
       }
-      delay_ms(50);
+      Delay_ms(50);
   }
   /* USER CODE END 3 */
 }
