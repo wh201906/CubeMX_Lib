@@ -36,6 +36,6 @@ void Delay_us(uint32_t nus)
 //nms:要延时的ms数
 void Delay_ms(uint16_t nms)
 {
-	HAL_Delay(nms-1);
+	Delay_us(nms*1000); // HAL_Delay() has some bugs
 }
 

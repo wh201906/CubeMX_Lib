@@ -4,7 +4,7 @@
 #include "usart.h"
 #include <stdio.h>
 
-#define MYUSART3_MAX_LEN 40
+#define MYUSART3_MAX_LEN 100
 
 #ifdef STM32H750xx
 #define __MYUSART3_ENABLE_IT() ((USART3)->CR1 |= (USART_CR1_RXNEIE_RXFNEIE))
@@ -59,4 +59,6 @@ add
 MyUSART3_IRQHandler(USARTx);
 in function
 USARTx_IRQHandler()
+
+Remember to enable usart interrupt in CubeMX
 */
