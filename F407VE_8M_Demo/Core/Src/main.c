@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "OLED/oled_iic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,8 +93,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  OLED_Init();
+  OLED_CLS();
+  OLED_ShowStr(0,0,"Hello!",TEXTSIZE_BIG,REVERSE_OFF);
+  OLED_ShowStr(0,2,"D2 State:",TEXTSIZE_BIG,REVERSE_OFF);
+  OLED_ShowStr(0,4,"D3 Speed:",TEXTSIZE_BIG,REVERSE_OFF);
+  Delay_ms(500);
+  HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
 
   /* USER CODE END 2 */

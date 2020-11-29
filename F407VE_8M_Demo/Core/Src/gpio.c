@@ -28,6 +28,7 @@
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
 extern uint8_t d2_state;
+extern int d3_speed;
 /* USER CODE END 1 */
 
 /** Configure pins as
@@ -50,9 +51,9 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : PE4 PE5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pins : PE3 PE4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
@@ -73,11 +74,11 @@ void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
   HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -89,6 +90,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,d2_state);
     d2_state=!d2_state;
+  }
+  else if(GPIO_Pin==GPIO_PIN_3 && HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_3)==GPIO_PIN_RESET)
+  {
+    if(d3_speed<4000)
+      d3_speed+=100;
+  }
+  else if(GPIO_Pin==GPIO_PIN_4 && HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_4)==GPIO_PIN_RESET)
+  {
+    if(d3_speed>500)
+      d3_speed-=100;
   }
 }
 /* USER CODE END 2 */
