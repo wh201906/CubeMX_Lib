@@ -29,7 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "WAVEGEN/wavegen.h"
-#include "GRIDKEY/gridkey.h"
+#include "KEY/key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,7 +70,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t state=2;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -100,6 +100,7 @@ int main(void)
     WaveGen_DACInit();
     WaveGen_DMAInit();
     Delay_Init(480);
+    Key_Init();
     WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095,WAVEGEN_BUFFER_MAX_SIZE);
 
   /* USER CODE END 2 */
@@ -113,27 +114,32 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
       Delay_ms(200);
-      key=GridKey_Scan(0);
+      key=Key_Scan();
       if(key==0)
+      {
+        state++;
+        state%=5;
+      }
+      if(state==0)
       {
           WaveGen_setPWMState(1);
       }
-      else if(key==1)
+      else if(state==1)
       {
           WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095,WAVEGEN_BUFFER_MAX_SIZE);
           WaveGen_setPWMState(0);
       }
-      else if(key==2)
+      else if(state==2)
       {
           WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_RAMP,4095,WAVEGEN_BUFFER_MAX_SIZE);
           WaveGen_setPWMState(0);
       }
-      else if(key==3)
+      else if(state==3)
       {
           WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SQUARE,4095,WAVEGEN_BUFFER_MAX_SIZE);
           WaveGen_setPWMState(0);
       }
-      else if(key==4)
+      else if(state==4)
       {
           WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_TRIANGLE,4095,WAVEGEN_BUFFER_MAX_SIZE);
           WaveGen_setPWMState(0);

@@ -143,7 +143,8 @@ void WaveGen_setPWMState(uint8_t state)
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
         HAL_TIM_OC_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
-        HAL_TIM_Base_Start(&WaveGen_TIM_Handler);
+        //HAL_TIM_Base_Start(&WaveGen_TIM_Handler); // On my H7 board, this function doesn't work.
+        __HAL_TIM_ENABLE(&WaveGen_TIM_Handler); // Works fine on my F4 and H7 board.
     }
     
 }
