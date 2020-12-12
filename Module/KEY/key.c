@@ -7,6 +7,17 @@ void Key_Init()
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+    #ifdef STM32H750xx
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    #endif
+
+    #ifdef STM32F407xx
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOE_CLK_ENABLE();
 
@@ -19,6 +30,7 @@ void Key_Init()
     GPIO_InitStruct.Pin = GPIO_PIN_0;
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    #endif
 }
 
 uint8_t Key_Scan()
