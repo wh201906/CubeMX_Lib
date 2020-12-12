@@ -35,3 +35,4 @@ const uint8_t resultMap[2][16]=
 };
 
 #endif
+// used to make grp[], pin[] private
