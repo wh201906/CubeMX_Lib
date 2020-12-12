@@ -12,7 +12,7 @@ const GPIO_PinState downSt[KEY_NUM] = {GPIO_PIN_RESET};
 #ifdef STM32F407xx
 #define KEY_NUM 3
 const GPIO_TypeDef *grp[KEY_NUM] = {GPIOE, GPIOE, GPIOA};
-const uint16_t pin[KEY_NUM] = {GPIO_PIN_3, GPIO_PIN_4, GPIO_PIN_0};
+const uint16_t pin[KEY_NUM] = {GPIO_PIN_4, GPIO_PIN_3, GPIO_PIN_0};
 const GPIO_PinState downSt[KEY_NUM] = {GPIO_PIN_RESET, GPIO_PIN_RESET, GPIO_PIN_SET};
 #endif
 

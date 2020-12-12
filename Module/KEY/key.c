@@ -36,7 +36,7 @@ void Key_Init()
 uint8_t Key_Scan()
 {
     int i;
-    uint8_t keyDn[KEY_NUM];
+    uint8_t keyDn[KEY_NUM] = {0};
     uint8_t isKeyDown = 0;
     for (i = 0; i < KEY_NUM; i++)
         isKeyDown = isKeyDown || HAL_GPIO_ReadPin(grp[i], pin[i]) == downSt[i];
@@ -48,7 +48,7 @@ uint8_t Key_Scan()
             keyDn[i] = HAL_GPIO_ReadPin(grp[i], pin[i]) == downSt[i];
         isKeyDown = 0;
         for (i = 0; i < KEY_NUM; i++)
-            isKeyDown = keyDn[i];
+            isKeyDown = isKeyDown || keyDn[i];
         if (!isKeyDown)
             return 0xFFu;
         isAllKeyReleased = 0;
@@ -68,7 +68,7 @@ uint8_t Key_Scan()
 uint8_t Key_ScanRaw()
 {
     int i;
-    uint8_t keyDn[3];
+    uint8_t keyDn[KEY_NUM] = {0};
     uint8_t isKeyDown = 0;
     for (i = 0; i < KEY_NUM; i++)
         isKeyDown = isKeyDown || HAL_GPIO_ReadPin(grp[i], pin[i]) == downSt[i];
@@ -80,7 +80,7 @@ uint8_t Key_ScanRaw()
             keyDn[i] = HAL_GPIO_ReadPin(grp[i], pin[i]) == downSt[i];
         isKeyDown = 0;
         for (i = 0; i < KEY_NUM; i++)
-            isKeyDown = keyDn[i];
+            isKeyDown = isKeyDown || keyDn[i];
         if (!isKeyDown)
             return 0xFFu;
         for (i = 0; i < KEY_NUM; i++)
