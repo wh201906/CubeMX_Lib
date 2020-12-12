@@ -50,6 +50,7 @@ int d3_delta=1;
 int d3_speed=500;
 int d3_threshold=1;
 uint8_t d2_state=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
