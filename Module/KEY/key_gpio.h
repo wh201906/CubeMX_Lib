@@ -6,7 +6,7 @@
 #define KEY_NUM 1
 const GPIO_TypeDef *grp[KEY_NUM] = {GPIOC};
 const uint16_t pin[KEY_NUM] = {GPIO_PIN_13};
-const GPIO_PinState downSt[KEY_NUM] = {GPIO_PIN_RESET};
+const GPIO_PinState downSt[KEY_NUM] = {GPIO_PIN_SET};
 #endif
 
 #ifdef STM32F407xx
