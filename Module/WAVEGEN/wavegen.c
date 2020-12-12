@@ -1,4 +1,4 @@
-#include "WAVEGEN/wavegen.h"
+#include "wavegen.h"
 
 TIM_HandleTypeDef WaveGen_TIM_Handler;
 DMA_HandleTypeDef WaveGen_DMA_Handler;

@@ -1,4 +1,4 @@
-#include "USART/myusart1.h"
+#include "myusart1.h"
 
 uint8_t MyUSART1_buffer[MYUSART1_MAX_LEN];
 uint32_t MyUSART1_bufferPos=0;
