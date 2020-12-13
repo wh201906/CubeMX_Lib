@@ -5,12 +5,12 @@
 
 // for F4 and H7
 //IO方向设置
-#define SDA_IN()  {GPIOE->MODER&=~(3<<(6*2));GPIOE->MODER|=0<<(6*2);}	//PE6输入模式
-#define SDA_OUT() {GPIOE->MODER&=~(3<<(6*2));GPIOE->MODER|=1<<(6*2);} //PE6输出模式
+#define SDA_IN()  {GPIOE->MODER&=~(3<<(4*2));GPIOE->MODER|=0<<(4*2);}	//PE6输入模式
+#define SDA_OUT() {GPIOE->MODER&=~(3<<(4*2));GPIOE->MODER|=1<<(4*2);} //PE6输出模式
 //IO操作
 #define IIC_SCL(n)  (n?HAL_GPIO_WritePin(GPIOE,GPIO_PIN_5,GPIO_PIN_SET):HAL_GPIO_WritePin(GPIOE,GPIO_PIN_5,GPIO_PIN_RESET)) //SCL
-#define IIC_SDA(n)  (n?HAL_GPIO_WritePin(GPIOE,GPIO_PIN_6,GPIO_PIN_SET):HAL_GPIO_WritePin(GPIOE,GPIO_PIN_6,GPIO_PIN_RESET)) //SDA
-#define READ_SDA    HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_6)  //输入SDA
+#define IIC_SDA(n)  (n?HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET):HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_RESET)) //SDA
+#define READ_SDA    HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_4)  //输入SDA
 
 
 //IIC所有操作函数

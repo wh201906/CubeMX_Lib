@@ -26,9 +26,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
-#include "USART/myusart1.h"
-#include "stdio.h"
 #include "DIST_US/dist_us.h"
+#include "USART/myusart1.h"
+#include "OLED/oled_iic.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,9 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t state=0;
-uint32_t val[2]; // val*0.17 at 168, mm
-char strr[30];
+uint8_t str[10];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,9 +96,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init();
-  Delay_ms(200);
-  MyUSART1_WriteStr("hello");
-  //Dist_US_Init(168);
+  OLED_Init();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,10 +107,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    sprintf(strr,"%d",val[1]);
-    MyUSART1_WriteLine(strr);
-    Delay_ms(1000);
-    val[1]=Dist_US_GetDistI();
+    Delay_ms(100);
+    OLED_CLS();
+    OLED_ShowFloat(1,1,Dist_US_GetDistF(),TEXTSIZE_BIG,REVERSE_OFF);
+    sprintf(str,"%d",Dist_US_GetDistI());
+    MyUSART1_WriteLine(str);
   }
   /* USER CODE END 3 */
 }
