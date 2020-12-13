@@ -93,13 +93,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  //MX_TIM2_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init();
   Delay_ms(200);
   MyUSART1_WriteStr("hello");
-  Dist_US_Init(168);
+  //Dist_US_Init(168);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,8 +110,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     sprintf(strr,"%d",val[1]);
-    MyUSART1_WriteUntil(strr,0x00);
-    Delay_ms(100);
+    MyUSART1_WriteLine(strr);
+    Delay_ms(1000);
     val[1]=Dist_US_GetDistI();
   }
   /* USER CODE END 3 */

@@ -1,6 +1,6 @@
 #include "dist_us.h"
 
-TIM_HandleTypeDef Dist_US_TIM_Handler;
+#define Dist_US_TIM_Handler (htim2)
 
 uint32_t Dist_US_counter[2]={0};
 int8_t Dist_US_state=-1;
@@ -9,58 +9,6 @@ float Dist_US_distF=0.0f;
 
 uint32_t Dist_US_TIMPeriod=0xffff;
 
-void Dist_US_Init(uint8_t SYSCLK) // 1us, coefficient=0.17
-{
-  
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_IC_InitTypeDef sConfigIC = {0};
-  
-  //Timer
-  __HAL_RCC_TIM2_CLK_ENABLE();
-  
-  Dist_US_TIM_Handler.Instance = TIM2;
-  Dist_US_TIM_Handler.Init.Prescaler = 168;
-  Dist_US_TIM_Handler.Init.CounterMode = TIM_COUNTERMODE_UP;
-  Dist_US_TIM_Handler.Init.Period = Dist_US_TIMPeriod;
-  Dist_US_TIM_Handler.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  Dist_US_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  HAL_TIM_Base_Init(&Dist_US_TIM_Handler);
-  
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  HAL_TIM_ConfigClockSource(&Dist_US_TIM_Handler, &sClockSourceConfig);
-  
-  HAL_TIM_IC_Init(&Dist_US_TIM_Handler);
-  
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&Dist_US_TIM_Handler, &sMasterConfig);
-  
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_BOTHEDGE;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
-  HAL_TIM_IC_ConfigChannel(&Dist_US_TIM_Handler, &sConfigIC, TIM_CHANNEL_1);
-  
-  // GPIO
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  
-  //Interrupt
-  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(TIM2_IRQn);
-}
 
 void Dist_US_Start(void)
 {
@@ -110,7 +58,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
       Dist_US_state=-1;
       HAL_TIM_IC_Stop_IT(&Dist_US_TIM_Handler,TIM_CHANNEL_1);
       Dist_US_counter[1]-=Dist_US_counter[0];
-      Dist_US_distI=Dist_US_counter[1]*17;
+      Dist_US_distI=Dist_US_counter[1]*17; // coffecient
       Dist_US_distF=Dist_US_distI*0.01;
     }	
 	}
