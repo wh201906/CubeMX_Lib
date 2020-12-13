@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "arm_math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,13 +42,17 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define FFT_LENGTH 256
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 uint16_t val[128];
+float fft_input[FFT_LENGTH*2];
+float fft_output[FFT_LENGTH];
+float fft_phase[FFT_LENGTH];
+arm_cfft_radix4_instance_f32 scfft;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -155,7 +160,14 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void fft()
+{
+  arm_cfft_radix4_init_f32(&scfft,FFT_LENGTH,0,1);
+  
+  arm_cfft_radix4_f32(&scfft,fft_input);
+  
+  arm_cmplx_mag_f32(fft_input,fft_output,FFT_LENGTH);
+}
 /* USER CODE END 4 */
 
 /**

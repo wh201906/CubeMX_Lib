@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "OLED/OLED_I2C.h"
+#include "OLED/oled_iic.h"
 #include "DELAY/delay.h"
 /* USER CODE END Includes */
 
@@ -87,7 +87,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  delay_init(168);
+  Delay_Init(168);
   OLED_Init();
   OLED_CLS();
   OLED_Reverse();
@@ -101,7 +101,7 @@ int main(void)
   {
       OLED_ShowCN(i*16,0,i,REVERSE_ON);
   }
-  delay_ms(1000);
+  Delay_ms(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,7 +112,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
       OLED_ShowStr(0,0,testStr,TEXTSIZE_SMALL,REVERSE_OFF);
-      delay_ms(200);
+      Delay_ms(200);
       for(int i=0;i<60;i++)
       {
         testStr[i]=((testStr[i]-32+1)%98)+32;
