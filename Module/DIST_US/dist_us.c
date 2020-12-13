@@ -26,6 +26,7 @@ void Dist_US_Start(void)
   
   //capture echo
   HAL_TIM_IC_Start_IT(&Dist_US_TIM_Handler,TIM_CHANNEL_1);
+  __HAL_TIM_ENABLE_IT(&Dist_US_TIM_Handler,TIM_IT_UPDATE);
   Dist_US_state=0;
   for(i=0;i<85;i++)
   {
@@ -46,11 +47,18 @@ float Dist_US_GetDistF(void)
   return Dist_US_distF;
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance==Dist_US_TIM_Handler.Instance && Dist_US_state==1)
+    Dist_US_counter[1]+=Dist_US_TIMPeriod+1;
+}
+
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance==Dist_US_TIM_Handler.Instance)
 	{
-    Dist_US_counter[Dist_US_state]=HAL_TIM_ReadCapturedValue(&Dist_US_TIM_Handler,TIM_CHANNEL_1);
+    // has been set to 0, compatible with the PeriodElapsedCallback()
+    Dist_US_counter[Dist_US_state]+=HAL_TIM_ReadCapturedValue(&Dist_US_TIM_Handler,TIM_CHANNEL_1);
     if(Dist_US_state==0)
       Dist_US_state++;
     else if(Dist_US_state==1)
