@@ -6,8 +6,8 @@
 
 // you can read it as fast as you can, but the valid interval is around 1200ms
 
-#define DHT11_GPIO_IN()  {GPIOE->MODER&=~(3<<(2*2));GPIOE->MODER|=0<<(2*2);} //PE2输入模式
-#define DHT11_GPIO_OUT() {GPIOE->MODER&=~(3<<(2*2));GPIOE->MODER|=1<<(2*2);} //PE2输出模式
+#define DHT11_GPIO_IN()  {GPIOE->MODER&=~(3<<(2*2));GPIOE->MODER|=0<<(2*2);} //PE2 In
+#define DHT11_GPIO_OUT() {GPIOE->MODER&=~(3<<(2*2));GPIOE->MODER|=1<<(2*2);} //PE2 Out
 #define DHT11_GPIO_WRITE(n)  (n?HAL_GPIO_WritePin(GPIOE,GPIO_PIN_2,GPIO_PIN_SET):HAL_GPIO_WritePin(GPIOE,GPIO_PIN_2,GPIO_PIN_RESET))
 #define DHT11_GPIO_READ()    HAL_GPIO_ReadPin(GPIOE,GPIO_PIN_2)
 
