@@ -541,6 +541,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Module/DIST_US</GroupName>
+          <Files>
+            <File>
+              <FileName>dist_us.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Module\DIST_US\dist_us.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>

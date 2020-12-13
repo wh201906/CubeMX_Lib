@@ -28,6 +28,7 @@
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
 #include "stdio.h"
+#include "DIST_US/dist_us.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,12 +93,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_TIM2_Init();
+  //MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init();
   Delay_ms(200);
   MyUSART1_WriteStr("hello");
+  Dist_US_Init(168);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,16 +111,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     sprintf(strr,"%d",val[1]);
     MyUSART1_WriteUntil(strr,0x00);
-    val[0]=0;
-    val[1]=0;
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_RESET);
-    Delay_ms(1000);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_SET);
-    Delay_us(20);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,GPIO_PIN_RESET);
-    
-    HAL_TIM_IC_Start_IT(&htim2,TIM_CHANNEL_1);
-    
+    Delay_ms(100);
+    val[1]=Dist_US_GetDistI();
   }
   /* USER CODE END 3 */
 }
@@ -167,23 +161,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-	
-	if(htim->Instance==TIM2)
-	{
-    val[state]=HAL_TIM_ReadCapturedValue(&htim2,TIM_CHANNEL_1);
-    if(state==0)
-      state++;
-    else if(state==1)
-    {
-      state=0;
-      HAL_TIM_IC_Stop_IT(&htim2,TIM_CHANNEL_1);
-      val[1]-=val[0];
-    }	
-	}
-	
-}
+
 /* USER CODE END 4 */
 
 /**
