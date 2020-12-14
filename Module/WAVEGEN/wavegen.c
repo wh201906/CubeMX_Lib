@@ -70,7 +70,7 @@ void WaveGen_TimerInit()
     
     WaveGen_TIM_Handler.Instance=TIM2;
     WaveGen_TIM_Handler.Init.CounterMode=TIM_COUNTERMODE_UP;
-    WaveGen_TIM_Handler.Init.Prescaler=120;
+    WaveGen_TIM_Handler.Init.Prescaler=12;
     WaveGen_TIM_Handler.Init.Period=1;
     WaveGen_TIM_Handler.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
     WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
