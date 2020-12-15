@@ -27,3 +27,4 @@ JLinkLog.txt
 *.hex
 EventRecorderStub.scvd
 /F407VE_8M_Test
+.vscode/
