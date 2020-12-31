@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "AD9833/ad9833.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t testData[5]={0x2100,0x50C7,0x42FF,0xC000,0x2000};
+uint16_t testData[5]={0x2100,0x50C7,0x4000,0xC000,0x2000};
+uint32_t tt;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,17 +94,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   Delay_ms(200);
-  //HAL_SPI_Transmit(&hspi2,&data[0],2,100);
-  //HAL_SPI_Transmit(&hspi2,&data[2],2,100);
-  //HAL_SPI_Transmit(&hspi2,&data[4],2,100);
-  //HAL_SPI_Transmit(&hspi2,&data[6],2,100);
-  //HAL_SPI_Transmit(&hspi2,&data[8],2,100);
-  Delay_ms(200);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)&testData[0],1,100);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)&testData[1],1,100);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)&testData[2],1,100);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)&testData[3],1,100);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)&testData[4],1,100);
+  tt=AD9833_GetFReg(150000,0);
+  AD9833_SendRaw(testData[0]);
+  AD9833_SendRaw(testData[1]);
+  AD9833_SendRaw(testData[2]);
+  AD9833_SendRaw(testData[3]);
+  AD9833_SendRaw(testData[4]);
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -536,6 +536,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Module/AD9833</GroupName>
+          <Files>
+            <File>
+              <FileName>ad9833.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Module\AD9833\ad9833.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
