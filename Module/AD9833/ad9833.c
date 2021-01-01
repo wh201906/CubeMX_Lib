@@ -1,10 +1,8 @@
 #include "ad9833.h"
 
-uint16_t ctrlReg=AD9833_REGADDR_CTRL|AD9833_WAVE_OFF|AD9833_FREQREG_FULL|AD9833_REGSEL_F0P0;
-uint32_t freq0Reg;
-uint32_t freq1Reg;
-uint16_t phase0Reg;
-uint16_t phase1Reg;
+uint16_t ctrlReg=AD9833_REGADDR_CTRL;
+uint32_t freqReg[2]={AD9833_REGADDR_FREQ0,AD9833_REGADDR_FREQ1};
+uint16_t phaseReg[2]={AD9833_REGADDR_PHASE0,AD9833_REGADDR_PHASE1};
 
 void AD9833_SetWaveType(AD9833_WaveType type)
 {
@@ -22,23 +20,78 @@ void AD9833_SetWaveType(AD9833_WaveType type)
   AD9833_SendRaw(ctrlReg);
 }
 
-void AD9833_SendRaw(uint16_t data)
+void AD9833_SelectReg(uint8_t freqRegID,uint8_t phaseRegID)
 {
-  HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,0);
-  HAL_SPI_Transmit(&hspi2,(uint8_t*)(&data),1,10);
-  HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,1);
+  ctrlReg&=~AD9833_REGSEL_MASK;
+  if(freqRegID)
+    ctrlReg|=AD9833_REGSEL_F1;
+  if(phaseRegID)
+    ctrlReg|=AD9833_REGSEL_P1;
+  AD9833_SendRaw(ctrlReg);
 }
 
-uint32_t AD9833_GetFReg(double freq, uint8_t regID)
+void AD9833_SetFreqConfMode(AD9833_FreqConfMode mode)
 {
-  // regID->0/1
+  ctrlReg&=~AD9833_FREQREG_MASK;
+  if(mode==AD9833_LSB)
+    ctrlReg|=AD9833_FREQREG_LSB;
+  else if(mode==AD9833_MSB)
+    ctrlReg|=AD9833_FREQREG_MSB;
+  else if(mode==AD9833_Full)
+    ctrlReg|=AD9833_FREQREG_FULL;
+  AD9833_SendRaw(ctrlReg);
+}
+
+
+uint32_t AD9833_Freq2Reg(double freq, uint8_t regID)
+{
   uint32_t res;
-  res=POW2_28/(double)AD9833_CLK*freq;
+  res=POW2_28/(double)AD9833_CLK*freq+0.5;
   res=(res&0x3FFFu)|(res<<2&0x3FFF0000u);
   regID++; // 00/01 -> 01/10
   res|=(regID<<14);
   res|=(regID<<30);
   return res;
+}
+
+double AD9833_GetActuralFreq(uint32_t regVal)
+{
+  double res;
+  regVal=(regVal&0x3FFFu)|(regVal>>2&0x0FFFC000u);
+  regVal&=0x0FFFFFFFu;
+  res=regVal*AD9833_CLK/POW2_28;
+  return res;
+}
+
+void AD9833_SetFreq(double freq, uint8_t regID)
+{
+  uint16_t tempReg;
+  freqReg[regID]=AD9833_Freq2Reg(freq,regID);
+  tempReg=ctrlReg&~AD9833_FREQREG_MASK;
+  tempReg|=AD9833_FREQREG_FULL;
+  
+  AD9833_SendRaw(tempReg); // Force Full write
+  AD9833_SendRaw((uint16_t)(freqReg[regID]>>0));
+  AD9833_SendRaw((uint16_t)(freqReg[regID]>>16));
+  
+  if(tempReg!=ctrlReg)
+    AD9833_SendRaw(ctrlReg); // Restore the FreqConfMode
+}
+
+void AD9833_SetFreqMSB(double freq, uint8_t regID)
+{
+  freqReg[regID]&=0x0000FFFFu;
+  freqReg[regID]|=(AD9833_Freq2Reg(freq,regID)&0xFFFF0000u);
+  AD9833_SendRaw(ctrlReg);
+  AD9833_SendRaw((uint16_t)(freqReg[regID]>>16));
+}
+
+void AD9833_SetFreqLSB(double freq, uint8_t regID)
+{
+  freqReg[regID]&=0xFFFF0000u;
+  freqReg[regID]|=(AD9833_Freq2Reg(freq,regID)&0x0000FFFFu);
+  AD9833_SendRaw(ctrlReg); // Force Full write
+  AD9833_SendRaw((uint16_t)(freqReg[regID]>>0));
 }
 
 void AD9833_Init(void)
@@ -49,5 +102,17 @@ void AD9833_Init(void)
   GPIO_InitStruct.Pull=GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(AD9833_NSS_GPIO, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,1);
+  
+  AD9833_SetWaveType(AD9833_Sine);
+  AD9833_SelectReg(0,0);
+  AD9833_SetFreqConfMode(AD9833_Full);
+  
+}
+
+void AD9833_SendRaw(uint16_t data)
+{
+  HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,0);
+  HAL_SPI_Transmit(&hspi2,(uint8_t*)(&data),1,10);
   HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,1);
 }

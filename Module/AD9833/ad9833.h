@@ -35,10 +35,8 @@
 
 // freq/phase Register selection, available in ctrlReg
 #define AD9833_REGSEL_MASK 0x0C00u
-#define AD9833_REGSEL_F0P0 0x0000u
-#define AD9833_REGSEL_F1P0 0x0800u
-#define AD9833_REGSEL_F0P1 0x0400u
-#define AD9833_REGSEL_F1P1 0x0C00u
+#define AD9833_REGSEL_F1 0x0800u
+#define AD9833_REGSEL_P1 0x0400u
 
 // should be set before configuration, to disable output, available in ctrlReg
 #define AD9833_RESET 0x0100u
@@ -52,10 +50,25 @@ typedef enum _AD9833_WaveType
   AD9833_Tri,
 } AD9833_WaveType;
 
-void AD9833_Init(void);
-void AD9833_SetWaveType(AD9833_WaveType type);
-void AD9833_SendRaw(uint16_t data);
+typedef enum _AD9833_FreqConfMode
+{
+  AD9833_LSB = 0,
+  AD9833_MSB,
+  AD9833_Full,
+} AD9833_FreqConfMode;
 
-uint32_t AD9833_GetFReg(double freq, uint8_t regID);
+
+void AD9833_SetWaveType(AD9833_WaveType type);
+void AD9833_SelectReg(uint8_t freqRegID,uint8_t phaseRegID);
+void AD9833_SetFreqConfMode(AD9833_FreqConfMode mode);
+
+uint32_t AD9833_Freq2Reg(double freq, uint8_t regID);
+double AD9833_GetActuralFreq(uint32_t regVal);
+void AD9833_SetFreq(double freq, uint8_t regID);
+void AD9833_SetFreqMSB(double freq, uint8_t regID); // should be set to MSB mode First
+void AD9833_SetFreqLSB(double freq, uint8_t regID); // should be set to lSB mode First
+
+void AD9833_Init(void);
+void AD9833_SendRaw(uint16_t data);
 
 #endif
