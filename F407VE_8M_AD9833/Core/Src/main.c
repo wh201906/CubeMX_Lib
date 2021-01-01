@@ -95,22 +95,32 @@ int main(void)
   AD9833_Init();
   Delay_ms(1500);
   
-  AD9833_SendRaw(testData[0]);
-  AD9833_SendRaw(testData[1]);
-  AD9833_SendRaw(testData[2]);
-  AD9833_SendRaw(testData[3]);
-  AD9833_SendRaw(testData[4]);
+  AD9833_SetFreq(400,0);
+  AD9833_SetWaveType(AD9833_Square);
+  Delay_ms(3000);
+  
+  AD9833_SetFreqConfMode(AD9833_LSB);
+  AD9833_SetFreqLSB(1234567,0);
+  Delay_ms(3000);
+  
+  AD9833_SetFreqConfMode(AD9833_MSB);
+  AD9833_SetFreqMSB(1357901,0);
+  Delay_ms(3000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  AD9833_SetFreq(3000000,1);
+  AD9833_SetFreqConfMode(AD9833_Full);
+  AD9833_SelectReg(1,0);
+  Delay_ms(3000);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    AD9833_SetWaveType((AD9833_WaveType)(type++));
-    type%=6;
+    type%=4;
+    AD9833_SetWaveType((AD9833_WaveType)(++type));
     Delay_ms(2000);
   }
   /* USER CODE END 3 */

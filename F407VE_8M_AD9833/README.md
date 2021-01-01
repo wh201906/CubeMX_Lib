@@ -8,10 +8,11 @@ The SPI2 is configured to Transmit Only Master mode
 
 ## Necessary Parameters
 + FirstBit -> MSB  
-+ DataSize -> 16 (for further DMA operations)  
++ DataSize -> 16  
+  (for further DMA operations)  
+  (No way, the hardware NSS is not available)  
 + NSS -> Software  
   (the hardware NSS will be pull down as soon as the SPE bit is set to 1)
-+ Pin_NSS: PullUp  
 
 + Prescaler -> 2(21.0MBit/s)  
 + CPOL -> HIGH && CPHA -> 2EDGE  

@@ -94,6 +94,30 @@ void AD9833_SetFreqLSB(double freq, uint8_t regID)
   AD9833_SendRaw((uint16_t)(freqReg[regID]>>0));
 }
 
+uint16_t AD9833_Phase2Reg(double phase, uint8_t regID)
+{
+  uint16_t res;
+  res=11.377777777777778*phase+0.5;
+  res&=0x0FFF;
+  regID++; // 00/01 -> 01/10 (0/1, left bit)
+  res|=(regID<<12);
+  return res;
+}
+
+double AD9833_GetActuralPhase(uint16_t regVal)
+{
+  double res;
+  regVal&=0x0FFFu;
+  res=regVal*11.377777777777778;
+  return res;
+}
+
+void AD9833_SetPhase(double phase, uint8_t regID)
+{
+  phaseReg[regID]=AD9833_Phase2Reg(phase,regID);
+  AD9833_SendRaw(phaseReg[regID]);
+}
+
 void AD9833_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct={0};
@@ -115,4 +139,23 @@ void AD9833_SendRaw(uint16_t data)
   HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,0);
   HAL_SPI_Transmit(&hspi2,(uint8_t*)(&data),1,10);
   HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,1);
+}
+
+uint32_t AD9833_GetCurrentFreqReg(uint8_t regID)
+{
+  return freqReg[regID];
+}
+
+uint16_t AD9833_GetCurrentPhaseReg(uint8_t regID)
+{
+  return phaseReg[regID];
+}
+
+void AD9833_SetResetState(uint8_t isReset)
+{
+  if(isReset)
+    ctrlReg|=AD9833_RESET;
+  else
+    ctrlReg&=~AD9833_RESET;
+  AD9833_SendRaw(ctrlReg);
 }

@@ -64,11 +64,18 @@ void AD9833_SetFreqConfMode(AD9833_FreqConfMode mode);
 
 uint32_t AD9833_Freq2Reg(double freq, uint8_t regID);
 double AD9833_GetActuralFreq(uint32_t regVal);
+uint32_t AD9833_GetCurrentFreqReg(uint8_t regID);
 void AD9833_SetFreq(double freq, uint8_t regID);
 void AD9833_SetFreqMSB(double freq, uint8_t regID); // should be set to MSB mode First
 void AD9833_SetFreqLSB(double freq, uint8_t regID); // should be set to lSB mode First
 
+uint16_t AD9833_Phase2Reg(double phase, uint8_t regID);
+double AD9833_GetActuralPhase(uint16_t regVal);
+uint16_t AD9833_GetCurrentPhaseReg(uint8_t regID);
+void AD9833_SetPhase(double phase, uint8_t regID);
+
 void AD9833_Init(void);
 void AD9833_SendRaw(uint16_t data);
+void AD9833_SetResetState(uint8_t isReset);
 
 #endif
