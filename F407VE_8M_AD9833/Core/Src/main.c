@@ -46,7 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t testData[5]={0x2100,0x50C7,0x4000,0xC000,0x2000};
+uint16_t testData[7]={0x2100,0x50C7,0x4000,0xC000,0x2000,0x5FC7,0x4000};
 uint32_t tt;
 /* USER CODE END PV */
 
@@ -68,7 +68,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t type=0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -93,7 +93,7 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  Delay_ms(200);
+  Delay_ms(500);
   tt=AD9833_GetFReg(150000,0);
   AD9833_SendRaw(testData[0]);
   AD9833_SendRaw(testData[1]);
@@ -109,7 +109,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
+    //AD9833_SetWaveType((AD9833_WaveType)(type++));
+    type%=6;
+    Delay_ms(2000);
   }
   /* USER CODE END 3 */
 }

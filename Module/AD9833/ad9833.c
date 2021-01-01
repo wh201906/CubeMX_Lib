@@ -1,8 +1,25 @@
 #include "ad9833.h"
 
-void AD9833_Stop()
+uint16_t ctrlReg=AD9833_REGADDR_CTRL|AD9833_WAVE_OFF|AD9833_FREQREG_FULL|AD9833_REGSEL_F0P0;
+uint16_t freq0Reg;
+uint16_t freq1Reg;
+uint16_t phase0Reg;
+uint16_t phase1Reg;
+
+void AD9833_SetWaveType(AD9833_WaveType type)
 {
-  
+  ctrlReg&=~AD9833_WAVE_MASK;
+  if(type==AD9833_Off)
+    ctrlReg|=AD9833_WAVE_OFF;
+  else if(type==AD9833_Square)
+    ctrlReg|=AD9833_WAVE_SQUARE;
+  else if(type==AD9833_Square2)
+    ctrlReg|=AD9833_WAVE_SQUARE2;
+  else if(type==AD9833_Sine)
+    ctrlReg|=AD9833_WAVE_SINE;
+  else if(type==AD9833_Tri)
+    ctrlReg|=AD9833_WAVE_TRI;
+  AD9833_SendRaw(ctrlReg);
 }
 
 void AD9833_SendRaw(uint16_t data)
