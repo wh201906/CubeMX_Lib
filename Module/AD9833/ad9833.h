@@ -3,6 +3,10 @@
 
 #include "main.h"
 #include "spi.h"
+#include "DELAY/delay.h"
+
+#define AD9833_NSS_PIN GPIO_PIN_14
+#define AD9833_NSS_GPIO GPIOB
 
 #define POW2_28 268435456u
 #define AD9833_CLK 25000000u
@@ -48,8 +52,10 @@ typedef enum _AD9833_WaveType
   AD9833_Tri,
 } AD9833_WaveType;
 
+void AD9833_Init(void);
 void AD9833_SetWaveType(AD9833_WaveType type);
 void AD9833_SendRaw(uint16_t data);
+
 uint32_t AD9833_GetFReg(double freq, uint8_t regID);
 
 #endif

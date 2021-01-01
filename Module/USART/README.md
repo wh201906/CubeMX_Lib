@@ -6,7 +6,7 @@
 
 1.在 stm32fxxx_it.h/stm32hxxx_it.h中添加头文件引用
 
-2.在 stm32fxxx_it.c/stm32hxxx_it.c中串口中断处添加自定义回调函数USARTx_IRQHandler()
+2.在 stm32fxxx_it.c/stm32hxxx_it.c中串口中断处添加自定义回调函数MyUSARTx_IRQHandler()
 
 3.CubeMX中记得配置串口的中断(NVIC中配置)
 */
