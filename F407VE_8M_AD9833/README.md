@@ -4,6 +4,7 @@ The SPI2 is configured to Transmit Only Master mode
 ## Pin
 + PC3->MOSI->SDATA  
 + PB13->SCK->SCLK  
+  (Pull Up!!!)  
 + PB14->NSS->FSYNC(Software)  
 
 ## Necessary Parameters
