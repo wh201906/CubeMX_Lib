@@ -104,10 +104,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    AD9850_SetFreq(15000);
-    Delay_ms(2000);
+    AD9850_SetFreq(300000);
+    Delay_ms(3000);
     AD9850_SetFreq(150000);
-    Delay_ms(2000);
+    Delay_ms(3000);
   }
   /* USER CODE END 3 */
 }

@@ -2,14 +2,12 @@
 The SPI2 is configured to Transmit Only Master mode
 
 ## Pin
-+ PD9   FQUD   (pulldown)  
-+ PD10  D0     (pullup)  
-+ PD11  D1     (pullup)  
-+ PD12  D2     (pulldown)  
-+ PD13  RESET  (pulldown)  
++ PE15   FQUD   (pulldown)  
++ PE13  RESET  (pulldown)  
++ PC3   D7
++ PB13  WCLK  
 (when pullup/pulldown then hold on, remember to change output level)  
 
-The D0~D2 are used to set in Serial mode, the D2 should be low and the D1&D0 should be high  
 and the data is loaded in D7
 
 ## Necessary Parameters
@@ -17,3 +15,11 @@ and the data is loaded in D7
 + DataSize -> 8  
 + NSS -> Software  
 
+## About Serial mode
+According to the datasheet, the serial load mode can be enabled in two ways.
++ Set D0(Pin4), D1(Pin3) to EXACTLY the Vdd and set D2(Pin2) to 0 when start up  
+  (If the Vdd is 5V, you shouldn't set D0 and D1 to 3.3V otherwise the chip will be in parallel mode.)
++ Make a positive pulse on the FQUD before every load.
+
+Then, according to my test, you just need to make D0~D6 floating, then you can load data in serial mode.  
+(And the positive pulse on the FQUD before every load doesn't matter)

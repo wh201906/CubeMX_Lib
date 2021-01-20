@@ -5,6 +5,7 @@ uint8_t phaseAndPowerReg;
 uint8_t cmd[5];
 
 void AD9850_ToCmdBuf(void);
+void AD9850_Delay(void);
 
 uint32_t AD9850_Freq2Reg(double freq)
 {
@@ -60,13 +61,13 @@ void AD9850_SetFreq(double freq)
 void AD9850_SendRaw(uint8_t* data)
 {
   HAL_GPIO_WritePin(AD9850_FQUD_GPIO,AD9850_FQUD_PIN,0);
+  AD9850_Delay();
+  HAL_GPIO_WritePin(AD9850_FQUD_GPIO,AD9850_FQUD_PIN,1);
+  AD9850_Delay();
+  HAL_GPIO_WritePin(AD9850_FQUD_GPIO,AD9850_FQUD_PIN,0);
   HAL_SPI_Transmit(&hspi2,data,5,10); // 5*8=40bit
   HAL_GPIO_WritePin(AD9850_FQUD_GPIO,AD9850_FQUD_PIN,1);
-  Delay_us(1);
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP(); // 2ns for single __nop(); at 480MHz, FQUD should be high for at least 7ns
+  AD9850_Delay();
   HAL_GPIO_WritePin(AD9850_FQUD_GPIO,AD9850_FQUD_PIN,0);
 }
 
@@ -85,4 +86,13 @@ void AD9850_ToCmdBuf(void)
   cmd[2] = freqReg >> 16;
   cmd[3] = freqReg >> 24;
   cmd[4] = phaseAndPowerReg;
+}
+
+void AD9850_Delay(void)
+{
+  // 2ns for single __nop(); at 480MHz, FQUD should be high for at least 7ns
+  __NOP();
+  __NOP();
+  __NOP();
+  __NOP();
 }
