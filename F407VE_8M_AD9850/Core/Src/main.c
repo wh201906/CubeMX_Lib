@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -27,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "AD9850/ad9850.h"
 #include "DELAY/delay.h"
+#include "KEY/key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,7 +67,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t keyVal;
+  uint8_t freqVal=1;
+  uint8_t powerDown=0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,12 +91,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  Key_Init();
   Delay_ms(1200);
+  AD9850_Init();
   AD9850_Reset();
   Delay_ms(1200);
+  AD9850_SetFreq(150000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -104,10 +108,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    AD9850_SetFreq(300000);
-    Delay_ms(3000);
-    AD9850_SetFreq(150000);
-    Delay_ms(3000);
+    Delay_ms(100);
+    keyVal=Key_Scan();
+    if(keyVal==0)
+      AD9850_Reset();
+    else if(keyVal==1)
+    {
+      AD9850_SetPowerDown(powerDown);
+      powerDown=freqVal==1?0:1;
+    }
+    else if(keyVal==2)
+    {
+      freqVal=freqVal==1?2:1;
+      AD9850_SetFreq(150000*freqVal);
+    }
+    
   }
   /* USER CODE END 3 */
 }

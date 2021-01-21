@@ -3,9 +3,9 @@ The SPI2 is configured to Transmit Only Master mode
 
 ## Pin
 + PE15   FQUD   (pulldown)  
-+ PE13  RESET  (pulldown)  
-+ PC3   D7
-+ PB13  WCLK  
++ PE13   RESET  (pulldown)  
++ PC3    D7  
++ PB13   WCLK  
 (when pullup/pulldown then hold on, remember to change output level)  
 
 and the data is loaded in D7
