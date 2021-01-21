@@ -13,7 +13,7 @@ uint8_t cmd[5] = {0};
 
 void AD9850_ToCmdBuf(void);
 void AD9850_Delay(void);
-void AD9850_ModeSelect(void);
+void AD9850_ModeUpdate(void);
 
 uint32_t AD9850_Freq2Reg(double freq)
 {
@@ -71,12 +71,15 @@ void AD9850_SetPhase(double phase)
 void AD9850_SendRaw(uint8_t *data)
 {
   uint8_t i, j;
+
+  // reset register pointer
   FQUD(0);
-#if MODE_SERIAL
   AD9850_Delay();
   FQUD(1);
   AD9850_Delay();
   FQUD(0);
+
+#if MODE_SERIAL
   for (i = 0; i < 5; i++)
     for (j = 0; j < 8; j++)
     {
@@ -86,9 +89,9 @@ void AD9850_SendRaw(uint8_t *data)
       WCLK(0);
     }
 #else
-  for(i = 0;i<5;i++)
+  for (i = 0; i < 5; i++)
   {
-    AD9850_D_GPIO->ODR=(data[i]<<8); // if use [7:0], remove the Lshift
+    AD9850_D_GPIO->ODR = (data[i] << 8); // if use [7:0], remove the Lshift
     WCLK(1);
     AD9850_Delay();
     WCLK(0);
@@ -115,7 +118,6 @@ void AD9850_Reset(void)
   RESET(1);
   Delay_us(1);
   RESET(0);
-  AD9850_ModeSelect();
 }
 
 void AD9850_ToCmdBuf(void)
@@ -150,6 +152,12 @@ void AD9850_Init()
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(AD9850_D_GPIO, &GPIO_InitStruct);
 
+#if MODE_SERIAL
+  HAL_GPIO_WritePin(AD9850_D_GPIO, AD9850_D0_PIN | AD9850_D1_PIN, 1);
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(AD9850_D_GPIO, &GPIO_InitStruct);
+#endif
+
   HAL_GPIO_WritePin(AD9850_FQUD_GPIO, AD9850_FQUD_PIN, 0);
   GPIO_InitStruct.Pin = AD9850_FQUD_PIN;
   HAL_GPIO_Init(AD9850_FQUD_GPIO, &GPIO_InitStruct);
@@ -161,8 +169,8 @@ void AD9850_Init()
   HAL_GPIO_WritePin(AD9850_WCLK_GPIO, AD9850_WCLK_PIN, 0);
   GPIO_InitStruct.Pin = AD9850_WCLK_PIN;
   HAL_GPIO_Init(AD9850_WCLK_GPIO, &GPIO_InitStruct);
-  
-  AD9850_ModeSelect();
+
+  AD9850_ModeUpdate();
 }
 
 void AD9850_Delay(void)
@@ -174,16 +182,15 @@ void AD9850_Delay(void)
   __NOP();
 }
 
-void AD9850_ModeSelect(void)
+void AD9850_ModeUpdate(void)
 {
   // see AD9850 datasheet, Rev.H, Figure 10
   WCLK(0);
   FQUD(0);
-#if MODE_SERIAL
-  HAL_GPIO_WritePin(AD9850_D_GPIO,AD9850_D0_PIN,1);
-  HAL_GPIO_WritePin(AD9850_D_GPIO,AD9850_D1_PIN,1);
-  HAL_GPIO_WritePin(AD9850_D_GPIO,AD9850_D2_PIN,0);
-#endif
+  AD9850_Delay();
+  FQUD(1);
+  AD9850_Delay();
+  FQUD(0);
   AD9850_Delay();
   WCLK(1);
   AD9850_Delay();
