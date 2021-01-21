@@ -10,6 +10,7 @@
 
 #define POW2_28 268435456u
 #define AD9833_CLK 25000000u
+#define AD9833_PHASE_DELTA 11.377777777777778
 
 // the target Register prefix
 #define AD9833_REGADDR_MASK 0xE000u

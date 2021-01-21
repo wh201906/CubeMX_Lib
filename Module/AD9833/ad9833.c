@@ -97,8 +97,8 @@ void AD9833_SetFreqLSB(double freq, uint8_t regID)
 uint16_t AD9833_Phase2Reg(double phase, uint8_t regID)
 {
   uint16_t res;
-  res=11.377777777777778*phase+0.5;
-  res&=0x0FFF;
+  res=AD9833_PHASE_DELTA*phase+0.5;
+  res&=0x0FFFu;
   regID++; // 00/01 -> 01/10 (0/1, left bit)
   res|=(regID<<12);
   return res;
@@ -108,7 +108,7 @@ double AD9833_GetActuralPhase(uint16_t regVal)
 {
   double res;
   regVal&=0x0FFFu;
-  res=regVal*11.377777777777778;
+  res=regVal*AD9833_PHASE_DELTA;
   return res;
 }
 
