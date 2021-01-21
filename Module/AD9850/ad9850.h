@@ -37,7 +37,9 @@ void AD9850_SetPhase(double phase);
 
 void AD9850_SetPowerDown(uint8_t isPowerDown);
 
-void AD9850_SendRaw(uint8_t* data);
+void AD9850_Update(void);
+void AD9850_SendByte(uint8_t data);
+void AD9850_ModeUpdate(void);
 void AD9850_Reset(void);
 void AD9850_Init(void);
 

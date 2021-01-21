@@ -8,12 +8,13 @@
 #define D7(x) (HAL_GPIO_WritePin(AD9850_D_GPIO, AD9850_D7_PIN, x))
 
 uint32_t freqReg = 0;
-uint8_t phaseAndPowerReg = 0;
-uint8_t cmd[5] = {0};
+uint8_t phaseReg = 0;
 
 void AD9850_ToCmdBuf(void);
 void AD9850_Delay(void);
 void AD9850_ModeUpdate(void);
+void AD9850_WCLKPulse(void);
+void AD9850_FQUDPulse(void);
 
 uint32_t AD9850_Freq2Reg(double freq)
 {
@@ -33,8 +34,7 @@ uint32_t AD9850_GetCurrentFreqReg(void)
 void AD9850_SetFreq(double freq)
 {
   freqReg = AD9850_Freq2Reg(freq);
-  AD9850_ToCmdBuf();
-  AD9850_SendRaw(cmd);
+  AD9850_Update();
 }
 
 uint8_t AD9850_Phase2Reg(double phase)
@@ -57,76 +57,41 @@ double AD9850_GetActuralPhase(uint8_t regVal)
 
 uint8_t AD9850_GetCurrentPhaseReg()
 {
-  return phaseAndPowerReg;
+  return phaseReg;
 }
 
 void AD9850_SetPhase(double phase)
 {
-  phaseAndPowerReg &= 0x07;
-  phaseAndPowerReg |= AD9850_Phase2Reg(phase);
-  AD9850_ToCmdBuf();
-  AD9850_SendRaw(cmd);
+  phaseReg = AD9850_Phase2Reg(phase);
+  AD9850_Update();
 }
 
-void AD9850_SendRaw(uint8_t *data)
+void AD9850_Update(void)
 {
-  uint8_t i, j;
-
   // reset register pointer
-  FQUD(0);
-  AD9850_Delay();
-  FQUD(1);
-  AD9850_Delay();
-  FQUD(0);
+  AD9850_FQUDPulse();
 
-#if MODE_SERIAL
-  for (i = 0; i < 5; i++)
-    for (j = 0; j < 8; j++)
-    {
-      D7((data[i] >> j) & 1u);
-      WCLK(1);
-      AD9850_Delay();
-      WCLK(0);
-    }
-#else
-  for (i = 0; i < 5; i++)
-  {
-    AD9850_D_GPIO->ODR = (data[i] << 8); // if use [7:0], remove the Lshift
-    WCLK(1);
-    AD9850_Delay();
-    WCLK(0);
-    AD9850_Delay();
-  }
-#endif
-  FQUD(1);
-  AD9850_Delay();
-  FQUD(0);
+  AD9850_SendByte(freqReg >> 0);
+  AD9850_SendByte(freqReg >> 8);
+  AD9850_SendByte(freqReg >> 16);
+  AD9850_SendByte(freqReg >> 24);
+  AD9850_SendByte(phaseReg);
+
+  AD9850_FQUDPulse();
 }
 
 void AD9850_SetPowerDown(uint8_t isPowerDown)
 {
-  phaseAndPowerReg &= 0xF8;
-  if (isPowerDown)
-    phaseAndPowerReg |= 0x04;
-  AD9850_ToCmdBuf();
-  AD9850_SendRaw(cmd);
+  AD9850_FQUDPulse();
+  AD9850_SendByte(isPowerDown ? 0x04 : 0x00);
+  AD9850_FQUDPulse();
 }
 
 void AD9850_Reset(void)
 {
-  uint8_t i;
   RESET(1);
   Delay_us(1);
   RESET(0);
-}
-
-void AD9850_ToCmdBuf(void)
-{
-  cmd[0] = freqReg >> 0;
-  cmd[1] = freqReg >> 8;
-  cmd[2] = freqReg >> 16;
-  cmd[3] = freqReg >> 24;
-  cmd[4] = phaseAndPowerReg;
 }
 
 void AD9850_Init()
@@ -185,18 +150,35 @@ void AD9850_Delay(void)
 void AD9850_ModeUpdate(void)
 {
   // see AD9850 datasheet, Rev.H, Figure 10
-  WCLK(0);
-  FQUD(0);
-  AD9850_Delay();
-  FQUD(1);
-  AD9850_Delay();
-  FQUD(0);
-  AD9850_Delay();
+  AD9850_FQUDPulse();
+  AD9850_WCLKPulse();
+  AD9850_FQUDPulse();
+}
+
+void AD9850_WCLKPulse(void)
+{
   WCLK(1);
   AD9850_Delay();
   WCLK(0);
   AD9850_Delay();
+}
+
+void AD9850_FQUDPulse(void)
+{
   FQUD(1);
   AD9850_Delay();
   FQUD(0);
+  AD9850_Delay();
+}
+
+void AD9850_SendByte(uint8_t data)
+{
+#if MODE_SERIAL
+  uint8_t j;
+  for (j = 0; j < 8; j++)
+    D7((data >> j) & 1u);
+#else
+  AD9850_D_GPIO->ODR = (data << 8); // if use [7:0], remove the Lshift
+#endif
+  AD9850_WCLKPulse();
 }
