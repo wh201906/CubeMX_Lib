@@ -120,6 +120,8 @@ void AD9833_SetPhase(double phase, uint8_t regID)
 
 void AD9833_Init(void)
 {
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  
   GPIO_InitTypeDef GPIO_InitStruct={0};
   GPIO_InitStruct.Pin=AD9833_NSS_PIN;
   GPIO_InitStruct.Mode=GPIO_MODE_OUTPUT_PP;
