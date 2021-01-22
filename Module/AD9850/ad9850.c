@@ -1,6 +1,6 @@
 #include "ad9850.h"
 
-#define MODE_SERIAL 1
+#define MODE_SERIAL 0
 
 #define FQUD(x) (HAL_GPIO_WritePin(AD9850_FQUD_GPIO, AD9850_FQUD_PIN, x))
 #define RESET(x) (HAL_GPIO_WritePin(AD9850_RESET_GPIO, AD9850_RESET_PIN, x))
@@ -71,11 +71,20 @@ void AD9850_Update(void) // An update with W34=0 will power up the chip
   // reset register pointer
   AD9850_FQUDPulse();
 
+#if MODE_SERIAL
   AD9850_SendByte(freqReg >> 0);
   AD9850_SendByte(freqReg >> 8);
   AD9850_SendByte(freqReg >> 16);
   AD9850_SendByte(freqReg >> 24);
   AD9850_SendByte(phaseReg);
+#else
+  AD9850_SendByte(phaseReg);
+  AD9850_SendByte(freqReg >> 24);
+  AD9850_SendByte(freqReg >> 16);
+  AD9850_SendByte(freqReg >> 8);
+  AD9850_SendByte(freqReg >> 0);
+#endif
+
 
   AD9850_FQUDPulse();
 }
@@ -186,7 +195,7 @@ void AD9850_SendByte(uint8_t data)
     AD9850_WCLKPulse();
   }
 #else
-  AD9850_D_GPIO->ODR = (data << 8); // if use [7:0], remove the Lshift
+  AD9850_D_GPIO->ODR = ((uint16_t)(data << 8)); // if use [7:0], remove the Lshift
   AD9850_WCLKPulse();
 #endif
 }
