@@ -66,7 +66,7 @@ void AD9850_SetPhase(double phase)
   AD9850_Update();
 }
 
-void AD9850_Update(void)
+void AD9850_Update(void) // An update with W34=0 will power up the chip
 {
   // reset register pointer
   AD9850_FQUDPulse();
@@ -82,9 +82,14 @@ void AD9850_Update(void)
 
 void AD9850_SetPowerDown(uint8_t isPowerDown)
 {
-  AD9850_FQUDPulse();
-  AD9850_SendByte(isPowerDown ? 0x04 : 0x00);
-  AD9850_FQUDPulse();
+  if(isPowerDown)
+  {
+    AD9850_FQUDPulse();
+    AD9850_SendByte(0x04);
+    AD9850_FQUDPulse();
+  }
+  else
+    AD9850_Update(); // An update with W34=0 will power up the chip
 }
 
 void AD9850_Reset(void)
@@ -176,9 +181,12 @@ void AD9850_SendByte(uint8_t data)
 #if MODE_SERIAL
   uint8_t j;
   for (j = 0; j < 8; j++)
+  {
     D7((data >> j) & 1u);
+    AD9850_WCLKPulse();
+  }
 #else
   AD9850_D_GPIO->ODR = (data << 8); // if use [7:0], remove the Lshift
-#endif
   AD9850_WCLKPulse();
+#endif
 }

@@ -115,7 +115,7 @@ int main(void)
     else if(keyVal==1)
     {
       AD9850_SetPowerDown(powerDown);
-      powerDown=freqVal==1?0:1;
+      powerDown=powerDown==1?0:1;
     }
     else if(keyVal==2)
     {
