@@ -104,7 +104,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(2000);
-    Beep_SetTIMPara(9,65535,5);
+    Beep_SetTIMPara(99,6553,50);
     Delay_ms(2000);
     //Beep_SetTIMPara(500,500,500);
   }

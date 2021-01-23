@@ -8,7 +8,7 @@ static uint32_t delay_fac_us=0;							//us延时倍乘数
 //SYSCLK:系统时钟频率
 void Delay_Init(uint16_t SYSCLK)
 {
-    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);//SysTick频率为HCLK
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);//SysTick频率为HCLK
 	delay_fac_us=SYSCLK;						    //不论是否使用OS,fac_us都需要使用
 }								    
 
