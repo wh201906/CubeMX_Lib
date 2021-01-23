@@ -7,7 +7,7 @@ uint16_t BeepSYSClkFreq;
 uint8_t BeepMode = 0; // 0:TIM and PWM, 1:Delay
 
 float freqTable[12][10] = {
-    // note: C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
+    // note: C, C#/Db, D, D#/Eb, E, F, F#/Gb, G, G#/Ab, A, A#/Bb, B
     // octave: [0,9]
     // A4=440Hz
     {16.352, 32.703, 65.406, 130.81, 261.63, 523.25, 1046.5, 2093.0, 4186.0, 8372.0},
@@ -53,7 +53,17 @@ void Beep_Init_TIM(TIM_HandleTypeDef *TIMHandle, uint32_t TIMChannel, uint16_t T
 
 void Beep_Init_Delay(uint16_t sysFreq)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
   Beep_SetSYSClkFreq(sysFreq);
+  BEEP_GPIO_CLKEN();
+
+  GPIO_InitStruct.Pin = BEEP_PIN;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(BEEP_GPIO, &GPIO_InitStruct);
+
   BeepMode = 1;
 }
 
@@ -80,7 +90,7 @@ void Beep_DelayTicks(uint32_t ticks)
 
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in ms
 {
-  if (BeepMode == 0)
+  if (BeepMode == 0) // PWM Mode
   {
     uint32_t TVal;
     uint16_t arrVal, pscVal;
@@ -94,5 +104,22 @@ void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in m
     __HAL_TIM_ENABLE(BeepTIMHandle);
     Delay_ms(duration);
     __HAL_TIM_DISABLE(BeepTIMHandle);
+  }
+  else // Delay Mode
+  {
+    uint32_t duraTicks, tuneTicks, counter;
+    duraTicks = BeepSYSClkFreq * 1000 * duration;
+    tuneTicks = BeepSYSClkFreq * 500000 / freqTable[note][octave];
+    counter = 0;
+    while (counter <= duraTicks)
+    {
+      Beep_DelayTicks(tuneTicks);
+      //Delay_us(100);
+      HAL_GPIO_WritePin(BEEP_GPIO, BEEP_PIN, 0);
+      Beep_DelayTicks(tuneTicks);
+      //Delay_us(100);
+      HAL_GPIO_WritePin(BEEP_GPIO, BEEP_PIN, 1);
+      counter += 2 * tuneTicks;
+    }
   }
 }

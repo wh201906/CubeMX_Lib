@@ -4,6 +4,7 @@
 #include "main.h"
 #include "DELAY/delay.h"
 #include "tim.h"
+#include "gpio.h"
 
 // Csharp: C#
 // Cflat: Cb
@@ -25,6 +26,10 @@
 #define NOTE_Bflat 10
 #define NOTE_B 11
 
+#define BEEP_GPIO GPIOA
+#define BEEP_PIN GPIO_PIN_6
+#define BEEP_GPIO_CLKEN() __HAL_RCC_GPIOE_CLK_ENABLE()
+
 void Beep_SetTIMPara(uint32_t arrVal, uint16_t pscVal, uint32_t cmpVal);
 void Beep_SetTIMClkFreq(uint16_t freq);
 void Beep_SetSYSClkFreq(uint16_t freq);
@@ -32,7 +37,7 @@ void Beep_Init_TIM(TIM_HandleTypeDef *TIMHandle, uint32_t TIMChannel, uint16_t T
 void Beep_Init_Delay(uint16_t sysFreq);
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration); // duration in ms
 
-// TIM&PWM mode: use PWM to generate the tune, use DELAY/delay.c to play for a while
+// TIM&PWM mode: use PWM to generate the tune, use DELAY/delay.c to play for a while, more precise
 // Delay mode: use internal delay(based on SysTick) to generate the tune and play for a while
 
 #endif
