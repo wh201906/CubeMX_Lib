@@ -93,7 +93,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   HAL_TIM_PWM_Init(&htim3);
-  HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
+  Beep_Init_TIM(&htim3,TIM_CHANNEL_1,84);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,9 +103,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(2000);
-    Beep_SetTIMPara(99,6553,50);
-    Delay_ms(2000);
+    Beep_Beep(NOTE_C,4,2000);
+    Beep_Beep(NOTE_A,4,2000);
     //Beep_SetTIMPara(500,500,500);
   }
   /* USER CODE END 3 */

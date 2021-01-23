@@ -46,6 +46,8 @@ void Beep_Init_TIM(TIM_HandleTypeDef *TIMHandle, uint32_t TIMChannel, uint16_t T
   BeepTIMHandle = TIMHandle;
   BeepTIMChannel = TIMChannel;
   Beep_SetTIMClkFreq(TIMFreq);
+  HAL_TIM_PWM_Start(BeepTIMHandle, TIMChannel);
+  __HAL_TIM_DISABLE(BeepTIMHandle);
   BeepMode = 0;
 }
 
@@ -78,4 +80,19 @@ void Beep_DelayTicks(uint32_t ticks)
 
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in ms
 {
+  if (BeepMode == 0)
+  {
+    uint32_t TVal;
+    uint16_t arrVal, pscVal;
+    TVal = BeepTIMClkFreq * 1000000;
+    TVal /= freqTable[note][octave];
+    arrVal = TVal / 65534 + 1;
+    if (arrVal & 1u) // make arrVal even
+      arrVal++;
+    pscVal = TVal / arrVal;
+    Beep_SetTIMPara(arrVal - 1, pscVal - 1, arrVal / 2);
+    __HAL_TIM_ENABLE(BeepTIMHandle);
+    Delay_ms(duration);
+    __HAL_TIM_DISABLE(BeepTIMHandle);
+  }
 }
