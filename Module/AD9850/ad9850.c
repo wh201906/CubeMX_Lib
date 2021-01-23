@@ -121,8 +121,14 @@ void AD9850_Init()
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
+  AD9850_RESET_CLKEN();
+  AD9850_FQUD_CLKEN();
+  AD9850_WCLK_CLKEN();
+  AD9850_D_CLKEN();
+
+#ifdef AD9850_FUNCPIN_CLKEN
+  AD9850_FUNCPIN_CLKEN();
+#endif
 
   HAL_GPIO_WritePin(AD9850_D_GPIO, dataGPIOPins, 0);
   GPIO_InitStruct.Pin = dataGPIOPins;
