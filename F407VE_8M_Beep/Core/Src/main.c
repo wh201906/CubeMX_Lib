@@ -27,6 +27,8 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "BEEP/beep.h"
+#include "BEEP/badapple.h"
+#include "KEY/key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,7 +69,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,6 +94,7 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  Key_Init();
   HAL_TIM_PWM_Init(&htim3);
   //Beep_Init_TIM(&htim3,TIM_CHANNEL_1,84);
   Beep_Init_Delay(168);
@@ -104,9 +107,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Beep_Beep(NOTE_C,4,2000);
-    Beep_Beep(NOTE_A,4,2000);
-    //Beep_SetTIMPara(500,500,500);
+    Delay_ms(200);
+    if(Key_Scan()==0)
+    {
+      for(i=0;i<126;i++)
+        Beep_Beep(song[i][0],song[i][1],200);
+    }
   }
   /* USER CODE END 3 */
 }

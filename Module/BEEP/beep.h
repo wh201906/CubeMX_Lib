@@ -25,6 +25,7 @@
 #define NOTE_Asharp 10
 #define NOTE_Bflat 10
 #define NOTE_B 11
+#define NOTE_NONE 0xFFu
 
 #define BEEP_GPIO GPIOA
 #define BEEP_PIN GPIO_PIN_6

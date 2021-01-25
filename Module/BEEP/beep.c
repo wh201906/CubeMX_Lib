@@ -90,6 +90,11 @@ void Beep_DelayTicks(uint32_t ticks)
 
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in ms
 {
+  if(note>=12 || octave>=10)
+    {
+      Delay_ms(duration);
+      return;
+    }
   if (BeepMode == 0) // PWM Mode
   {
     uint32_t TVal;
