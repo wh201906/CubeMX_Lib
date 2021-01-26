@@ -33,12 +33,11 @@
 
 void Beep_SetTIMPara(uint32_t arrVal, uint16_t pscVal, uint32_t cmpVal);
 void Beep_SetTIMClkFreq(uint16_t freq);
-void Beep_SetSYSClkFreq(uint16_t freq);
 void Beep_Init_TIM(TIM_HandleTypeDef *TIMHandle, uint32_t TIMChannel, uint16_t TIMFreq);
-void Beep_Init_Delay(uint16_t sysFreq);
+void Beep_Init_Delay(void);
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration); // duration in ms
 
-// TIM&PWM mode: use PWM to generate the tune, use DELAY/delay.c to play for a while, more precise
-// Delay mode: use internal delay(based on SysTick) to generate the tune and play for a while
+// TIM&PWM mode: use PWM to generate the tune, use delay to play for a while, more precise
+// Delay mode: use delay to generate the tune and play for a while
 
 #endif

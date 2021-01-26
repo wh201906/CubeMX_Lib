@@ -95,9 +95,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   Key_Init();
-  HAL_TIM_PWM_Init(&htim3);
   //Beep_Init_TIM(&htim3,TIM_CHANNEL_1,84);
-  Beep_Init_Delay(168);
+  Beep_Init_Delay();
   /* USER CODE END 2 */
 
   /* Infinite loop */

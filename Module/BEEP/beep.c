@@ -36,26 +36,22 @@ void Beep_SetTIMClkFreq(uint16_t freq)
   BeepTIMClkFreq = freq;
 }
 
-void Beep_SetSYSClkFreq(uint16_t freq)
-{
-  BeepSYSClkFreq = freq;
-}
-
 void Beep_Init_TIM(TIM_HandleTypeDef *TIMHandle, uint32_t TIMChannel, uint16_t TIMFreq)
 {
   BeepTIMHandle = TIMHandle;
   BeepTIMChannel = TIMChannel;
   Beep_SetTIMClkFreq(TIMFreq);
+  HAL_TIM_PWM_Init(BeepTIMHandle);
   HAL_TIM_PWM_Start(BeepTIMHandle, TIMChannel);
-  __HAL_TIM_DISABLE(BeepTIMHandle);
+  // __HAL_TIM_DISABLE(); doesn't work there
+  BeepTIMHandle->Instance->CR1 &= ~(TIM_CR1_CEN);
   BeepMode = 0;
 }
 
-void Beep_Init_Delay(uint16_t sysFreq)
+void Beep_Init_Delay(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  Beep_SetSYSClkFreq(sysFreq);
   BEEP_GPIO_CLKEN();
 
   GPIO_InitStruct.Pin = BEEP_PIN;
@@ -67,34 +63,13 @@ void Beep_Init_Delay(uint16_t sysFreq)
   BeepMode = 1;
 }
 
-void Beep_DelayTicks(uint32_t ticks)
-{
-  uint32_t told, tnow, tcnt = 0;
-  uint32_t reload = SysTick->LOAD;
-  told = SysTick->VAL;
-  while (1)
-  {
-    tnow = SysTick->VAL;
-    if (tnow != told)
-    {
-      if (tnow < told)
-        tcnt += told - tnow;
-      else
-        tcnt += reload - tnow + told;
-      told = tnow;
-      if (tcnt >= ticks)
-        break;
-    }
-  };
-}
-
 void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in ms
 {
   if(note>=12 || octave>=10)
-    {
-      Delay_ms(duration);
-      return;
-    }
+  {
+    Delay_ms(duration);
+    return;
+  }
   if (BeepMode == 0) // PWM Mode
   {
     uint32_t TVal;
@@ -108,21 +83,20 @@ void Beep_Beep(uint8_t note, uint8_t octave, uint16_t duration) // duration in m
     Beep_SetTIMPara(arrVal - 1, pscVal - 1, arrVal / 2);
     __HAL_TIM_ENABLE(BeepTIMHandle);
     Delay_ms(duration);
-    __HAL_TIM_DISABLE(BeepTIMHandle);
+    // __HAL_TIM_DISABLE(); doesn't work there
+    BeepTIMHandle->Instance->CR1 &= ~(TIM_CR1_CEN);
   }
   else // Delay Mode
   {
     uint32_t duraTicks, tuneTicks, counter;
-    duraTicks = BeepSYSClkFreq * 1000 * duration;
-    tuneTicks = BeepSYSClkFreq * 500000 / freqTable[note][octave];
+    duraTicks = Delay_GetSYSFreq() / 1000 * duration;
+    tuneTicks = Delay_GetSYSFreq() / 2 / freqTable[note][octave];
     counter = 0;
     while (counter <= duraTicks)
     {
-      Beep_DelayTicks(tuneTicks);
-      //Delay_us(100);
+      Delay_ticks(tuneTicks);
       HAL_GPIO_WritePin(BEEP_GPIO, BEEP_PIN, 0);
-      Beep_DelayTicks(tuneTicks);
-      //Delay_us(100);
+      Delay_ticks(tuneTicks);
       HAL_GPIO_WritePin(BEEP_GPIO, BEEP_PIN, 1);
       counter += 2 * tuneTicks;
     }
