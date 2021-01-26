@@ -288,7 +288,7 @@ int OLED_ShowInt(uint8_t x, uint8_t y, int val, uint8_t TextSize, uint8_t revers
 
 int OLED_ShowFloat(uint8_t x, uint8_t y, double val, uint8_t TextSize, uint8_t reverse)
 {
-	char out[16];
+	uint8_t out[16];
 	sprintf(out,"%.3lf",val);
 	out[15]='\0';
 	OLED_ShowStr(x,y,out,TextSize,reverse);

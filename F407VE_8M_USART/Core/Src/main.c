@@ -25,7 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
-#include "USART/myusart.h"
+#include "USART/myusart1.h"
 #include "GRIDKEY/gridkey.h"
 #include "OLED/oled_iic.h"
 /* USER CODE END Includes */
@@ -94,15 +94,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
     Delay_Init(168);
     OLED_Init();
-    MyUSART_Init();
+    MyUSART1_Init();
     printf("01234\r\n");
-    MyUSART_WriteChar('5');
-    MyUSART_Write("678\r\n666",5);
-    MyUSART_WriteStr("90123");
-    MyUSART_WriteLine("45678");
-    MyUSART_WriteUntil("9012345678",'5');
-    MyUSART_WriteLine("");
-    MyUSART_WriteStr("");
+    MyUSART1_WriteChar('5');
+    MyUSART1_Write("678\r\n666",5);
+    MyUSART1_WriteStr("90123");
+    MyUSART1_WriteLine("45678");
+    MyUSART1_WriteUntil("9012345678",'5');
+    MyUSART1_WriteLine("");
+    MyUSART1_WriteStr("");
     Delay_ms(1000);
     
   /* USER CODE END 2 */
@@ -114,7 +114,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-      int key=GridKey_scan(0);
+      int key=GridKey_Scan(0);
       if(key==255)
           continue;
       OLED_ShowChar(6,displayPos,' ',TEXTSIZE_SMALL,REVERSE_OFF);
@@ -123,36 +123,36 @@ int main(void)
       switch(key)
       {
           case 0:
-              MyUSART_ClearBuffer();
+              MyUSART1_ClearBuffer();
           break;
           case 1:
-              MyUSART_WriteChar(MyUSART_ReadChar());
+              MyUSART1_WriteChar(MyUSART1_ReadChar());
           break;
           case 2:
-              MyUSART_WriteChar(MyUSART_PeekChar());
+              MyUSART1_WriteChar(MyUSART1_PeekChar());
           break;
           case 3:
-              receivedLen=MyUSART_Read(buffer,20);
-              MyUSART_Write(buffer,receivedLen);
+              receivedLen=MyUSART1_Read(buffer,20);
+              MyUSART1_Write(buffer,receivedLen);
           break;
           case 4:
-              receivedLen=MyUSART_ReadStr(buffer);
-              MyUSART_Write(buffer,receivedLen);
+              receivedLen=MyUSART1_ReadStr(buffer);
+              MyUSART1_Write(buffer,receivedLen);
           break;
           case 5:
-              receivedLen=MyUSART_ReadLine(buffer);
-              MyUSART_Write(buffer,receivedLen);
+              receivedLen=MyUSART1_ReadLine(buffer);
+              MyUSART1_Write(buffer,receivedLen);
           break;
           case 6:
-              receivedLen=MyUSART_ReadUntil(buffer,'>');
-              MyUSART_Write(buffer,receivedLen);
+              receivedLen=MyUSART1_ReadUntil(buffer,'>');
+              MyUSART1_Write(buffer,receivedLen);
           break;
           case 7:
-              receivedLen=MyUSART_ReadAll(buffer);
-              MyUSART_Write(buffer,receivedLen);
+              receivedLen=MyUSART1_ReadAll(buffer);
+              MyUSART1_Write(buffer,receivedLen);
           break;
           case 8:
-              __MyUSART_DumpAll();
+              __MyUSART1_DumpAll();
           
       }
   }
