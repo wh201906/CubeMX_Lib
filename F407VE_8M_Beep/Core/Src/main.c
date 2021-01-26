@@ -110,7 +110,7 @@ int main(void)
     Delay_ms(200);
     if(Key_Scan()==0)
     {
-      for(i=0;i<126;i++)
+      for(i=0;i<sizeof(song)/2;i++)
         Beep_Beep(song[i][0],song[i][1],200);
     }
   }
