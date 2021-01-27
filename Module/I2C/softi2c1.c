@@ -33,6 +33,7 @@ void SoftI2C1_Start(void)
   Delay_ticks(delayTicks); // hold time
 
   SOFTI2C1_SCL(0); // cannot be read
+  Delay_ticks(delayTicks);
 }
 
 void SoftI2C1_Stop(void)
@@ -62,21 +63,23 @@ void SoftI2C1_SendACK(uint8_t isACK) // 1:ACK 0:NACK
 uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
 {
   uint16_t waitTime = 0;
+  uint8_t result = 0;
   SOFTI2C1_SDA_IN();
   SOFTI2C1_SCL(1);
   Delay_ticks(delayTicks / 8); // data setup time
-  while (SOFTI2C1_READSDA())
+  result = SOFTI2C1_READSDA();
+  Delay_ticks(delayTicks / 8 * 7);
+  if (result)
   {
-    __NOP();
-    waitTime++;
-    if (waitTime > delayTicks)
-    {
-      SoftI2C1_Stop();
-      return 0;
-    }
+    SoftI2C1_Stop();
+    return 0;
   }
-  SOFTI2C1_SCL(0);
-  return 1;
+  else
+  {
+    SOFTI2C1_SCL(0);
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW
+    return 1;
+  }
 }
 
 void SoftI2C1_SendByte(uint8_t byte)
@@ -106,8 +109,8 @@ uint8_t SoftI2C1_ReadByte(uint8_t sendACK) // 1: send ACK 0: no ACK
     SOFTI2C1_SCL(1);
     result <<= 1;
     Delay_ticks(delayTicks / 8); // data setup time
-    result |= SOFTI2C1_READSDA() & 1u;
-    Delay_ticks(delayTicks); // data hold time
+    result |= SOFTI2C1_READSDA();
+    Delay_ticks(delayTicks / 8 * 7); // data hold time
   }
   SoftI2C1_SendACK(sendACK);
   return result;
