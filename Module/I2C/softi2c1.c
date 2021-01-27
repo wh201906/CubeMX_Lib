@@ -20,7 +20,7 @@ void SoftI2C1_Init(uint32_t speed)
   GPIO_InitStruct.Pin = SOFTI2C1_SDA_PIN;
   HAL_GPIO_Init(SOFTI2C1_SDA_GPIO, &GPIO_InitStruct);
 
-  delayTicks = Delay_GetSYSFreq() / speed;
+  delayTicks = Delay_GetSYSFreq() / speed / 2;
 }
 
 void SoftI2C1_Start(void)
@@ -52,11 +52,11 @@ void SoftI2C1_SendACK(uint8_t isACK) // 1:ACK 0:NACK
   SOFTI2C1_SCL(0); // change start
   SOFTI2C1_SDA_OUT();
   SOFTI2C1_SDA(!isACK);        // 1:ACK 0:NACK
-  Delay_ticks(delayTicks / 4); // data setup time
+  Delay_ticks(delayTicks / 8); // data setup time
   SOFTI2C1_SCL(1);             // can be read
   Delay_ticks(delayTicks);     // hold
   SOFTI2C1_SCL(0);             // cannot be read
-  Delay_ticks(delayTicks / 4); // data setup time
+  Delay_ticks(delayTicks);     // data setup time & SCL_LOW
 }
 
 uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
@@ -64,7 +64,7 @@ uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
   uint16_t waitTime = 0;
   SOFTI2C1_SDA_IN();
   SOFTI2C1_SCL(1);
-  delay_us(1);
+  Delay_ticks(delayTicks / 8); // data setup time
   while (SOFTI2C1_READSDA())
   {
     __NOP();
@@ -79,19 +79,19 @@ uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
   return 1;
 }
 
-void SoftI2C1_SendByte(u8 byte)
+void SoftI2C1_SendByte(uint8_t byte)
 {
   int8_t i;
   SOFTI2C1_SDA_OUT();
   SOFTI2C1_SCL(0);
-  for (t = 7; t >= 0; t--)
+  for (i = 7; i >= 0; i--)
   {
-    SOFTI2C1_SDA((byte >> t) & 1u);
-    Delay_ticks(delayTicks / 4); // data setup time
+    SOFTI2C1_SDA((byte >> i) & 1u);
+    Delay_ticks(delayTicks / 8); // data setup time
     SOFTI2C1_SCL(1);
     Delay_ticks(delayTicks); // data hold time
     SOFTI2C1_SCL(0);
-    Delay_ticks(delayTicks / 4); // data setup time
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW
   }
 }
 
@@ -101,11 +101,11 @@ uint8_t SoftI2C1_ReadByte(uint8_t sendACK) // 1: send ACK 0: no ACK
   SOFTI2C1_SDA_IN();
   for (i = 0; i < 8; i++)
   {
-    IIC_SCL = 0;
-    Delay_ticks(delayTicks / 4); // data setup time
-    IIC_SCL = 1;
+    SOFTI2C1_SCL(0);
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW
+    SOFTI2C1_SCL(1);
     result <<= 1;
-    Delay_ticks(delayTicks / 4); // data setup time
+    Delay_ticks(delayTicks / 8); // data setup time
     result |= SOFTI2C1_READSDA() & 1u;
     Delay_ticks(delayTicks); // data hold time
   }

@@ -27,6 +27,12 @@
 
 
 void SoftI2C1_Init(uint32_t speed);
+void SoftI2C1_Start(void);
+void SoftI2C1_Stop(void);
+void SoftI2C1_SendACK(uint8_t isACK);
+uint8_t SoftI2C1_WaitACK(void);
+void SoftI2C1_SendByte(uint8_t byte);
+uint8_t SoftI2C1_ReadByte(uint8_t sendACK);
 
 void SoftI2C1_Master_Transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 void SoftI2C1_Master_Receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
