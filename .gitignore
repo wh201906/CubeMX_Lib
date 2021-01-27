@@ -28,3 +28,4 @@ JLinkLog.txt
 EventRecorderStub.scvd
 /F407VE_8M_Test
 .vscode/
+Module/I2C/Template*
