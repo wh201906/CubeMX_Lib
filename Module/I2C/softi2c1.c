@@ -23,6 +23,49 @@ void SoftI2C1_Init(uint32_t speed)
   delayTicks = Delay_GetSYSFreq() / speed / 2;
 }
 
+uint8_t SoftI2C1_SendAddr(uint8_t RorW, uint16_t addr, uint8_t addrLen)
+{
+  uint8_t buf, i;
+  if (addrLen == SI2C_ADDR_7b)
+  {
+    buf = ((addr & 0x007F) << 1u) | RorW;
+    for (i = 0; i < SOFTI2C1_RETRYTIMES; i++)
+    {
+      SoftI2C1_SendByte(buf);
+      if (SoftI2C1_WaitACK == SI2C_ACK)
+        break;
+    }
+    if (i < SOFTI2C1_RETRYTIMES)
+      return 0;
+  }
+  else
+  {
+    // 111100XX with first 2 bits
+    buf = ((addr & 0x0003) << 1u) | RorW;
+    buf |= 0x78;
+    for (i = 0; i < SOFTI2C1_RETRYTIMES; i++)
+    {
+      SoftI2C1_SendByte(buf);
+      if (SoftI2C1_WaitACK == SI2C_ACK)
+        break;
+    }
+    if (i < SOFTI2C1_RETRYTIMES)
+      return 0;
+
+    // the last 8 bits
+    buf = addr & 0x00FF;
+    for (i = 0; i < SOFTI2C1_RETRYTIMES; i++)
+    {
+      SoftI2C1_SendByte(buf);
+      if (SoftI2C1_WaitACK == SI2C_ACK)
+        break;
+    }
+    if (i < SOFTI2C1_RETRYTIMES)
+      return 0;
+  }
+  return 1;
+}
+
 void SoftI2C1_Start(void)
 {
   SOFTI2C1_SDA_OUT();
@@ -48,19 +91,19 @@ void SoftI2C1_Stop(void)
   // when the transmition is stopped, the SCL should be high
 }
 
-void SoftI2C1_SendACK(uint8_t isACK) // 1:ACK 0:NACK
+void SoftI2C1_SendACK(uint8_t ACK) // 0:ACK 1:NACK
 {
   SOFTI2C1_SCL(0); // change start
   SOFTI2C1_SDA_OUT();
-  SOFTI2C1_SDA(!isACK);        // 1:ACK 0:NACK
+  SOFTI2C1_SDA(ACK);
   Delay_ticks(delayTicks / 8); // data setup time
   SOFTI2C1_SCL(1);             // can be read
   Delay_ticks(delayTicks);     // hold
   SOFTI2C1_SCL(0);             // cannot be read
-  Delay_ticks(delayTicks);     // data setup time & SCL_LOW
+  Delay_ticks(delayTicks);     // data setup time & SCL_LOW & SMBus requirement
 }
 
-uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
+uint8_t SoftI2C1_WaitACK(void) // 0:ACK 1:NACK/No response
 {
   uint16_t waitTime = 0;
   uint8_t result = 0;
@@ -68,18 +111,15 @@ uint8_t SoftI2C1_WaitACK(void) // 1:ACK 0:NACK/No response
   SOFTI2C1_SCL(1);
   Delay_ticks(delayTicks / 8); // data setup time
   result = SOFTI2C1_READSDA();
-  Delay_ticks(delayTicks / 8 * 7);
-  if (result)
-  {
+  Delay_ticks(delayTicks);
+  if (result == SI2C_NACK)
     SoftI2C1_Stop();
-    return 0;
-  }
   else
   {
     SOFTI2C1_SCL(0);
-    Delay_ticks(delayTicks); // data setup time & SCL_LOW
-    return 1;
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW & SMBus requirement
   }
+  return result;
 }
 
 void SoftI2C1_SendByte(uint8_t byte)
@@ -94,24 +134,24 @@ void SoftI2C1_SendByte(uint8_t byte)
     SOFTI2C1_SCL(1);
     Delay_ticks(delayTicks); // data hold time
     SOFTI2C1_SCL(0);
-    Delay_ticks(delayTicks); // data setup time & SCL_LOW
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW & SMBus requirement
   }
 }
 
-uint8_t SoftI2C1_ReadByte(uint8_t sendACK) // 1: send ACK 0: no ACK
+uint8_t SoftI2C1_ReadByte(uint8_t ACK) // 0: send ACK 1: no ACK
 {
   uint8_t i, result = 0;
   SOFTI2C1_SDA_IN();
   for (i = 0; i < 8; i++)
   {
     SOFTI2C1_SCL(0);
-    Delay_ticks(delayTicks); // data setup time & SCL_LOW
+    Delay_ticks(delayTicks); // data setup time & SCL_LOW & SMBus requirement
     SOFTI2C1_SCL(1);
     result <<= 1;
     Delay_ticks(delayTicks / 8); // data setup time
     result |= SOFTI2C1_READSDA();
-    Delay_ticks(delayTicks / 8 * 7); // data hold time
+    Delay_ticks(delayTicks); // data hold time
   }
-  SoftI2C1_SendACK(sendACK);
+  SoftI2C1_SendACK(ACK);
   return result;
 }

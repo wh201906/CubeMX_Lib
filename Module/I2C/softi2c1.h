@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "DELAY/delay.h"
+#include "softi2c_common.h"
 
 // ****** configuration start ******
 #define SOFTI2C1_SCL_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
@@ -13,6 +14,8 @@
 
 #define SOFTI2C1_SCL_PINID 8
 #define SOFTI2C1_SDA_PINID 9
+
+#define SOFTI2C1_RETRYTIMES 3
 // ****** configuration end ******
 
 #define SOFTI2C1_SCL_PIN ((uint16_t)1u << SOFTI2C1_SCL_PINID)
@@ -25,14 +28,24 @@
 #define SOFTI2C1_SDA_IN() {SOFTI2C1_SDA_GPIO->MODER &= ~(3 << (SOFTI2C1_SDA_PINID * 2u)); SOFTI2C1_SDA_GPIO->MODER |= 0 << (SOFTI2C1_SDA_PINID * 2u);}
 #define SOFTI2C1_SDA_OUT() {SOFTI2C1_SDA_GPIO->MODER &= ~(3 << (SOFTI2C1_SDA_PINID * 2u)); SOFTI2C1_SDA_GPIO->MODER |= 1 << (SOFTI2C1_SDA_PINID * 2u);}
 
+#define SI2C_ACK 0
+#define SI2C_NACK 1
+
+#define SI2C_READ 1
+#define SI2C_WRITE 0
+
+#define SI2C_
+
 
 void SoftI2C1_Init(uint32_t speed);
 void SoftI2C1_Start(void);
 void SoftI2C1_Stop(void);
-void SoftI2C1_SendACK(uint8_t isACK);
+void SoftI2C1_SendACK(uint8_t ACK);
 uint8_t SoftI2C1_WaitACK(void);
 void SoftI2C1_SendByte(uint8_t byte);
-uint8_t SoftI2C1_ReadByte(uint8_t sendACK);
+uint8_t SoftI2C1_ReadByte(uint8_t ACK);
+
+
 
 void SoftI2C1_Master_Transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 void SoftI2C1_Master_Receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
