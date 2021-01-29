@@ -29,19 +29,19 @@ uint8_t SoftI2C1_SendAddr(uint16_t addr, uint8_t addrLen, uint8_t RorW)
   if (addrLen == SI2C_ADDR_7b)
   {
     buf = ((addr & 0x007F) << 1u) | RorW;
-    return SoftI2C1_SendByte_ACK(buf, SI2C_ACK);
+    return SoftI2C1_SendByte_ACK(buf, SI2C_NACK);
   }
   else
   {
     // 111100XX with first 2 bits
     buf = ((addr & 0x0003) << 1u) | RorW;
     buf |= 0x78;
-    if (!SoftI2C1_SendByte_ACK(buf, SI2C_ACK))
+    if (!SoftI2C1_SendByte_ACK(buf, SI2C_NACK))
       return 0;
 
     // the last 8 bits
     buf = addr & 0x00FF;
-    return SoftI2C1_SendByte_ACK(buf, SI2C_ACK);
+    return SoftI2C1_SendByte_ACK(buf, SI2C_NACK);
   }
 }
 
@@ -72,10 +72,10 @@ uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
   SoftI2C1_Start();
   if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_WRITE))
     return 0;
-  if (!SoftI2C1_SendByte_ACK(memAddr, SI2C_ACK))
+  if (!SoftI2C1_SendByte_ACK(memAddr, SI2C_NACK))
     return 0;
   for (i = 0; i < dataSize; i++)
-    if (!SoftI2C1_SendByte_ACK(*(dataBuf + i), SI2C_ACK))
+    if (!SoftI2C1_SendByte_ACK(*(dataBuf + i), SI2C_NACK))
       return 0;
   SoftI2C1_Stop();
 

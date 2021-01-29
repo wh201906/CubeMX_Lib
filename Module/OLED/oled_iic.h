@@ -10,7 +10,7 @@
 extern uint8_t RevState;
 extern uint8_t brightness;
 
-#define OLED_ADDRESS 0x78
+#define OLED_ADDRESS 0x3C
 
 #define TEXTSIZE_SMALL 1
 #define TEXTSIZE_BIG 2
