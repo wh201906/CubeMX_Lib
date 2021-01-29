@@ -8,6 +8,6 @@
 #define SI2C_READ 1
 
 #define SI2C_ADDR_7b 0
-#define SI2C_ADDR_7b 1
+#define SI2C_ADDR_10b 1
 
 #endif

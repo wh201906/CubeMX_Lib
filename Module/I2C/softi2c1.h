@@ -28,36 +28,20 @@
 #define SOFTI2C1_SDA_IN() {SOFTI2C1_SDA_GPIO->MODER &= ~(3 << (SOFTI2C1_SDA_PINID * 2u)); SOFTI2C1_SDA_GPIO->MODER |= 0 << (SOFTI2C1_SDA_PINID * 2u);}
 #define SOFTI2C1_SDA_OUT() {SOFTI2C1_SDA_GPIO->MODER &= ~(3 << (SOFTI2C1_SDA_PINID * 2u)); SOFTI2C1_SDA_GPIO->MODER |= 1 << (SOFTI2C1_SDA_PINID * 2u);}
 
-#define SI2C_ACK 0
-#define SI2C_NACK 1
-
-#define SI2C_READ 1
-#define SI2C_WRITE 0
-
-#define SI2C_
-
-
+// For most of the cases
 void SoftI2C1_Init(uint32_t speed);
+uint8_t SoftI2C1_SendAddr(uint16_t addr, uint8_t addrLen, uint8_t RorW);
+uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
+uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
+
+// Low Layer
 void SoftI2C1_Start(void);
 void SoftI2C1_Stop(void);
 void SoftI2C1_SendACK(uint8_t ACK);
 uint8_t SoftI2C1_WaitACK(void);
 void SoftI2C1_SendByte(uint8_t byte);
-uint8_t SoftI2C1_ReadByte(uint8_t ACK);
-
-
-
-void SoftI2C1_Master_Transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-void SoftI2C1_Master_Receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
-void SoftI2C1_Slave_Transmit(uint8_t *pData, uint16_t Size, uint32_t Timeout);
-void SoftI2C1_Slave_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
-void SoftI2C1_Write(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-void SoftI2C1_Read(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
-void SoftI2C1_IsDeviceReady(uint16_t DevAddress, uint32_t Trials, uint32_t Timeout);
-
-void SoftI2C1_Start(void);
+uint8_t SoftI2C1_ReadByte(void);
+uint8_t SoftI2C1_SendByte_ACK(uint8_t byte, uint8_t handleACK);
+uint8_t SoftI2C1_ReadByte_ACK(uint8_t ACK);
 
 #endif
