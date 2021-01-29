@@ -10,14 +10,14 @@
       <TargetName>H750VB_25M_Display</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6140000::V6.14::ARMCLANG</pCCUsed>
+      <pCCUsed>6150000::V6.15::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32H750VBTx</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32H7xx_DFP.2.6.0</PackID>
-          <PackURL>https://www.keil.com/pack/</PackURL>
+          <PackID>Keil.STM32H7xx_DFP.2.7.0</PackID>
+          <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000-0x2001FFFF) IRAM2(0x24000000-0x2407FFFF) IROM(0x8000000-0x801FFFF) CLOCK(12000000) FPU3(DFPU) CPUTYPE("Cortex-M7") ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -394,14 +394,19 @@
           <GroupName>Module/OLED</GroupName>
           <Files>
             <File>
-              <FileName>myiic.c</FileName>
+              <FileName>oled_iic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\OLED\myiic.c</FilePath>
+              <FilePath>..\..\Module\OLED\oled_iic.c</FilePath>
             </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Module/I2C</GroupName>
+          <Files>
             <File>
-              <FileName>OLED_I2C.c</FileName>
+              <FileName>softi2c1.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Module\OLED\OLED_I2C.c</FilePath>
+              <FilePath>..\..\Module\I2C\softi2c1.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -569,11 +574,6 @@
     <Layers>
       <Layer>
         <LayName>&lt;Project Info&gt;</LayName>
-        <LayDesc></LayDesc>
-        <LayUrl></LayUrl>
-        <LayKeys></LayKeys>
-        <LayCat></LayCat>
-        <LayLic></LayLic>
         <LayTarg>0</LayTarg>
         <LayPrjMark>1</LayPrjMark>
       </Layer>

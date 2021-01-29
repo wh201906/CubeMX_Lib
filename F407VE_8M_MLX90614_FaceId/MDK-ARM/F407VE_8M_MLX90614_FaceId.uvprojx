@@ -541,6 +541,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Module/I2C</GroupName>
+          <Files>
+            <File>
+              <FileName>softi2c1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Module\I2C\softi2c1.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>

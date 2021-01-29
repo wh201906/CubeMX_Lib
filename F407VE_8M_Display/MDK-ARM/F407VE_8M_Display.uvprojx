@@ -531,6 +531,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Module/I2C</GroupName>
+          <Files>
+            <File>
+              <FileName>softi2c1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Module\I2C\softi2c1.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
@@ -553,7 +563,7 @@
   <LayerInfo>
     <Layers>
       <Layer>
-        <LayName>&lt;Project Info&gt;</LayName>
+        <LayName>F407VE_8M_Display</LayName>
         <LayTarg>0</LayTarg>
         <LayPrjMark>1</LayPrjMark>
       </Layer>
