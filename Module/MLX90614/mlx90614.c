@@ -21,5 +21,5 @@ uint8_t MLX90614_ReadReg(uint16_t deviceAddr, uint8_t regAddr, uint16_t *data)
 void MLX90614_Init(void)
 {
   SoftI2C2_Init(100000);
-  Delay_ms(20);
+  Delay_ms(600);
 }
