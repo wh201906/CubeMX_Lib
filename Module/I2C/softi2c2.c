@@ -54,6 +54,7 @@ uint8_t SoftI2C2_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
     return 0;
   if (!SoftI2C2_SendByte_ACK(memAddr, SI2C_ACK))
     return 0;
+  // SoftI2C2_Stop(); // A STOP signal is required on some devices.
 
   SoftI2C2_Start();
   if (!SoftI2C2_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
@@ -180,7 +181,7 @@ uint8_t SoftI2C2_SendByte_ACK(uint8_t byte, uint8_t handleACK) // handle ACK and
   {
     SoftI2C2_SendByte(byte);
     SOFTI2C2_SDA_IN();
-    SOFTI2C2_SCL(0);                      // change start
+    SOFTI2C2_SCL(1);                      
     Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
     SOFTI2C2_SCL(1);                      // can be read
     Delay_ticks(SoftI2C2_delayTicks);     // hold
