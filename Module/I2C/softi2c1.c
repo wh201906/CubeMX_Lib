@@ -12,7 +12,7 @@ void SoftI2C1_Init(uint32_t speed)
   SOFTI2C1_SCL(1);
   SOFTI2C1_SDA(1);
   GPIO_InitStruct.Pin = SOFTI2C1_SCL_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(SOFTI2C1_SCL_GPIO, &GPIO_InitStruct);
@@ -54,7 +54,6 @@ uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
     return 0;
   if (!SoftI2C1_SendByte_ACK(memAddr, SI2C_ACK))
     return 0;
-  SoftI2C1_Stop();
 
   SoftI2C1_Start();
   if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))

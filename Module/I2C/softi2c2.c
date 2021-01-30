@@ -14,7 +14,7 @@ void SoftI2C2_Init(uint32_t speed)
   GPIO_InitStruct.Pin = SOFTI2C2_SCL_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(SOFTI2C2_SCL_GPIO, &GPIO_InitStruct);
 
   GPIO_InitStruct.Pin = SOFTI2C2_SDA_PIN;
@@ -89,10 +89,9 @@ void SoftI2C2_Start(void)
   Delay_ticks(SoftI2C2_delayTicks); // setup time
   SOFTI2C2_SDA(0);                  // START: when CLK is high,DATA change form HIGH to LOW
   Delay_ticks(SoftI2C2_delayTicks); // hold time
-  
+
   SOFTI2C2_SCL(0); // cannot be read
   Delay_ticks(SoftI2C2_delayTicks);
-  SOFTI2C2_SDA_IN();
 }
 
 void SoftI2C2_Stop(void)
@@ -112,25 +111,22 @@ void SoftI2C2_SendACK(uint8_t ACK) // 0:ACK 1:NACK
   SOFTI2C2_SCL(0); // change start
   SOFTI2C2_SDA_OUT();
   SOFTI2C2_SDA(ACK);
-  Delay_ticks(SoftI2C2_delayTicks / 4 * 3); // data setup time
-  SOFTI2C2_SCL(1);                          // can be read
-  Delay_ticks(SoftI2C2_delayTicks);         // hold
-  SOFTI2C2_SCL(0);                          // cannot be read
-  SOFTI2C2_SDA_IN();
-  Delay_ticks(SoftI2C2_delayTicks / 4); // data setup time & SCL_LOW & SMBus requirement
+  Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
+  SOFTI2C2_SCL(1);                      // can be read
+  Delay_ticks(SoftI2C2_delayTicks);     // hold
+  SOFTI2C2_SCL(0);                      // cannot be read
+  Delay_ticks(SoftI2C2_delayTicks);     // data setup time & SCL_LOW & SMBus requirement
 }
 
 uint8_t SoftI2C2_WaitACK(void) // 0:ACK 1:NACK/No response
 {
   uint16_t waitTime = 0;
   uint8_t result = 0;
-  SOFTI2C2_SCL(0);
   SOFTI2C2_SDA_IN();
-  Delay_ticks(SoftI2C2_delayTicks / 4 * 3); // data setup time
   SOFTI2C2_SCL(1);
-  Delay_ticks(SoftI2C2_delayTicks / 4 * 3); // data setup time
+  Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
   result = SOFTI2C2_READSDA();
-  Delay_ticks(SoftI2C2_delayTicks / 4);
+  Delay_ticks(SoftI2C2_delayTicks);
   SOFTI2C2_SCL(0);
   Delay_ticks(SoftI2C2_delayTicks); // data setup time & SCL_LOW & SMBus requirement
   if (result == SI2C_NACK)
@@ -147,11 +143,11 @@ void SoftI2C2_SendByte(uint8_t byte) // barely send a byte
   for (i = 7; i >= 0; i--)
   {
     SOFTI2C2_SDA((byte >> i) & 1u);
-    Delay_ticks(SoftI2C2_delayTicks / 4 * 3); // data setup time
+    Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
     SOFTI2C2_SCL(1);
     Delay_ticks(SoftI2C2_delayTicks); // data hold time
     SOFTI2C2_SCL(0);
-    Delay_ticks(SoftI2C2_delayTicks / 4); // data setup time & SCL_LOW & SMBus requirement
+    Delay_ticks(SoftI2C2_delayTicks); // data setup time & SCL_LOW & SMBus requirement
   }
 }
 
@@ -166,7 +162,7 @@ uint8_t SoftI2C2_ReadByte(void) // barely read a byte
     Delay_ticks(SoftI2C2_delayTicks); // data setup time & SCL_LOW & SMBus requirement
     SOFTI2C2_SCL(1);
     result <<= 1;
-    Delay_ticks(SoftI2C2_delayTicks / 4); // data setup time
+    Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
     result |= SOFTI2C2_READSDA();
     Delay_ticks(SoftI2C2_delayTicks); // data hold time
   }
@@ -184,12 +180,12 @@ uint8_t SoftI2C2_SendByte_ACK(uint8_t byte, uint8_t handleACK) // handle ACK and
   {
     SoftI2C2_SendByte(byte);
     SOFTI2C2_SDA_IN();
-    SOFTI2C2_SCL(0);                          // change start
-    Delay_ticks(SoftI2C2_delayTicks / 4 * 3); // data setup time
-    SOFTI2C2_SCL(1);                          // can be read
-    Delay_ticks(SoftI2C2_delayTicks);         // hold
-    SOFTI2C2_SCL(0);                          // cannot be read
-    Delay_ticks(SoftI2C2_delayTicks / 4);     // data setup time & SCL_LOW & SMBus requirement
+    SOFTI2C2_SCL(0);                      // change start
+    Delay_ticks(SoftI2C2_delayTicks / 8); // data setup time
+    SOFTI2C2_SCL(1);                      // can be read
+    Delay_ticks(SoftI2C2_delayTicks);     // hold
+    SOFTI2C2_SCL(0);                      // cannot be read
+    Delay_ticks(SoftI2C2_delayTicks);     // data setup time & SCL_LOW & SMBus requirement
     return 1;
   }
   else
