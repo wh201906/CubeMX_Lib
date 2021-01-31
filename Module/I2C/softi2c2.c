@@ -54,7 +54,8 @@ uint8_t SoftI2C2_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
     return 0;
   if (!SoftI2C2_SendByte_ACK(memAddr, SI2C_ACK))
     return 0;
-  // SoftI2C2_Stop(); // A STOP signal is required on some devices.
+  // SoftI2C2_Stop(); // A STOP and START signal is required on some devices.
+  // SoftI2C2_Start();
 
   SoftI2C2_RepStart();
   if (!SoftI2C2_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
