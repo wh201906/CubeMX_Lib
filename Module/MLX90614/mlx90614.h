@@ -6,6 +6,7 @@
 #include "main.h"
 #include "I2C/softi2c2.h"
 #include "DELAY/delay.h"
+#include "I2C/crc8.h"
 
 void MLX90614_Init(void);
 uint8_t MLX90614_WriteROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t data);
