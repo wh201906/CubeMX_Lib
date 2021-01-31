@@ -1,6 +1,6 @@
 #include "mlx90614.h"
 
-uint8_t MLX90614_addr = 0x00;
+uint8_t MLX90614_addr = 0x5A;
 
 uint8_t MLX90614_WriteROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t data)
 {
@@ -98,10 +98,10 @@ uint8_t MLX90614_SetI2CAddr(uint8_t addr, uint8_t changeAddrReg) // 0:just chang
       result &= MLX90614_WriteROM(MLX90614_addr, MLX90614_ADDRREG, (uint16_t)MLX90614_addr);
       return 0;
     }
-    Delay_ms(5);
-    MLX90614_Sleep(1);
-    MLX90614_Sleep(0);
-    MLX90614_addr = addr;
+    Delay_ms(10);
+    // MLX90614_addr = addr;
+    // The new address will be valid after the MLX90614 is turned off then turned on.
+    // Sleep then Wakeup doesn't works there.
     return 1;
   }
 }
