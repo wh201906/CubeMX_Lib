@@ -1,11 +1,16 @@
 #include "mlx90614.h"
 
+uint8_t MLX90614_addr = 0x00;
+
 uint8_t MLX90614_WriteROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t data)
 {
   uint8_t tmp[3];
   tmp[0] = data & 0x00FF;
   tmp[1] = (data >> 8u) & 0x00FF;
-  tmp[2] = CRC8_Calc(0, tmp, 2);
+
+  tmp[2] = CRC8_CalcByte(0, deviceAddr << 1);
+  tmp[2] = CRC8_CalcByte(tmp[2], romAddr & 0x1F | 0x20);
+  tmp[2] = CRC8_Calc(tmp[2], tmp, 2);
   return SoftI2C2_Write(deviceAddr, SI2C_ADDR_7b, romAddr & 0x1F | 0x20, tmp, 3);
 }
 
@@ -45,8 +50,58 @@ void MLX90614_Init(void)
 float MLX90614_GetTemp(uint8_t reg)
 {
   uint16_t temp;
-  if (!MLX90614_ReadRAM(MLX90614_ADDR, reg, &temp) || (temp & 0x8000) == 0x8000)
+  if (!MLX90614_ReadRAM(MLX90614_addr, reg, &temp) || (temp & 0x8000) == 0x8000)
     return 2000.0;
   else
     return (float)temp * 0.02 - 273.15;
+}
+
+void MLX90614_Sleep(uint8_t enterSleep) // 1:sleep 0:wakeup
+{
+  uint8_t pec = 0xE8;
+  if (enterSleep)
+    SoftI2C2_Write(MLX90614_addr, SI2C_ADDR_7b, 0xFF, &pec, 1);
+  else
+  {
+    SOFTI2C2_SDA(1);
+    SOFTI2C2_SCL(0);
+    Delay_ms(1);
+    SOFTI2C2_SDA(0);
+    SOFTI2C2_SCL(1);
+    Delay_ms(34);
+    SOFTI2C2_SDA(1);
+    Delay_ms(250);
+  }
+}
+
+uint8_t MLX90614_SetI2CAddr(uint8_t addr, uint8_t changeAddrReg) // 0:just change the address in program 1:also change the address of device
+{
+  uint8_t result = 1;
+  if (!changeAddrReg)
+  {
+    MLX90614_addr = addr;
+    return 1;
+  }
+  else
+  {
+    result &= MLX90614_WriteROM(MLX90614_addr, MLX90614_ADDRREG, 0);
+    if (!result)
+    {
+      result &= MLX90614_WriteROM(MLX90614_addr, MLX90614_ADDRREG, (uint16_t)MLX90614_addr);
+      return 0;
+    }
+
+    Delay_ms(10);
+    result &= MLX90614_WriteROM(MLX90614_addr, MLX90614_ADDRREG, (uint16_t)addr);
+    if (!result)
+    {
+      result &= MLX90614_WriteROM(MLX90614_addr, MLX90614_ADDRREG, (uint16_t)MLX90614_addr);
+      return 0;
+    }
+    Delay_ms(5);
+    MLX90614_Sleep(1);
+    MLX90614_Sleep(0);
+    MLX90614_addr = addr;
+    return 1;
+  }
 }
