@@ -56,7 +56,7 @@ uint8_t SoftI2C2_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
     return 0;
   // SoftI2C2_Stop(); // A STOP signal is required on some devices.
 
-  SoftI2C2_Start();
+  SoftI2C2_RepStart();
   if (!SoftI2C2_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
     return 0;
   for (i = 0; i < dataSize; i++)
@@ -65,6 +65,7 @@ uint8_t SoftI2C2_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
 
   return 1;
 }
+
 uint8_t SoftI2C2_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
 {
   uint32_t i;
@@ -84,8 +85,6 @@ uint8_t SoftI2C2_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
 
 void SoftI2C2_Start(void)
 {
-  SOFTI2C2_SCL(0);
-  Delay_ticks(SoftI2C2_delayTicks * 0.75);
   SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(1);
@@ -97,10 +96,18 @@ void SoftI2C2_Start(void)
   Delay_ticks(SoftI2C2_delayTicks);
 }
 
-void SoftI2C2_Stop(void)
+void SoftI2C2_RepStart(void)
 {
   SOFTI2C2_SCL(0);
   Delay_ticks(SoftI2C2_delayTicks * 0.75);
+  SOFTI2C2_SDA_OUT();
+  SOFTI2C2_SDA(1);
+  Delay_ticks(SoftI2C2_delayTicks / 4);
+  SoftI2C2_Start();
+}
+
+void SoftI2C2_Stop(void)
+{
   SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(0);

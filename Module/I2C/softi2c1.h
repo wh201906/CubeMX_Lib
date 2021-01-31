@@ -36,6 +36,7 @@ uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
 
 // Low Layer
 void SoftI2C1_Start(void);
+void SoftI2C1_RepStart(void);
 void SoftI2C1_Stop(void);
 void SoftI2C1_SendACK(uint8_t ACK);
 uint8_t SoftI2C1_WaitACK(void);
