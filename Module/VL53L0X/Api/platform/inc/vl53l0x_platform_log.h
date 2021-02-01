@@ -1,5 +1,5 @@
 /*******************************************************************************
-Copyright © 2015, STMicroelectronics International N.V.
+Copyright ï¿½ 2015, STMicroelectronics International N.V.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VL53L0X_PLATFORM_LOG_H_
 #define _VL53L0X_PLATFORM_LOG_H_
 
-#include <stdio.h>
 #include <string.h>
 /* LOG Functions */
 
@@ -43,6 +42,8 @@ extern "C" {
  *
  * @brief platform log function definition
  */
+
+// Log function is disabled
 
 //#define VL53L0X_LOG_ENABLE 0
 

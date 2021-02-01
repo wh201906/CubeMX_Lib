@@ -26,6 +26,6 @@ JLinkLog.txt
 *.uvoptx
 *.hex
 EventRecorderStub.scvd
-/F407VE_8M_Test
+Project/F407VE_8M_Test
 .vscode/
-Module/I2C/Template*
+Module/VL53L0X/TODO.txt

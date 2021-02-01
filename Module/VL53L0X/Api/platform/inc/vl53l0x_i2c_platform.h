@@ -27,12 +27,6 @@
 extern "C" {
 #endif
 
-// Include uint8_t, unit16_t  etc definitions
-
-#include <stdint.h>
-#include <stdarg.h>
-
-
 /**
  *  @brief Typedef defining .\n
  * The developer shoud modify this to suit the platform being deployed.
@@ -51,48 +45,12 @@ extern "C" {
 typedef unsigned char bool_t;
 #endif
 
-
-#define	   I2C                0x01
-#define	   SPI                0x00
-
 #define    COMMS_BUFFER_SIZE    64  // MUST be the same size as the SV task buffer
 
 #define    BYTES_PER_WORD        2
 #define    BYTES_PER_DWORD       4
 
 #define    VL53L0X_MAX_STRING_LENGTH_PLT       256
-
-/**
- * @brief  Initialise platform comms.
- *
- * @param  comms_type      - selects between I2C and SPI
- * @param  comms_speed_khz - unsigned short containing the I2C speed in kHz
- *
- * @return status - status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_comms_initialise(uint8_t  comms_type,
-                                          uint16_t comms_speed_khz);
-
-/**
- * @brief  Close platform comms.
- *
- * @return status - status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_comms_close(void);
-
-/**
- * @brief  Cycle Power to Device
- *
- * @return status - status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_cycle_power(void);
-
 
 /**
  * @brief Writes the supplied byte buffer to the device
@@ -307,94 +265,6 @@ int32_t VL53L0X_read_word(uint8_t address,  uint8_t index, uint16_t *pdata);
  */
 
 int32_t VL53L0X_read_dword(uint8_t address, uint8_t index, uint32_t *pdata);
-
-
-/**
- * @brief  Implements a programmable wait in us
- *
- * Wrapper for SystemVerilog Wait in micro seconds task
- *
- * @param  wait_us - integer wait in micro seconds
- *
- * @return status - SystemVerilog status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_platform_wait_us(int32_t wait_us);
-
-
-/**
- * @brief  Implements a programmable wait in ms
- *
- * Wrapper for SystemVerilog Wait in milli seconds task
- *
- * @param  wait_ms - integer wait in milli seconds
- *
- * @return status - SystemVerilog status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_wait_ms(int32_t wait_ms);
-
-
-/**
- * @brief Set GPIO value
- *
- * @param  level  - input  level - either 0 or 1
- *
- * @return status - SystemVerilog status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_set_gpio(uint8_t  level);
-
-
-/**
- * @brief Get GPIO value
- *
- * @param  plevel - uint8_t pointer to store GPIO level (0 or 1)
- *
- * @return status - SystemVerilog status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_get_gpio(uint8_t *plevel);
-
-/**
- * @brief Release force on GPIO
- *
- * @return status - SystemVerilog status 0 = ok, 1 = error
- *
- */
-
-int32_t VL53L0X_release_gpio(void);
-
-
-/**
-* @brief Get the frequency of the timer used for ranging results time stamps
-*
-* @param[out] ptimer_freq_hz : pointer for timer frequency
-*
-* @return status : 0 = ok, 1 = error
-*
-*/
-
-int32_t VL53L0X_get_timer_frequency(int32_t *ptimer_freq_hz);
-
-/**
-* @brief Get the timer value in units of timer_freq_hz (see VL53L0X_get_timestamp_frequency())
-*
-* @param[out] ptimer_count : pointer for timer count value
-*
-* @return status : 0 = ok, 1 = error
-*
-*/
-
-int32_t VL53L0X_get_timer_value(int32_t *ptimer_count);
-
-
-
-
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
-Copyright © 2015, STMicroelectronics International N.V.
+Copyright ï¿½ 2015, STMicroelectronics International N.V.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,8 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error "Error NULL definition should be done. Please add required include "
 #endif
 
-
-#if ! defined(STDINT_H) &&  !defined(_GCC_STDINT_H) &&!defined(__STDINT_DECLS) && !defined(_GCC_WRAP_STDINT_H)
+// all types below have been defined on STM32
+#if 0
 
  #pragma message("Please review  type definition of STDINT define for your platform and add to list above ")
 
@@ -107,5 +107,7 @@ typedef signed char int8_t;
  *
  * Given a floating point value f it's .16 bit point is (int)(f*(1<<16))*/
 typedef uint32_t FixPoint1616_t;
+
+typedef uint32_t DWORD;
 
 #endif /* VL53L0X_TYPES_H_ */
