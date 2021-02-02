@@ -52,6 +52,8 @@ typedef unsigned char bool_t;
 
 #define    VL53L0X_MAX_STRING_LENGTH_PLT       256
 
+int VL53L0X_i2c_init(uint32_t baudRate);
+
 /**
  * @brief Writes the supplied byte buffer to the device
  *

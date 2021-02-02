@@ -1,6 +1,7 @@
 #include "softi2c2.h"
 
 uint16_t SoftI2C2_delayTicks = 0;
+uint8_t started = 0;
 
 void SoftI2C2_Init(uint32_t speed)
 {
@@ -86,6 +87,12 @@ uint8_t SoftI2C2_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
 
 void SoftI2C2_Start(void)
 {
+  if (started)
+  {
+    SoftI2C2_RepStart();
+    return;
+  }
+  started = 1;
   SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(1);
@@ -109,6 +116,7 @@ void SoftI2C2_RepStart(void)
 
 void SoftI2C2_Stop(void)
 {
+  started = 0;
   SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(0);

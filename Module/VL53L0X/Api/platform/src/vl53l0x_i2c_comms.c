@@ -41,7 +41,7 @@ uint8_t cached_page = 0;
 #define STATUS_OK 0x00
 #define STATUS_FAIL 0x01
 
-int VL53L0X_i2c_init(unsigned int baudRate)
+int VL53L0X_i2c_init(uint32_t baudRate)
 {
     SoftI2C2_Init(baudRate);
     return STATUS_OK;
