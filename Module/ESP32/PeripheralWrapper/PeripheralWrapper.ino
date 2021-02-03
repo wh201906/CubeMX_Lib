@@ -4,8 +4,8 @@
 
 HardwareSerial comSerial(1);
 
-uint8_t syncVariable;
-uint8_t asyncVariable;
+uint8_t syncVariable=0;
+uint8_t asyncVariable=0;
 uint8_t receiveBuffer[128];
 uint8_t receiveLen;
 
@@ -35,7 +35,7 @@ void init()
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
   init();
 }
 

@@ -106,10 +106,7 @@ int main(void)
     {
       Delay_ms(2);
       if(MyUSART2_Read(data,1))
-      {
-        if(data[0] && 1u)
-          HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
-      }
+        HAL_GPIO_WritePin(GPIOE,GPIO_PIN_8,data[0] & 1u);
     }
     MyUSART2_WriteLine("Hello! ESP32");
   }
