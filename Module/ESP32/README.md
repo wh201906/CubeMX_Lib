@@ -1,0 +1,4 @@
+# ESP32
+通过SPI/串口与STM32设备通信，借由Arduino的丰富资源和ESP32的硬件资源快速调通设备驱动以整合至作品内
+
+PeripheralWrapper: 使用Arduino的大量库资源驱动低速/低实时性外设
