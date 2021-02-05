@@ -458,6 +458,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
             </File>
+            <File>
+              <FileName>myfft.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\SIGNAL\myfft.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

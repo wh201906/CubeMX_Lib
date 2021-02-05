@@ -29,7 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
-#include "arm_math.h"
+#include "SIGNAL/myfft.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,31 +39,22 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define FFT_LENGTH 4096
 void tableInit(void);
-void fftInit(void);
-int32_t cfftCalc(void);
-int32_t rfftCalc(void);
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define FFT_LENGTH 256
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
-float32_t cfftBuf[2*FFT_LENGTH];
-float32_t cfftResult[FFT_LENGTH];
-float32_t rfftInput[FFT_LENGTH];
-float32_t rfftOutput[FFT_LENGTH];
-float32_t rfftFreq[FFT_LENGTH/2];
+float32_t fftData[FFT_LENGTH];
 
-
-arm_cfft_instance_f32 scfft;
-arm_rfft_fast_instance_f32 srfft;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,15 +106,10 @@ int main(void)
   MyUSART1_Init();
   Delay_ms(200);
   tableInit();
-  fftInit();
-  sprintf(str,"ticks:%d",cfftCalc());
-  MyUSART1_WriteLine(str);
-  MyUSART1_WriteLine("----------------");
-  printAll(cfftResult,FFT_LENGTH);
-  sprintf(str,"ticks:%d",rfftCalc());
-  MyUSART1_WriteLine(str);
-  MyUSART1_WriteLine("----------------");
-  printAll(rfftFreq,FFT_LENGTH/2);
+  MyFFT_Init(0);
+  MyFFT_CalcInPlace(fftData);
+  printAll(fftData,FFT_LENGTH/2);
+  //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -186,33 +172,7 @@ void tableInit()
 {
   uint16_t i;
   for(i=0;i<FFT_LENGTH;i++)
-  {
-    rfftInput[i]=(7.5+6*arm_sin_f32(2*PI*i*10/FFT_LENGTH)+4.5*arm_sin_f32(2*PI*i*30/FFT_LENGTH));
-    cfftBuf[2*i]=rfftInput[i];
-    cfftBuf[2*i+1]=0;
-  }
-}
-
-void fftInit()
-{
-  arm_rfft_fast_init_f32(&srfft,FFT_LENGTH);
-  arm_cfft_init_f32(&scfft,FFT_LENGTH);
-}
-
-int32_t cfftCalc()
-{
-  int32_t startTick=__HAL_TIM_GetCounter(&htim2);
-  arm_cfft_f32(&scfft,cfftBuf,0,1);
-  arm_cmplx_mag_f32(cfftBuf,cfftResult,FFT_LENGTH);
-  return __HAL_TIM_GetCounter(&htim2)-startTick;
-}
-
-int32_t rfftCalc()
-{
-  int32_t startTick=__HAL_TIM_GetCounter(&htim2);
-  arm_rfft_fast_f32(&srfft,rfftInput,rfftOutput,0);
-  arm_cmplx_mag_f32(rfftOutput,rfftFreq,FFT_LENGTH/2);
-  return __HAL_TIM_GetCounter(&htim2)-startTick;
+    fftData[i]=(7.5+6*arm_sin_f32(2*PI*i*10/FFT_LENGTH)+4.5*arm_sin_f32(2*PI*i*30/FFT_LENGTH));
 }
 
 void printAll(float32_t* addr,uint16_t len)
