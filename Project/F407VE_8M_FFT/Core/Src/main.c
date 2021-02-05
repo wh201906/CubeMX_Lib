@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "USART/myusart1.h"
 #include "arm_math.h"
 /* USER CODE END Includes */
 
@@ -38,6 +39,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+void tableInit(void);
+void fftInit(void);
+int32_t cfftCalc(void);
+int32_t rfftCalc(void);
+void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,11 +54,16 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t val[128];
-float fft_input[FFT_LENGTH*2];
-float fft_output[FFT_LENGTH];
-float fft_phase[FFT_LENGTH];
-arm_cfft_radix4_instance_f32 scfft;
+uint16_t val[FFT_LENGTH];
+float32_t cfftBuf[2*FFT_LENGTH];
+float32_t cfftResult[FFT_LENGTH];
+float32_t rfftInput[FFT_LENGTH];
+float32_t rfftOutput[FFT_LENGTH];
+float32_t rfftFreq[FFT_LENGTH/2];
+
+
+arm_cfft_instance_f32 scfft;
+arm_rfft_fast_instance_f32 srfft;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,7 +84,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  char str[20];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,7 +102,6 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -102,6 +112,18 @@ int main(void)
   Delay_Init(168);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,128);
   HAL_TIM_Base_Start(&htim2);
+  MyUSART1_Init();
+  Delay_ms(200);
+  tableInit();
+  fftInit();
+  sprintf(str,"ticks:%d",cfftCalc());
+  MyUSART1_WriteLine(str);
+  MyUSART1_WriteLine("----------------");
+  printAll(cfftResult,FFT_LENGTH);
+  sprintf(str,"ticks:%d",rfftCalc());
+  MyUSART1_WriteLine(str);
+  MyUSART1_WriteLine("----------------");
+  printAll(rfftFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -160,13 +182,49 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void fft()
+void tableInit()
 {
-  arm_cfft_radix4_init_f32(&scfft,FFT_LENGTH,0,1);
-  
-  arm_cfft_radix4_f32(&scfft,fft_input);
-  
-  arm_cmplx_mag_f32(fft_input,fft_output,FFT_LENGTH);
+  uint16_t i;
+  for(i=0;i<FFT_LENGTH;i++)
+  {
+    rfftInput[i]=(7.5+6*arm_sin_f32(2*PI*i*10/FFT_LENGTH)+4.5*arm_sin_f32(2*PI*i*30/FFT_LENGTH));
+    cfftBuf[2*i]=rfftInput[i];
+    cfftBuf[2*i+1]=0;
+  }
+}
+
+void fftInit()
+{
+  arm_rfft_fast_init_f32(&srfft,FFT_LENGTH);
+  arm_cfft_init_f32(&scfft,FFT_LENGTH);
+}
+
+int32_t cfftCalc()
+{
+  int32_t startTick=__HAL_TIM_GetCounter(&htim2);
+  arm_cfft_f32(&scfft,cfftBuf,0,1);
+  arm_cmplx_mag_f32(cfftBuf,cfftResult,FFT_LENGTH);
+  return __HAL_TIM_GetCounter(&htim2)-startTick;
+}
+
+int32_t rfftCalc()
+{
+  int32_t startTick=__HAL_TIM_GetCounter(&htim2);
+  arm_rfft_fast_f32(&srfft,rfftInput,rfftOutput,0);
+  arm_cmplx_mag_f32(rfftOutput,rfftFreq,FFT_LENGTH/2);
+  return __HAL_TIM_GetCounter(&htim2)-startTick;
+}
+
+void printAll(float32_t* addr,uint16_t len)
+{
+  char buf[20];
+  uint16_t i;
+  for(i=0;i<len;i++)
+  {
+    sprintf(buf,"%d:%f",i,*(addr+i));
+    MyUSART1_WriteLine(buf);
+    Delay_ms(2);
+  }
 }
 /* USER CODE END 4 */
 
