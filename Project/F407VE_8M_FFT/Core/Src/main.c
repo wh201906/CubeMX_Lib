@@ -78,6 +78,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   char str[20];
   double para[6]={7.5,6,4.5,0,35,80};
+  uint32_t timer;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -107,9 +108,15 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
   MyUSART1_Init();
   Delay_ms(200);
+  timer=__HAL_TIM_GetCounter(&htim2);
   MyFFT_Init(SAMPLERATE);
+  sprintf(str,"Init:%u",__HAL_TIM_GetCounter(&htim2)-timer);
+  MyUSART1_WriteLine(str);
   MyFFT_GenerateArray(fftData,SAMPLERATE,&para[3],&para[0],3);
+  timer=__HAL_TIM_GetCounter(&htim2);
   MyFFT_CalcInPlace(fftData);
+  sprintf(str,"Calc:%u",__HAL_TIM_GetCounter(&htim2)-timer);
+  MyUSART1_WriteLine(str);
   printAll(fftData,FFT_LENGTH/2);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */

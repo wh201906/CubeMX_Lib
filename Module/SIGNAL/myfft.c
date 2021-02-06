@@ -1,4 +1,5 @@
 #include "myfft.h"
+#include "math.h"
 
 float32_t fftOutput[MYFFT_LENGTH];
 arm_rfft_fast_instance_f32 fftInst;
@@ -20,8 +21,13 @@ void MyFFT_Init(double sampleRate)
 #if MYFFT_USE_HANNING
   // see https://www.mathworks.com/help/signal/ref/hann.html
   // hann(MYFFT_LENGTH, 'peroidic')
-  for (i = 0; i < MYFFT_LENGTH; i++)
+  hanningWindow[0] = 0;
+  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
+  {
     hanningWindow[i] = 0.5 * (1 - arm_cos_f32(2 * PI * i / MYFFT_LENGTH));
+    hanningWindow[MYFFT_LENGTH - i] = hanningWindow[i];
+  }
+
 #endif
 }
 
