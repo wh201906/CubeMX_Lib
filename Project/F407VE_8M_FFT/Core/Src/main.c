@@ -39,8 +39,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define FFT_LENGTH 4096
-#define SAMPLERATE 40960
+#define FFT_LENGTH 256
+#define SAMPLERATE 100000
 
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
@@ -55,6 +55,7 @@ void printAll(float32_t* addr,uint16_t len);
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
+uint8_t completeFlag = 0;
 
 /* USER CODE END PV */
 
@@ -77,8 +78,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char str[20];
-  double para[6]={7.5,6,4.5,0,35,80};
-  uint32_t timer;
+  uint16_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,6 +96,7 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -104,20 +105,11 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,128);
+  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   MyUSART1_Init();
   Delay_ms(200);
-  timer=__HAL_TIM_GetCounter(&htim2);
   MyFFT_Init(SAMPLERATE);
-  sprintf(str,"Init:%u",__HAL_TIM_GetCounter(&htim2)-timer);
-  MyUSART1_WriteLine(str);
-  MyFFT_GenerateArray(fftData,SAMPLERATE,&para[3],&para[0],3);
-  timer=__HAL_TIM_GetCounter(&htim2);
-  MyFFT_CalcInPlace(fftData);
-  sprintf(str,"Calc:%u",__HAL_TIM_GetCounter(&htim2)-timer);
-  MyUSART1_WriteLine(str);
-  printAll(fftData,FFT_LENGTH/2);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
@@ -128,7 +120,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(20);
+    if(completeFlag)
+    {
+      for(i=0;i<FFT_LENGTH;i++)
+        fftData[i]=val[i];
+      MyFFT_CalcInPlace(fftData);
+      sprintf(str,"Peak:%f",MyFFT_GetPeakFreq(fftData+1,FFT_LENGTH/2-1));
+      MyUSART1_WriteLine(str);
+      completeFlag=0;
+      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
+      HAL_TIM_Base_Start(&htim2);
+    }
+    Delay_ms(100);
   }
   /* USER CODE END 3 */
 }

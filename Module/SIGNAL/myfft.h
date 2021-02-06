@@ -5,7 +5,7 @@
 #include "arm_math.h"
 
 // bigger -> more precise -> takes longer time
-#define MYFFT_LENGTH 4096
+#define MYFFT_LENGTH 256
 
 // use hanning window
 #define MYFFT_USE_HANNING 1
@@ -24,7 +24,7 @@ void MyFFT_CalcInPlace(float32_t *data);
 void MyFFT_Calc(float32_t *input, float32_t *output); 
 
 // get the freq which has the highest amplitude, based on the given sampleRate
-double MyFFT_GetPeakFreq(float32_t *data);
+double MyFFT_GetPeakFreq(float32_t *data, uint16_t len);
 
 void MyFFT_SetSampleRate(double sampleRate);
 

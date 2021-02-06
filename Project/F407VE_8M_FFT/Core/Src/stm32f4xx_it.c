@@ -42,7 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+extern uint8_t completeFlag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -218,7 +218,8 @@ void USART1_IRQHandler(void)
 void DMA2_Stream0_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */
-
+  if(__HAL_DMA_GET_IT_SOURCE(&hdma_adc1, DMA_IT_TC) != RESET)
+    completeFlag=1;
   /* USER CODE END DMA2_Stream0_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc1);
   /* USER CODE BEGIN DMA2_Stream0_IRQn 1 */

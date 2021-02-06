@@ -53,12 +53,12 @@ void MyFFT_Calc(float32_t *input, float32_t *output)
   // output[0] /= 2; // for Amplitude
 }
 
-double MyFFT_GetPeakFreq(float32_t *data)
+double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)
 {
   uint32_t i;
   float32_t val;
-  arm_max_f32(data, MYFFT_LENGTH / 2, &val, &i);
-  return i * sampRate / MYFFT_LENGTH;
+  arm_max_f32(data, len, &val, &i);
+  return (double)i * sampRate / MYFFT_LENGTH;
 }
 
 void MyFFT_GenerateArray(float32_t *data, double sampleRate, double *freqArray, double *ampArray, uint32_t arrayLen)
