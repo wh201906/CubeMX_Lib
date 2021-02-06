@@ -40,7 +40,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define FFT_LENGTH 4096
-void tableInit(void);
+#define SAMPLERATE 40960
+
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
@@ -76,6 +77,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char str[20];
+  double para[6]={7.5,6,4.5,0,35,80};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,8 +107,8 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
   MyUSART1_Init();
   Delay_ms(200);
-  tableInit();
-  MyFFT_Init(0);
+  MyFFT_Init(SAMPLERATE);
+  MyFFT_GenerateArray(fftData,SAMPLERATE,&para[3],&para[0],3);
   MyFFT_CalcInPlace(fftData);
   printAll(fftData,FFT_LENGTH/2);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
@@ -168,12 +170,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void tableInit()
-{
-  uint16_t i;
-  for(i=0;i<FFT_LENGTH;i++)
-    fftData[i]=(7.5+6*arm_sin_f32(2*PI*i*10/FFT_LENGTH)+4.5*arm_sin_f32(2*PI*i*30/FFT_LENGTH));
-}
 
 void printAll(float32_t* addr,uint16_t len)
 {

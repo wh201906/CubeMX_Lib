@@ -4,16 +4,11 @@
 #include "main.h"
 #include "arm_math.h"
 
-// memory required of CFFT: 3 * FFT_LENGTH * 32bit
-/// memory required of RFFT: 2(or 2.5) * FFT_LENGTH * 32bit
-
-// cfft_radix2 and cfft_radix4 are deprecated
-// considering that the FFT is often used in processing a real number array,
-// the RFFT is a better choice with faster speed and less memory cost.
-
-
 // bigger -> more precise -> takes longer time
 #define MYFFT_LENGTH 4096
+
+// use hanning window
+#define MYFFT_USE_HANNING 1
 
 // init before use
 void MyFFT_Init(double sampleRate);
@@ -33,4 +28,15 @@ double MyFFT_GetPeakFreq(float32_t *data);
 
 void MyFFT_SetSampleRate(double sampleRate);
 
+// generate a array with (MYFFT_LENGTH) points
+// which has (arrayLen) sine waves
+void MyFFT_GenerateArray(float32_t *data, double sampleRate, double *freqArray, double *ampArray, uint32_t arrayLen);
+
 #endif
+
+// memory required of CFFT: 3 * FFT_LENGTH * 32bit
+/// memory required of RFFT: 2(or 2.5) * FFT_LENGTH * 32bit
+
+// cfft_radix2 and cfft_radix4 are deprecated
+// considering that the FFT is often used in processing a real number array,
+// the RFFT is a better choice with faster speed and less memory cost.
