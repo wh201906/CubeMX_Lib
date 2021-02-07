@@ -39,9 +39,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define FFT_LENGTH 256
-#define SAMPLERATE 100000
+#define FFT_LENGTH 1024
 
+double sampleRate=100000;
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
@@ -78,7 +78,10 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char str[20];
-  uint16_t i;
+  uint16_t i,j;
+  uint8_t outVal;
+  float32_t tmp;
+  char hexTable[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,7 +112,7 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
   MyUSART1_Init();
   Delay_ms(200);
-  MyFFT_Init(SAMPLERATE);
+  MyFFT_Init(sampleRate);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
@@ -125,13 +128,58 @@ int main(void)
       for(i=0;i<FFT_LENGTH;i++)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
-      sprintf(str,"Peak:%f",MyFFT_GetPeakFreq(fftData+1,FFT_LENGTH/2-1));
-      MyUSART1_WriteLine(str);
       completeFlag=0;
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
       HAL_TIM_Base_Start(&htim2);
+      //printAll(fftData,512);
+      MyUSART1_Write("cle 1,0\xFF\xFF\xFF",10);
+      MyUSART1_Write("addt 1,0,480\xFF\xFF\xFF",15);
+      arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
+      tmp=256/tmp;
+      for(i=0;i<480;i++)
+      {
+        outVal=fftData[479-i]/tmp;
+        MyUSART1_WriteChar(outVal);
+      }
     }
-    Delay_ms(100);
+    for(i=0;i<6;i++)
+    {
+      Delay_ms(50);
+      j=MyUSART1_ReadUntil(str,'>');
+      if(j)
+      {
+        if(str[j-2]=='+' && sampleRate<1000000)
+        {
+          if(sampleRate<10000)
+            sampleRate+=500;
+          else if(sampleRate<100000)
+            sampleRate+=5000;
+          else
+           sampleRate+=50000;
+        }
+        else if(str[j-2]=='-' && sampleRate>0)
+        {
+          if(sampleRate>100000)
+            sampleRate-=50000;
+          else if(sampleRate>10000)
+            sampleRate-=5000;
+          else
+            sampleRate-=500;
+        }
+        if(sampleRate>10000)
+        {
+          __HAL_TIM_SET_AUTORELOAD(&htim2,83);
+          __HAL_TIM_SET_PRESCALER(&htim2,1000000/sampleRate-1);
+        }
+        else
+        {
+          __HAL_TIM_SET_AUTORELOAD(&htim2,8399);
+          __HAL_TIM_SET_PRESCALER(&htim2,10000/sampleRate-1);
+        }
+      }
+    }
+    
+    MyUSART1_ClearBuffer();
   }
   /* USER CODE END 3 */
 }
@@ -192,6 +240,7 @@ void printAll(float32_t* addr,uint16_t len)
     Delay_ms(2);
   }
 }
+
 /* USER CODE END 4 */
 
 /**

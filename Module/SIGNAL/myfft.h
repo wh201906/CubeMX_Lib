@@ -5,7 +5,7 @@
 #include "arm_math.h"
 
 // bigger -> more precise -> takes longer time
-#define MYFFT_LENGTH 256
+#define MYFFT_LENGTH 1024
 
 // use hanning window
 #define MYFFT_USE_HANNING 1
