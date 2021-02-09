@@ -50,8 +50,8 @@ void MyFFT_Calc(float32_t *input, float32_t *output)
   arm_rfft_fast_f32(&fftInst, input, fftOutput, 0);
 #endif
   arm_cmplx_mag_f32(fftOutput, output, MYFFT_LENGTH / 2);
-  output[0] /= 2; // for Amplitude
-  arm_scale_f32(output, (double)2 / MYFFT_LENGTH, output, MYFFT_LENGTH / 2);
+  output[0] /= 2; // amplitude correction
+  arm_scale_f32(output, (double)2 / MYFFT_LENGTH, output, MYFFT_LENGTH / 2); // amplitude correction
 }
 
 double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)

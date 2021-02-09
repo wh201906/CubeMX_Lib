@@ -41,7 +41,7 @@
 /* USER CODE BEGIN PD */
 #define FFT_LENGTH 1024
 
-double sampleRate=100000;
+double sampleRate=2000000;
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
@@ -81,6 +81,7 @@ int main(void)
   uint16_t i,j;
   uint8_t outVal;
   float32_t tmp;
+  volatile uint8_t st[12];
   char hexTable[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
   /* USER CODE END 1 */
 
@@ -107,7 +108,7 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  Delay_Init(168);
+  Delay_Init(120);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   MyUSART1_Init();
@@ -129,20 +130,25 @@ int main(void)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
       completeFlag=0;
-      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
-      HAL_TIM_Base_Start(&htim2);
-      //printAll(fftData,512);
+      //printAll(fftData,sizeof(fftData));
       MyUSART1_Write("cle 1,0\xFF\xFF\xFF",10);
       MyUSART1_Write("addt 1,0,480\xFF\xFF\xFF",15);
       arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
       tmp=256/tmp;
       for(i=0;i<480;i++)
       {
-        outVal=fftData[479-i]/tmp;
+        outVal=fftData[479-i]*tmp;
         MyUSART1_WriteChar(outVal);
       }
+      
+      // DMA DOES take the bandwidth, so I start it after UART transmition.
+      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
+      // if the compiler use -O0 or -O1, the second HAL_ADC_Start_DMA() is necessary.
+      // I don't know why
+      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
+      HAL_TIM_Base_Start(&htim2);
     }
-    for(i=0;i<6;i++)
+    for(i=0;i<10;i++)
     {
       Delay_ms(50);
       j=MyUSART1_ReadUntil(str,'>');
@@ -168,16 +174,17 @@ int main(void)
         }
         if(sampleRate>10000)
         {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,83);
+          __HAL_TIM_SET_AUTORELOAD(&htim2,59);
           __HAL_TIM_SET_PRESCALER(&htim2,1000000/sampleRate-1);
         }
         else
         {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,8399);
+          __HAL_TIM_SET_AUTORELOAD(&htim2,5999);
           __HAL_TIM_SET_PRESCALER(&htim2,10000/sampleRate-1);
         }
       }
     }
+    
     
     MyUSART1_ClearBuffer();
   }
@@ -205,7 +212,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLN = 120;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -221,7 +228,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
     Error_Handler();
   }
