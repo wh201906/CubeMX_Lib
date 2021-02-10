@@ -6,7 +6,7 @@ DMA直接使用HAL库即可，此功能模块仅用于多字节传输
 具体初始化方法见头文件
 
 
-1.在 stm32fxxx_it.h/stm32hxxx_it.h中添加头文件引用
+1.在 stm32fxxx_it.c/stm32hxxx_it.c中添加头文件引用
 
 2.在 stm32fxxx_it.c/stm32hxxx_it.c中串口中断处添加自定义回调函数MyUSARTx_IRQHandler()
 

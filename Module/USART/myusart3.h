@@ -46,7 +46,7 @@ void MyUSART3_IRQHandler(USART_TypeDef* source);
 #endif
 
 /*
-Patch for stm32fxxx_it.h/stm32hxxx_it.h
+Patch for stm32fxxx_it.c/stm32hxxx_it.c
 
 1.
 add

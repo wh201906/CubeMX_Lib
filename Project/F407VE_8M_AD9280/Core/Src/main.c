@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "DELAY/delay.h"
+#include "USART/myusart1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,13 +47,14 @@
 
 /* USER CODE BEGIN PV */
 DMA_HandleTypeDef AD9280DMA;
-uint8_t adcVal[1024];
+uint8_t adcVal[32];
+uint8_t testVal;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void DMAInit(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -92,6 +94,8 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+  Delay_Init(168);
+  DMAInit();
   
   /* USER CODE END 2 */
 
@@ -102,6 +106,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    testVal=GPIOD->IDR;
+    MyUSART1_Write(adcVal,32);
   }
   /* USER CODE END 3 */
 }
@@ -156,9 +163,9 @@ void DMAInit(void)
   
   __HAL_RCC_GPIOD_CLK_ENABLE();
   
-  GPIO_InitStruct.Pin = 0x00FF; // Pin0 ~ Pin7
+  GPIO_InitStruct.Pin = 0xFFFF; // Pin0 ~ Pin7
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
   
@@ -171,12 +178,21 @@ void DMAInit(void)
   AD9280DMA.Init.MemInc=DMA_MINC_ENABLE;
   AD9280DMA.Init.PeriphDataAlignment=DMA_PDATAALIGN_BYTE;
   AD9280DMA.Init.MemDataAlignment=DMA_MDATAALIGN_BYTE;
-  AD9280DMA.Init.Mode=DMA_NORMAL;
+  AD9280DMA.Init.Mode=DMA_CIRCULAR;
   AD9280DMA.Init.Priority=DMA_PRIORITY_VERY_HIGH;
   AD9280DMA.Init.FIFOMode=DMA_FIFOMODE_DISABLE;
   
+  HAL_DMA_DeInit(&AD9280DMA);
   HAL_DMA_Init(&AD9280DMA);
-  HAL_DMA_Start(&AD9280DMA, GPIOD->IDR, adcVal, 1024);
+  
+  __HAL_LINKDMA(&htim2,hdma[TIM_DMA_ID_UPDATE],AD9280DMA);
+  
+  HAL_DMA_Start(&AD9280DMA, (uint32_t)&(GPIOD->IDR), (uint32_t)adcVal, 32);
+  __HAL_TIM_ENABLE_DMA(&htim2, TIM_DMA_UPDATE);
+  __HAL_TIM_ENABLE(&htim2);
+  //HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+  //htim2.Instance->CR2|=(uint16_t)(1u<<3);
+  //htim2.Instance->DIER=0x4100;
   
 }
 /* USER CODE END 4 */
