@@ -91,9 +91,9 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_TIM2_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim8,TIM_CHANNEL_1);
   Delay_Init(168);
   DMAInit();
   
@@ -169,10 +169,10 @@ void DMAInit(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
   
-  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
   
-  AD9280DMA.Instance=DMA1_Stream1;
-  AD9280DMA.Init.Channel=DMA_CHANNEL_3;
+  AD9280DMA.Instance=DMA2_Stream1;
+  AD9280DMA.Init.Channel=DMA_CHANNEL_7;
   AD9280DMA.Init.Direction=DMA_PERIPH_TO_MEMORY;
   AD9280DMA.Init.PeriphInc=DMA_PINC_DISABLE;
   AD9280DMA.Init.MemInc=DMA_MINC_ENABLE;
@@ -185,12 +185,17 @@ void DMAInit(void)
   HAL_DMA_DeInit(&AD9280DMA);
   HAL_DMA_Init(&AD9280DMA);
   
-  __HAL_LINKDMA(&htim2,hdma[TIM_DMA_ID_UPDATE],AD9280DMA);
+  __HAL_LINKDMA(&htim8,hdma[TIM_DMA_ID_UPDATE],AD9280DMA);
+  
+  
+  htim8.hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = TIM_DMADelayPulseCplt;
+  htim8.hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = TIM_DMADelayPulseHalfCplt;
+  htim8.hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
   
   HAL_DMA_Start(&AD9280DMA, (uint32_t)&(GPIOD->IDR), (uint32_t)adcVal, 32);
-  __HAL_TIM_ENABLE_DMA(&htim2, TIM_DMA_UPDATE);
-  __HAL_TIM_ENABLE(&htim2);
-  //HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+  __HAL_TIM_ENABLE_DMA(&htim8, TIM_DMA_UPDATE);
+  __HAL_TIM_ENABLE(&htim8);
+  
   //htim2.Instance->CR2|=(uint16_t)(1u<<3);
   //htim2.Instance->DIER=0x4100;
   

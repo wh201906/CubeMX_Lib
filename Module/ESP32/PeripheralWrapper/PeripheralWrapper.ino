@@ -8,6 +8,7 @@
 #define WRAPPER_RX_PIN 16
 #define WRAPPER_TX_PIN 17
 
+// max freq with GPIO matrix enabled: 7.2MHz
 #define WRAPPER_SCLK_PIN 13
 #define WRAPPER_MOSI_PIN 12
 #define WRAPPER_MISO_PIN 14
