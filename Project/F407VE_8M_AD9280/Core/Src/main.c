@@ -106,7 +106,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(100);
+    Delay_ms(300);
     testVal=GPIOD->IDR;
     MyUSART1_Write(adcVal,32);
   }
