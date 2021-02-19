@@ -1,9 +1,10 @@
 #include "paraio.h"
 
 // on STM32F4, GPIO is on AHB1, which is only accessible by DMA2
+// the Timer should be configured by CubeMX
 
 DMA_HandleTypeDef ParaIO_DMA_In;
-TIM_HandleTypeDef ParaIO_TIM_In;
+TIM_HandleTypeDef* ParaIO_TIM_In;
 
 void ParaIO_Init_GPIO_In(void)
 {
@@ -38,25 +39,8 @@ void ParaIO_Init_DMA_In(void)
 
   __HAL_LINKDMA(&ParaIO_TIM_In,hdma[TIM_DMA_ID_UPDATE],ParaIO_DMA_In);
 
-  ParaIO_TIM_In.hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = TIM_DMADelayPulseCplt;
-  ParaIO_TIM_In.hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = TIM_DMADelayPulseHalfCplt;
-  ParaIO_TIM_In.hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
+  ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = TIM_DMADelayPulseCplt;
+  ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = TIM_DMADelayPulseHalfCplt;
+  ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
 
-}
-
-void ParaIO_Init_TIM_In(void)
-{
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  // The DMA2 can only be triggered by TIM1/TIM8, which have BreakDeadTimeConfig
-  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0}; 
-
-  ParaIO_TIM_In.Instance = TIM8;
-  ParaIO_TIM_In.Init.Prescaler = 9;
-  ParaIO_TIM_In.Init.CounterMode = TIM_COUNTERMODE_UP;
-  ParaIO_TIM_In.Init.Period = 167;
-  ParaIO_TIM_In.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  ParaIO_TIM_In.Init.RepetitionCounter = 0;
-  ParaIO_TIM_In.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 }

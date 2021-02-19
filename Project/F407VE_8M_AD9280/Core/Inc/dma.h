@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    tim.h
+  * @file    dma.h
   * @brief   This file contains all the function prototypes for
-  *          the tim.c file
+  *          the dma.c file
   ******************************************************************************
   * @attention
   *
@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __TIM_H__
-#define __TIM_H__
+#ifndef __DMA_H__
+#define __DMA_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,20 +27,17 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+/* DMA memory to memory transfer handles -------------------------------------*/
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-extern TIM_HandleTypeDef htim8;
-
 /* USER CODE BEGIN Private defines */
-extern DMA_HandleTypeDef hdma_tim8_up;
 
 /* USER CODE END Private defines */
 
-void MX_TIM8_Init(void);
-
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+void MX_DMA_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -50,6 +47,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 }
 #endif
 
-#endif /* __TIM_H__ */
+#endif /* __DMA_H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
