@@ -1,5 +1,4 @@
 #include "myfft.h"
-#include "math.h"
 
 float32_t fftOutput[MYFFT_LENGTH];
 arm_rfft_fast_instance_f32 fftInst;

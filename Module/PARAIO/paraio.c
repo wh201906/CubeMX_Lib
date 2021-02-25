@@ -37,10 +37,12 @@ void ParaIO_Init_DMA_In(void)
   HAL_DMA_DeInit(&ParaIO_DMA_In);
   HAL_DMA_Init(&ParaIO_DMA_In);
 
-  __HAL_LINKDMA(&ParaIO_TIM_In,hdma[TIM_DMA_ID_UPDATE],ParaIO_DMA_In);
+  __HAL_LINKDMA(ParaIO_TIM_In,hdma[TIM_DMA_ID_UPDATE],ParaIO_DMA_In);
 
   ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = TIM_DMADelayPulseCplt;
   ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferHalfCpltCallback = TIM_DMADelayPulseHalfCplt;
   ParaIO_TIM_In->hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = TIM_DMAError;
 
 }
+
+void ParaIO_Init_In()
