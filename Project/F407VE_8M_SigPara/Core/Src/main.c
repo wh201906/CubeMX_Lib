@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATA_LEN 256
+#define DATA_LEN 1024
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -107,6 +107,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   HAL_TIM_Base_Start(&htim2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,8 +120,18 @@ int main(void)
     
     HAL_ADC_Start_DMA(&hadc1,(uint32_t*)rawData,DATA_LEN);
     Delay_ms(500);
-    HAL_ADC_Stop_DMA(&hadc1);
-    sprintf(str,"val: %f",RMS_Process());
+    // DMAContinuousRequests should be DISABLED, otherwise the data in buffer
+    // is not all valid(might be overwrite)
+    
+    // if DMAContinuousRequests is DISABLED, the ADC will not send new
+    // DMA requests if any data is not write to DMA.(this will happen when
+    // the DMA is full)
+    // However, in this case, the ADC_CR2_DMA is still HIGH
+    // So I need to reset ADC_CR2_DMA to restart transfer from ADC to DMA
+    
+    // set ADC_CR2_DMA to 0 then to 1
+    hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+    sprintf(str,"val: %f",RMS_Process()*3.3/4096);
     MyUSART1_WriteLine(str);
     
   }
