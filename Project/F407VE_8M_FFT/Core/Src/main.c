@@ -55,7 +55,6 @@ void printAll(float32_t* addr,uint16_t len);
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
-uint8_t completeFlag = 0;
 
 /* USER CODE END PV */
 
@@ -124,12 +123,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(completeFlag)
+    if(__HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR))
     {
+      hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
       for(i=0;i<FFT_LENGTH;i++)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
-      completeFlag=0;
       //printAll(fftData,sizeof(fftData));
       MyUSART1_Write("cle 1,0\xFF\xFF\xFF",10);
       MyUSART1_Write("addt 1,0,480\xFF\xFF\xFF",15);
@@ -142,11 +141,12 @@ int main(void)
       }
       
       // DMA DOES take the bandwidth, so I start it after UART transmition.
+      // 
+      // HAL_ADC_Stop_DMA(&hadc1);
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
       // if the compiler use -O0 or -O1, the second HAL_ADC_Start_DMA() is necessary.
       // I don't know why
-      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
-      HAL_TIM_Base_Start(&htim2);
+      // HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
     for(i=0;i<10;i++)
     {
