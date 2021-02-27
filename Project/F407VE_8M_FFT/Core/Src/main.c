@@ -41,7 +41,7 @@
 /* USER CODE BEGIN PD */
 #define FFT_LENGTH 1024
 
-double sampleRate=2000000;
+uint32_t sampleRate=2000000;
 void printAll(float32_t* addr,uint16_t len);
 /* USER CODE END PD */
 
@@ -157,42 +157,28 @@ int main(void)
         outVal=fftData[479-i]*tmp;
         MyUSART1_WriteChar(outVal);
       }
-      
+      Delay_ms(5);
+      MyUSART1_ClearBuffer();
       // DMA DOES take the bandwidth, so I start it after UART transmition.
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
     for(i=0;i<10;i++)
     {
       Delay_ms(30);
-      j=MyUSART1_ReadUntil(str,'>');
-      if(j)
+      j=MyUSART1_Read(str,3);
+      if(j==3)
       {
-        if(str[j-2]=='+' && sampleRate<1000000)
-        {
-          if(sampleRate<10000)
-            sampleRate+=500;
-          else if(sampleRate<100000)
-            sampleRate+=5000;
-          else
-           sampleRate+=50000;
-        }
-        else if(str[j-2]=='-' && sampleRate>0)
-        {
-          if(sampleRate>100000)
-            sampleRate-=50000;
-          else if(sampleRate>10000)
-            sampleRate-=5000;
-          else
-            sampleRate-=500;
-        }
+        sampleRate = str[0]&0xFF;
+        sampleRate |= (uint32_t)(str[1]<<8);
+        sampleRate |= (uint32_t)(str[2]<<16);
         if(sampleRate>10000)
         {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,59);
+          __HAL_TIM_SET_AUTORELOAD(&htim2,29);
           __HAL_TIM_SET_PRESCALER(&htim2,1000000/sampleRate-1);
         }
         else
         {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,5999);
+          __HAL_TIM_SET_AUTORELOAD(&htim2,2999);
           __HAL_TIM_SET_PRESCALER(&htim2,10000/sampleRate-1);
         }
       }
