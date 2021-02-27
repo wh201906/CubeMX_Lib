@@ -1,5 +1,19 @@
 # 信号处理
 
+## Tips:
+对于单轮ADC+DMA采集，ADC与DMA应进行如下配置：
+
+ADC:  
+ContinuousConvMode = DISABLE;   // 只需要采集一轮数据，且采集需要外部触发条件来控制等间隔  
+DMAContinuousRequests = DISABLE;   // F4中对应ADC_CR2_DDS，DMA最后一次传输完成后不再产生新DMA请求  
+DMA:  
+Init.Mode = DMA_NORMAL; //DMA完成即终止  
+
+此时检测DMA传输是否完成可使用  
+__HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR)  
+检测ADC的状态寄存器SR的OVR位，在传输完成后ADC的下一次DMA请求会失效，从而使得OVR位被置1  
+
+
 ## FFT
 针对时域实数列进行计算，比复数FFT节省空间，速度更快  
 支持加汉宁窗，从而减轻频谱泄露现象  

@@ -130,10 +130,28 @@ int main(void)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
       //printAll(fftData,sizeof(fftData));
+      
+      // Init transfer
+      MyUSART1_ClearBuffer();
+      str[0]=0x00;
+      j=0;
+      
+      // Write command
       MyUSART1_Write("cle 1,0\xFF\xFF\xFF",10);
       MyUSART1_Write("addt 1,0,480\xFF\xFF\xFF",15);
+      
+       // Wait for response in 30ms
+      for(i=0;i<15;i++)
+      {
+        if(str[0]==0xFE)
+          break;
+        Delay_ms(2);
+        j=MyUSART1_Read(str+j,4);
+      }
       arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
       tmp=256/tmp;
+      
+      // Write data
       for(i=0;i<480;i++)
       {
         outVal=fftData[479-i]*tmp;
@@ -141,16 +159,11 @@ int main(void)
       }
       
       // DMA DOES take the bandwidth, so I start it after UART transmition.
-      // 
-      // HAL_ADC_Stop_DMA(&hadc1);
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
-      // if the compiler use -O0 or -O1, the second HAL_ADC_Start_DMA() is necessary.
-      // I don't know why
-      // HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
     for(i=0;i<10;i++)
     {
-      Delay_ms(50);
+      Delay_ms(30);
       j=MyUSART1_ReadUntil(str,'>');
       if(j)
       {
