@@ -171,16 +171,14 @@ int main(void)
         sampleRate = str[0]&0xFF;
         sampleRate |= (uint32_t)(str[1]<<8);
         sampleRate |= (uint32_t)(str[2]<<16);
-        if(sampleRate>10000)
-        {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,29);
-          __HAL_TIM_SET_PRESCALER(&htim2,1000000/sampleRate-1);
-        }
-        else
-        {
-          __HAL_TIM_SET_AUTORELOAD(&htim2,2999);
-          __HAL_TIM_SET_PRESCALER(&htim2,10000/sampleRate-1);
-        }
+        // for a 32-bit ARR register, 
+        // the prescaler can be set to 0, 
+        // and the lowest freq is 168M / (2^32-1) = 0.04Hz
+        // or in this program: 60M / (2^32-1) = 0.014Hz
+        
+        // PRESCALER has been set to 0
+        __HAL_TIM_SET_AUTORELOAD(&htim2,(60000000.0/2.0/sampleRate+0.5)-1);
+        
       }
     }
     
