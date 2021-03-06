@@ -52,7 +52,7 @@ void MyFFT_Calc(q15_t *input, q15_t *output)
   // need some modify
   arm_cmplx_mag_q15(fftOutput, output, MYFFT_LENGTH / 2);
   output[0] /= 2;                                                            // amplitude correction
-  arm_scale_q15(output, (double)2 / MYFFT_LENGTH, output, MYFFT_LENGTH / 2); // amplitude correction
+  //arm_scale_q15(output, (double)2 / MYFFT_LENGTH, output, MYFFT_LENGTH / 2); // amplitude correction
 }
 
 // need some modify
