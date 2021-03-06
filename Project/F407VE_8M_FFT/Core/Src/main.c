@@ -110,9 +110,13 @@ int main(void)
   Delay_Init(120);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
+  HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
   MyUSART1_Init();
-  Delay_ms(200);
+  Delay_ms(500);
+  HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   MyFFT_Init(sampleRate);
+  HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
+  Delay_ms(200);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
@@ -126,9 +130,12 @@ int main(void)
     if(__HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR))
     {
       hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
       for(i=0;i<FFT_LENGTH;i++)
         fftData[i]=val[i];
+      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
       MyFFT_CalcInPlace(fftData);
+      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4); 
       //printAll(fftData,sizeof(fftData));
       
       // Init transfer

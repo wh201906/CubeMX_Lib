@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;           ../../../Module;           "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc";           "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";           "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/CMSIS/Device/ST/STM32F4xx/Include";           "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/CMSIS/Include"</IncludePath>
+              <IncludePath>../Core/Inc;                 ../../../Module;                 "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc";                 "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";                 "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/CMSIS/Device/ST/STM32F4xx/Include";                 "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/CMSIS/Include"</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -462,11 +462,6 @@
               <FileName>myfft.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\SIGNAL\myfft.c</FilePath>
-            </File>
-            <File>
-              <FileName>myfft_q15.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\SIGNAL\myfft_q15.c</FilePath>
             </File>
           </Files>
         </Group>

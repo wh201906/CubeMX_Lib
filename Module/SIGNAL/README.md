@@ -21,7 +21,7 @@ __HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR)
 函数实现尽可能使用CMSIS DSP库以充分利用FPU资源  
 （还没做相位计算，因为DSP库内没有arctan()，如果需要可用math.h当中的atan2()计算）  
 
-测试数据：  
+测试数据：(通过反转GPIO口，外部示波器测量脉宽测量)  
 带汉宁窗，4096点，F407VE(168MHz)上测试  
 初始化：895us  
 单次计算：3178us  
