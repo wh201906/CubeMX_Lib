@@ -242,53 +242,20 @@ void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch, uint8_t TextSize, uint8_t r
   }
 }
 
-int OLED_ShowInt(uint8_t x, uint8_t y, int val, uint8_t TextSize, uint8_t reverse)
+int OLED_ShowInt(uint8_t x, uint8_t y, int64_t val, uint8_t TextSize, uint8_t reverse)
 {
-  uint8_t str[12], ch;
-  int i, n;
-  if (val == 0)
-  {
-    OLED_ShowChar(x, y, '0', TextSize, reverse);
-    return 1;
-  }
-  else
-  {
-    if (val < 0)
-    {
-      str[0] = '-';
-      val = -val;
-    }
-    else
-      str[0] = ' ';
-    for (n = 1; val > 0; val /= 10, n++)
-      str[n] = (val % 10) + '0';
-    str[n] = '\0';
-    for (i = 1; i <= n / 2; i++)
-    {
-      ch = str[i];
-      str[i] = str[n - i];
-      str[n - i] = ch;
-    }
-    if (str[0] == '-')
-    {
-      OLED_ShowStr(x, y, str, TextSize, reverse);
-      return n;
-    }
-    else
-    {
-      OLED_ShowStr(x, y, str + 1, TextSize, reverse);
-      return (n - 1);
-    }
-  }
+  uint8_t str[22], len;
+  len=myitoa(val,str,10);
+  OLED_ShowStr(x, y, str, TextSize, reverse);
+  return len;
 }
 
 int OLED_ShowFloat(uint8_t x, uint8_t y, double val, uint8_t TextSize, uint8_t reverse)
 {
-  uint8_t out[16];
-  sprintf(out, "%.3lf", val);
-  out[15] = '\0';
-  OLED_ShowStr(x, y, out, TextSize, reverse);
-  return (strlen(out));
+  uint8_t str[30],len;
+  len=myftoa(val,str);
+  OLED_ShowStr(x, y, str, TextSize, reverse);
+  return (len);
 }
 void OLED_SetBrightness(uint8_t val)
 {

@@ -4,8 +4,7 @@
 #include "main.h"
 #include "DELAY/delay.h"
 #include "I2C/softi2c1.h"
-#include "stdio.h"
-#include "string.h"
+#include "UTIL/util.h"
 
 extern uint8_t RevState;
 extern uint8_t brightness;
@@ -32,7 +31,7 @@ void OLED_Reverse(void);
 void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t reverse);
 void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index, uint8_t reverse);
 void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch, uint8_t TextSize, uint8_t reverse);
-int OLED_ShowInt(uint8_t x, uint8_t y, int val, uint8_t TextSize, uint8_t reverse);
+int OLED_ShowInt(uint8_t x, uint8_t y, int64_t val, uint8_t TextSize, uint8_t reverse);
 int OLED_ShowFloat(uint8_t x, uint8_t y, double val, uint8_t TextSize, uint8_t reverse);
 void OLED_DrawBMP(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t BMP[], uint8_t reverse);
 #endif
