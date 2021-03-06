@@ -523,6 +523,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\I2C\softi2c1.c</FilePath>
             </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
