@@ -30,8 +30,16 @@ DMA_HandleTypeDef hdma_adc1;
 /* ADC1 init function */
 void MX_ADC1_Init(void)
 {
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
   ADC_ChannelConfTypeDef sConfig = {0};
 
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
@@ -59,6 +67,9 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
 
 }
 
