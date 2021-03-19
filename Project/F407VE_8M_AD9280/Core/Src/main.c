@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
+#include "PARAIO/paraio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,10 +97,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start_DMA(&htim8,TIM_CHANNEL_1, (uint32_t)adcVal, 32);
+  // HAL_TIM_PWM_Start_DMA(&htim8,TIM_CHANNEL_1, (uint32_t)adcVal, ADC_LEN);
   Delay_Init(168);
-  IOInit();
-  //HAL_DMA_Start_IT(&hdma_tim8_up,(uint32_t)&(GPIOD->IDR), (uint32_t)adcVal, 32);
+  ParaIO_Init_GPIO_In();
+  ParaIO_Init_DMA_In();
+  // ParaIO_Start_In(adcVal,ADC_LEN);
 
   
   
@@ -112,7 +114,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //HAL_DMA_Start_IT(&hdma_tim8_up,(uint32_t)&(GPIOD->IDR), (uint32_t)adcVal, 32);
+    ParaIO_Init_DMA_In();
+    ParaIO_Start_In(adcVal,ADC_LEN);
+    testVal=GPIOD->IDR;
     Delay_ms(300);
     MyUSART1_Write(adcVal,ADC_LEN);
   }
@@ -163,19 +167,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void IOInit(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  
-  GPIO_InitStruct.Pin = 0xFFFF; // Pin0 ~ Pin7
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-  
-}
+
 /* USER CODE END 4 */
 
 /**
