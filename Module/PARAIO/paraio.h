@@ -12,6 +12,8 @@ void ParaIO_Init_GPIO_In(void);
 
 void ParaIO_Init_DMA_In(void);
 
+void ParaIO_Init_In(TIM_HandleTypeDef* htim);
+
 void ParaIO_Start_In(void *destAddr,uint32_t len);
 
 #endif 

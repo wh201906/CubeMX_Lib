@@ -4,7 +4,7 @@
 // the Timer should be configured by CubeMX
 
 DMA_HandleTypeDef ParaIO_DMA_In;
-TIM_HandleTypeDef* ParaIO_TIM_In=&htim8;
+TIM_HandleTypeDef* ParaIO_TIM_In;
 
 void ParaIO_Init_GPIO_In(void)
 {
@@ -42,8 +42,17 @@ void ParaIO_Init_DMA_In(void)
   // DMA Interrupt should be disabled in CubeMX
 }
 
+void ParaIO_Init_In(TIM_HandleTypeDef* htim)
+{
+  ParaIO_TIM_In = htim;
+  ParaIO_Init_GPIO_In();
+  ParaIO_Init_DMA_In();
+}
+
 void ParaIO_Start_In(void *destAddr,uint32_t len)
 {
+  
+  HAL_DMA_Init(&ParaIO_DMA_In); // necessary there
   HAL_DMA_Start(&ParaIO_DMA_In,(uint32_t)&(GPIOD->IDR),(uint32_t)destAddr,len);
   __HAL_TIM_ENABLE_DMA(ParaIO_TIM_In, TIM_DMA_UPDATE);
   __HAL_TIM_ENABLE(ParaIO_TIM_In);

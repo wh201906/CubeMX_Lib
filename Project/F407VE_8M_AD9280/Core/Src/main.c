@@ -99,12 +99,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   // HAL_TIM_PWM_Start_DMA(&htim8,TIM_CHANNEL_1, (uint32_t)adcVal, ADC_LEN);
   Delay_Init(168);
-  ParaIO_Init_GPIO_In();
-  ParaIO_Init_DMA_In();
+  HAL_TIM_PWM_Start(&htim8,TIM_CHANNEL_1);
+  ParaIO_Init_In(&htim8);
   // ParaIO_Start_In(adcVal,ADC_LEN);
 
-  
-  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,7 +112,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    ParaIO_Init_DMA_In();
     ParaIO_Start_In(adcVal,ADC_LEN);
     testVal=GPIOD->IDR;
     Delay_ms(300);
