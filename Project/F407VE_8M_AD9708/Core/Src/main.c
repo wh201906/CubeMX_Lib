@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -38,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DACLEN 42
+#define DACLEN 32
 #define PI 3.1415926535
 /* USER CODE END PD */
 
@@ -66,7 +65,7 @@ void dacValGen(void)
   int16_t i; // use signed value to prevent implicit convert to unsigned value
   for(i=0;i<DACLEN;i++)
   {
-    dacVal[i]=(double)sin(2*PI*(double)i/DACLEN);
+    dacVal[i] = (double)sin(2 * PI * (double)i / DACLEN) * 127 + 128;
   }
 }
 /* USER CODE END 0 */
@@ -99,7 +98,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */

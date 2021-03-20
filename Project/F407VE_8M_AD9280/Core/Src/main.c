@@ -48,7 +48,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-DMA_HandleTypeDef AD9280DMA;
 uint8_t adcVal[ADC_LEN];
 uint8_t testVal;
 /* USER CODE END PV */

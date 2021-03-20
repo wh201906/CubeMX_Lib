@@ -25,7 +25,6 @@
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim8;
-DMA_HandleTypeDef hdma_tim8_up;
 
 /* TIM8 init function */
 void MX_TIM8_Init(void)
@@ -43,9 +42,9 @@ void MX_TIM8_Init(void)
 
   /* USER CODE END TIM8_Init 1 */
   htim8.Instance = TIM8;
-  htim8.Init.Prescaler = 839;
+  htim8.Init.Prescaler = 0;
   htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim8.Init.Period = 1;
+  htim8.Init.Period = 4;
   htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim8.Init.RepetitionCounter = 0;
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -60,7 +59,7 @@ void MX_TIM8_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 1;
+  sConfigOC.Pulse = 2;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -98,26 +97,6 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* tim_pwmHandle)
   /* USER CODE END TIM8_MspInit 0 */
     /* TIM8 clock enable */
     __HAL_RCC_TIM8_CLK_ENABLE();
-
-    /* TIM8 DMA Init */
-    /* TIM8_UP Init */
-    hdma_tim8_up.Instance = DMA2_Stream1;
-    hdma_tim8_up.Init.Channel = DMA_CHANNEL_7;
-    hdma_tim8_up.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_tim8_up.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_tim8_up.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_tim8_up.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_tim8_up.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_tim8_up.Init.Mode = DMA_NORMAL;
-    hdma_tim8_up.Init.Priority = DMA_PRIORITY_LOW;
-    hdma_tim8_up.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-    if (HAL_DMA_Init(&hdma_tim8_up) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(tim_pwmHandle,hdma[TIM_DMA_ID_UPDATE],hdma_tim8_up);
-
   /* USER CODE BEGIN TIM8_MspInit 1 */
 
   /* USER CODE END TIM8_MspInit 1 */
@@ -161,9 +140,6 @@ void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* tim_pwmHandle)
   /* USER CODE END TIM8_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_TIM8_CLK_DISABLE();
-
-    /* TIM8 DMA DeInit */
-    HAL_DMA_DeInit(tim_pwmHandle->hdma[TIM_DMA_ID_UPDATE]);
   /* USER CODE BEGIN TIM8_MspDeInit 1 */
 
   /* USER CODE END TIM8_MspDeInit 1 */
