@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -93,14 +92,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
   // HAL_TIM_PWM_Start_DMA(&htim8,TIM_CHANNEL_1, (uint32_t)adcVal, ADC_LEN);
   Delay_Init(168);
   HAL_TIM_PWM_Start(&htim8,TIM_CHANNEL_1);
-  ParaIO_Init_In(&htim8);
+  ParaIO_Init_In(&htim8,8,0);
   // ParaIO_Start_In(adcVal,ADC_LEN);
 
   /* USER CODE END 2 */
