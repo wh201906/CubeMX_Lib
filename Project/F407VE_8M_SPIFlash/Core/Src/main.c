@@ -37,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ARRAYLEN 20
+#define ARRAYLEN 32
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
