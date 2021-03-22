@@ -71,6 +71,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint16_t i;
+  uint8_t id;
+  uint32_t jedecid;
+  uint64_t uid;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,9 +98,10 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   SPIFlash_Init(&hspi1);
-  SPIFLASH_CS_L();
-  HAL_SPI_TransmitReceive(&hspi1, txBuf,rxBuf, 6, 1000);   
-  SPIFLASH_CS_H();
+  rxBuf[0]=SPIFlash_GetDeviceID_PowerUp();
+  uid=SPIFlash_GetUID();
+  jedecid=SPIFlash_GetJEDECID();
+  id=rxBuf[0];
   
   for(i=0;i<ARRAYLEN;i++)
     fputc(rxBuf[i],(FILE*)1);
