@@ -54,6 +54,7 @@ uint8_t SPIFlash_WriteStateReg(uint8_t regId, uint8_t val);
 uint8_t SPIFlash_SetWriteEnabled(uint8_t isEnabled);
 uint8_t SPIFlash_IsBusy(void);
 
+void SPIFlash_Erase(uint8_t type, uint32_t addr);
 uint8_t SPIFlash_ReadByte(uint32_t addr);
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val);
 #endif

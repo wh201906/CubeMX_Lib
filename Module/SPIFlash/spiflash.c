@@ -87,7 +87,9 @@ uint32_t SPIFlash_GetJEDECID(void)
 // return the reg value
 uint8_t SPIFlash_ReadStateReg(uint8_t regId)
 {
-  if (regId == 2)
+  if (regId == 1)
+    SPIFlash_Buf[0] = SPIFLASH_SR1_R;
+  else if (regId == 2)
     SPIFlash_Buf[0] = SPIFLASH_SR2_R;
   else if (regId == 3)
     SPIFlash_Buf[0] = SPIFLASH_SR3_R;
@@ -152,9 +154,9 @@ uint8_t SPIFlash_IsBusy(void)
 }
 
 // CS will not be pulled up there
-void SPIFLASH_SendAddr(uint8_t rw, uint32_t addr)
+void SPIFLASH_SendAddr(uint8_t operation, uint32_t addr)
 {
-  SPIFlash_Buf[0] = rw;
+  SPIFlash_Buf[0] = operation;
 #if SPIFLASH_ADDR_4BYTE
   SPIFlash_Buf[1] = (addr >> 24) & 0xFF;
   SPIFlash_Buf[2] = (addr >> 16) & 0xFF;
@@ -163,7 +165,6 @@ void SPIFLASH_SendAddr(uint8_t rw, uint32_t addr)
 
   SPIFLASH_CS_L();
   SPIFLASH_T(5);
-  SPIFLASH_CS_H();
 #else
   SPIFlash_Buf[1] = (addr >> 16) & 0xFF;
   SPIFlash_Buf[2] = (addr >> 8) & 0xFF;
@@ -172,6 +173,48 @@ void SPIFLASH_SendAddr(uint8_t rw, uint32_t addr)
   SPIFLASH_CS_L();
   SPIFLASH_T(4);
 #endif
+}
+
+// The type can be: SPIFLASH_ERASE4K, SPIFLASH_ERASE32K, SPIFLASH_ERASE64K, SPIFLASH_ERASEALL
+// The addr is the orignal address rather than the sector/32k/64k id
+//
+// It seems that the addr can be passed to Flash directly, but there are many implementations
+// which make the alignment, so I keep it in my code.
+void SPIFlash_Erase(uint8_t type, uint32_t addr)
+{
+  SPIFlash_SetWriteEnabled(1);
+
+  if (type == SPIFLASH_ERASEALL)
+  {
+    SPIFlash_Buf[0] = type;
+
+    SPIFLASH_CS_L();
+    SPIFLASH_T(1);
+    SPIFLASH_CS_H();
+
+    while (SPIFlash_IsBusy)
+      ;
+    return;
+  }
+
+  // I don't know whether (addr >> 12; addr << 12;) will be optimized by compiler
+  // but @HolmiumTS gives a better way
+  // "x&((-1)<<n)"
+  else if (type == SPIFLASH_ERASE4K)
+    addr &= (uint32_t)-1 << 12;
+  else if (type == SPIFLASH_ERASE32K)
+    addr &= (uint32_t)-1 << 15;
+  else if (type == SPIFLASH_ERASE64K)
+    addr &= (uint32_t)-1 << 16;
+  else // treat as 4K
+    addr &= (uint32_t)-1 << 12;
+
+  SPIFLASH_SendAddr(type, addr);
+  SPIFLASH_CS_H();
+
+  while (SPIFlash_IsBusy)
+    ;
+  return;
 }
 
 uint8_t SPIFlash_ReadByte(uint32_t addr)
@@ -183,18 +226,18 @@ uint8_t SPIFlash_ReadByte(uint32_t addr)
   return SPIFlash_Buf[0];
 }
 
-void SPIFlash_Erase(uint8_t type, uint32_t addr)
-{
-}
-
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)
 {
+  if (SPIFlash_ReadByte(addr) == val)
+    return 1;
+
+  SPIFlash_Erase(SPIFLASH_ERASE4K, addr);
+
   if (SPIFlash_SetWriteEnabled(1))
     return 0;
 
   SPIFLASH_SendAddr(SPIFLASH_WRITE, addr);
-  SPIFlash_Buf[0];
-  SPIFLASH_T(1);
+  SPIFlash_Buf[0] SPIFLASH_T(1);
   SPIFLASH_CS_H();
 
 #if SPIFLASH_WRITECHECK
