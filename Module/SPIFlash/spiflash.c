@@ -4,11 +4,12 @@ SPI_HandleTypeDef *SPIFlash_SPIHandler;
 uint32_t SPIFlash_Timeout = 1000;
 
 // Write 256Bit, Erase 4096Bit, cache before erase
-uint8_t SPIFlash_Buf[12];
+uint8_t SPIFlash_Data_Buf[4100]; // 4096
+uint8_t SPIFlash_CMD_Buf[10];    // 8
 
 // Use SPIFlash_Buf for transmit and receive
-#define SPIFLASH_R(__LEN__) HAL_SPI_Receive(SPIFlash_SPIHandler, SPIFlash_Buf, (__LEN__), SPIFlash_Timeout)
-#define SPIFLASH_T(__LEN__) HAL_SPI_Transmit(SPIFlash_SPIHandler, SPIFlash_Buf, (__LEN__), SPIFlash_Timeout)
+#define SPIFLASH_R(__LEN__) HAL_SPI_Receive(SPIFlash_SPIHandler, SPIFlash_CMD_Buf, (__LEN__), SPIFlash_Timeout)
+#define SPIFLASH_T(__LEN__) HAL_SPI_Transmit(SPIFlash_SPIHandler, SPIFlash_CMD_Buf, (__LEN__), SPIFlash_Timeout)
 
 void SPIFlash_Init(SPI_HandleTypeDef *hspi)
 {
@@ -153,7 +154,7 @@ uint8_t SPIFlash_IsBusy(void)
   return (SPIFlash_ReadStateReg(1) & 1u);
 }
 
-// CS will not be pulled up there
+// CS will not be pulled down there
 void SPIFLASH_SendAddr(uint8_t operation, uint32_t addr)
 {
   SPIFlash_Buf[0] = operation;
@@ -192,7 +193,7 @@ void SPIFlash_Erase(uint8_t type, uint32_t addr)
     SPIFLASH_T(1);
     SPIFLASH_CS_H();
 
-    while (SPIFlash_IsBusy)
+    while (SPIFlash_IsBusy())
       ;
     return;
   }
@@ -212,7 +213,7 @@ void SPIFlash_Erase(uint8_t type, uint32_t addr)
   SPIFLASH_SendAddr(type, addr);
   SPIFLASH_CS_H();
 
-  while (SPIFlash_IsBusy)
+  while (SPIFlash_IsBusy())
     ;
   return;
 }
@@ -226,6 +227,48 @@ uint8_t SPIFlash_ReadByte(uint32_t addr)
   return SPIFlash_Buf[0];
 }
 
+// |---|---|---|---
+// |---|---|-
+// Just handle the tail
+void SPIFlash_Read(uint32_t addr, uint8_t *data, uint32_t len)
+{
+  // the maxLen for HAL_SPI_Receive() is 16bit, so I need a loop
+  uint32_t processedLen = 0, currLen = 0;
+  SPIFLASH_SendAddr(SPIFLASH_READ, addr);
+  while (processedLen < len)
+  {
+    currLen = len - processedLen;
+    currLen = 0xFFFFu < currLen ? 0xFFFFu : currLen;
+    HAL_SPI_Receive(SPIFlash_SPIHandler, data + processedLen, currLen, SPIFlash_Timeout);
+    processedLen += currLen;
+  }
+  SPIFLASH_CS_H();
+}
+
+// |---|---|---|---
+//    -|---|---|-
+// Handle head and tail for 256Byte alignment
+void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
+{
+  uint32_t processedLen = 0, currLen = 0;
+
+  currLen = 0xFF - (addr % 0xFF);
+  currLen = len < currLen ? len : currLen;
+  while (processedLen < len)
+  {
+    SPIFLASH_SendAddr(SPIFLASH_PROGRAM, addr + processedLen);
+    HAL_SPI_Transmit(SPIFlash_SPIHandler, data + processedLen, currLen, SPIFlash_Timeout);
+    SPIFLASH_CS_H();
+    while (SPIFlash_IsBusy())
+      ;
+
+    processedLen + currLen;
+    currLen = currLen = len - processedLen;
+    currLen = 0xFFu < currLen ? 0xFFu : currLen;
+  }
+  // The assignment of currLen will be executed once more.
+}
+
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)
 {
   if (SPIFlash_ReadByte(addr) == val)
@@ -237,7 +280,8 @@ uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)
     return 0;
 
   SPIFLASH_SendAddr(SPIFLASH_WRITE, addr);
-  SPIFlash_Buf[0] SPIFLASH_T(1);
+  SPIFlash_Buf[0];
+  SPIFLASH_T(1);
   SPIFLASH_CS_H();
 
 #if SPIFLASH_WRITECHECK

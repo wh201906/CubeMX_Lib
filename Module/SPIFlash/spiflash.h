@@ -37,7 +37,7 @@
 // Fast read is not implemented there. This instruction is useful when the SPI clock is over 50MHz
 #define SPIFLASH_READ 0x03
 #define SPIFLASH_READ_FAST 0x0B
-#define SPIFLASH_WRITE 0x02
+#define SPIFLASH_PROGRAM 0x02
 #define SPIFLASH_ERASE4K 0x20
 #define SPIFLASH_ERASE32K 0x52
 #define SPIFLASH_ERASE64K 0xD8
