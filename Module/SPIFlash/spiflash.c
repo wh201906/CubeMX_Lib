@@ -201,7 +201,7 @@ void SPIFlash_Erase(uint8_t type, uint32_t addr)
   // I don't know whether (addr >> 12; addr << 12;) will be optimized by compiler
   // but @HolmiumTS gives a better way
   // "x&((-1)<<n)"
-  else if (type == SPIFLASH_ERASE4K)
+  if (type == SPIFLASH_ERASE4K)
     addr &= (uint32_t)-1 << 12;
   else if (type == SPIFLASH_ERASE32K)
     addr &= (uint32_t)-1 << 15;
@@ -235,10 +235,11 @@ void SPIFlash_Read(uint32_t addr, uint8_t *data, uint32_t len)
   // the maxLen for HAL_SPI_Receive() is 16bit, so I need a loop
   uint32_t processedLen = 0, currLen = 0;
   SPIFLASH_SendAddr(SPIFLASH_READ, addr);
+
   while (processedLen < len)
   {
     currLen = len - processedLen;
-    currLen = 0xFFFFu < currLen ? 0xFFFFu : currLen;
+    currLen = 65536 < currLen ? 65536 : currLen;
     HAL_SPI_Receive(SPIFlash_SPIHandler, data + processedLen, currLen, SPIFlash_Timeout);
     processedLen += currLen;
   }
@@ -252,7 +253,7 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
 {
   uint32_t processedLen = 0, currLen = 0;
 
-  currLen = 0xFF - (addr % 0xFF);
+  currLen = 256 - (addr % 256);
   currLen = len < currLen ? len : currLen;
   while (processedLen < len)
   {
@@ -263,10 +264,48 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
       ;
 
     processedLen + currLen;
-    currLen = currLen = len - processedLen;
-    currLen = 0xFFu < currLen ? 0xFFu : currLen;
+    currLen = len - processedLen;
+    currLen = 256 < currLen ? 256 : currLen;
   }
   // The assignment of currLen will be executed once more.
+}
+
+// |---|---|---|---
+//    -|---|---|-
+// Handle head and tail for 4kByte alignment
+void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
+{
+  uint32_t processedLen = 0, currLen = 0;
+  uint32_t offset = 0, secPos = 0;
+  uint16_t i;
+
+  currLen = 4096 - (addr % 4096);
+  currLen = len < currLen ? len : currLen;
+  while (processedLen < len)
+  {
+    secPos = addr + processedLen;
+    offset = secPos & 0xFFF;
+    secPos &= (uint32_t)-1 << 12;
+    SPIFlash_Read(secPos, SPIFlash_Data_Buf, 4096);
+    for (i = 0; i < currLen; i++)
+    {
+      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[processedLen + offset + i])
+        break;
+    }
+    if (i < currLen)
+    {
+      SPIFlash_Erase(secPos);
+      for (i = 0; i < currLen; i++)
+        SPIFlash_Data_Buf[offset + i] = data[processedLen + offset + i];
+      SPIFlash_Program(secPos, SPIFlash_Data_Buf, 4096);
+    }
+    else
+      SPIFlash_Program(addr + processedLen, data + processedLen, currLen);
+
+    processedLen += currLen;
+    currLen = len - processedLen;
+    currLen = 4096 < currLen ? 4096 : currLen;
+  }
 }
 
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)
