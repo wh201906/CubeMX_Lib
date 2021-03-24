@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include "DELAY/delay.h"
 #include "SPIFlash/spiflash.h"
+#include "USART/myusart1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ARRAYLEN 32
+#define ARRAYLEN 64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,8 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t txBuf[ARRAYLEN] = {0x90,0x00,0x00,0x00};
-uint8_t rxBuf[ARRAYLEN];
+uint8_t buf[ARRAYLEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,10 +70,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t i;
-  uint8_t id;
-  uint32_t jedecid;
-  uint64_t uid;
+  uint32_t i;
+  uint8_t cmdByte;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,14 +95,23 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  Delay_Init(168);
   SPIFlash_Init(&hspi1);
-  rxBuf[0]=SPIFlash_GetDeviceID_PowerUp();
-  uid=SPIFlash_GetUID();
-  jedecid=SPIFlash_GetJEDECID();
-  id=rxBuf[0];
+  MyUSART1_Init();
   
-  for(i=0;i<ARRAYLEN;i++)
-    fputc(rxBuf[i],(FILE*)1);
+  MyUSART1_WriteLine("SPIFlash Test");
+  MyUSART1_WriteLine("0x01 Generate 0~ArrayLen");
+  MyUSART1_WriteLine("0x02 Generate 0XFF~(0XFF-ArrayLen)");
+  MyUSART1_WriteLine("0x03 Read and output");
+  MyUSART1_WriteLine("0x04 Write");
+  MyUSART1_WriteLine("0x05 Erase");
+  // seperator
+  for(i=0;i<5;i++)
+  {
+    MyUSART1_WriteChar(0x55);
+    MyUSART1_WriteChar(0xAA);
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,6 +121,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (MyUSART1_Read(&cmdByte, 1))
+    {
+      if (cmdByte == 0x01) // Generate 0~ARRAYLEN
+        for (i = 0; i < ARRAYLEN; i++)
+          buf[i] = i;
+      else if (cmdByte == 0x02) // Generate 0XFF~(0XFF-ARRAYLEN)
+        for (i = 0; i < ARRAYLEN; i++)
+          buf[i] = 0xFF - 1;
+      else if (cmdByte == 0x03) // Read and output
+      {
+        SPIFlash_Read(32766, buf, ARRAYLEN);
+        for (i = 0; i < ARRAYLEN; i++)
+          MyUSART1_WriteChar(buf[i]);
+      }
+      else if (cmdByte == 0x04) // Write
+        SPIFlash_Write(32766, buf, ARRAYLEN);
+      else if (cmdByte == 0x05) // Erase
+        SPIFlash_Erase(SPIFLASH_ERASE4K, 32768);
+    }
   }
   /* USER CODE END 3 */
 }

@@ -308,14 +308,14 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
     SPIFlash_Read(secPos, SPIFlash_Data_Buf, 4096);
     for (i = 0; i < currLen; i++)
     {
-      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[offset + i])
+      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[i])
         break;
     }
     if (i < currLen)
     {
       SPIFlash_Erase(SPIFLASH_ERASE4K, secPos);
       for (i = 0; i < currLen; i++)
-        SPIFlash_Data_Buf[offset + i] = data[offset + i];
+        SPIFlash_Data_Buf[offset + i] = data[i];
       SPIFlash_Program(secPos, SPIFlash_Data_Buf, 4096);
     }
     else
