@@ -32,6 +32,15 @@ void SPIFlash_Init(SPI_HandleTypeDef *hspi)
   SPIFlash_SPIHandler = hspi;
 }
 
+void SPIFlash_PowerDown(void)
+{
+  SPIFlash_CMD_Buf[0] = SPIFLASH_PWRDN;
+
+  SPIFLASH_CS_L();
+  SPIFLASH_T(1);
+  SPIFLASH_CS_H();
+}
+
 // Release PowerDown then get device ID
 uint8_t SPIFlash_GetDeviceID_PowerUp(void)
 {
@@ -154,7 +163,7 @@ uint8_t SPIFlash_IsBusy(void)
   return (SPIFlash_ReadStateReg(1) & 1u);
 }
 
-// CS will not be pulled down there
+// CS will NOT be pulled up there
 void SPIFLASH_SendAddr(uint8_t operation, uint32_t addr)
 {
   SPIFlash_CMD_Buf[0] = operation;
@@ -254,8 +263,12 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
 {
   uint32_t processedLen = 0, currLen = 0;
 
+  SPIFlash_SetWriteEnabled(1);
+
+  // Head trim
   currLen = 256 - (addr % 256);
   currLen = len < currLen ? len : currLen;
+  // Body and tail
   while (processedLen < len)
   {
     SPIFLASH_SendAddr(SPIFLASH_PROGRAM, addr);
@@ -282,8 +295,12 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
   uint32_t offset = 0, secPos = 0;
   uint16_t i;
 
+  // Head trim
   currLen = 4096 - (addr % 4096);
   currLen = len < currLen ? len : currLen;
+  // Body and tail
+  // offset is only used for unaligned head(addr is not a multiple of 4096)
+  // in other siturations, the offset is zero(addr is a multiple of 4096)
   while (processedLen < len)
   {
     offset = addr & 0xFFF;
@@ -291,18 +308,18 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
     SPIFlash_Read(secPos, SPIFlash_Data_Buf, 4096);
     for (i = 0; i < currLen; i++)
     {
-      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[processedLen + offset + i])
+      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[offset + i])
         break;
     }
     if (i < currLen)
     {
       SPIFlash_Erase(SPIFLASH_ERASE4K, secPos);
       for (i = 0; i < currLen; i++)
-        SPIFlash_Data_Buf[offset + i] = data[processedLen + offset + i];
+        SPIFlash_Data_Buf[offset + i] = data[offset + i];
       SPIFlash_Program(secPos, SPIFlash_Data_Buf, 4096);
     }
     else
-      SPIFlash_Program(addr + processedLen, data + processedLen, currLen);
+      SPIFlash_Program(addr, data, currLen);
 
     processedLen += currLen;
     addr += currLen;
@@ -314,17 +331,7 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
 
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)
 {
-  if (SPIFlash_ReadByte(addr) == val)
-    return 1;
-
-  SPIFlash_Erase(SPIFLASH_ERASE4K, addr);
-
-  if (SPIFlash_SetWriteEnabled(1))
-    return 0;
-
-  SPIFLASH_SendAddr(SPIFLASH_PROGRAM, addr);
-  SPIFLASH_T(1);
-  SPIFLASH_CS_H();
+  SPIFlash_Write(addr, &val, 1);
 
 #if SPIFLASH_WRITECHECK
   return SPIFlash_ReadByte(addr) == val;

@@ -13,6 +13,7 @@
 #define SPIFLASH_CS_PIN GPIO_PIN_0
 #define SPIFLASH_CS_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 
+// Write check works for WriteStateReg(), SetWriteEnabled() and WriteByte()
 #define SPIFLASH_WRITECHECK 1
 #define SPIFLASH_ADDR_4BYTE 0
 
@@ -45,6 +46,7 @@
 
 void SPIFlash_Init(SPI_HandleTypeDef *hspi);
 
+void SPIFlash_PowerDown(void);
 uint8_t SPIFlash_GetDeviceID_PowerUp(void);
 uint64_t SPIFlash_GetUID(void);
 uint32_t SPIFlash_GetJEDECID(void);
@@ -56,5 +58,9 @@ uint8_t SPIFlash_IsBusy(void);
 
 void SPIFlash_Erase(uint8_t type, uint32_t addr);
 uint8_t SPIFlash_ReadByte(uint32_t addr);
+void SPIFlash_Read(uint32_t addr, uint8_t *data, uint32_t len);
+void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len);
+void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len);
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val);
+
 #endif
