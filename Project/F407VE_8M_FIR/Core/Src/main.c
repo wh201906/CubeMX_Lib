@@ -120,14 +120,10 @@ int main(void)
   Delay_Init(168);
   DMAInit();
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)buf,ARRLEN);
-  __HAL_RCC_DMA1_CLK_ENABLE();
-  __HAL_RCC_DAC_CLK_ENABLE();
   HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
   __HAL_TIM_ENABLE_DMA(&htim2,TIM_DMA_UPDATE);
   HAL_DMA_Start(&hdma1,(uint32_t)buf,(uint32_t)(&(DAC->DHR12R2)),ARRLEN);
-  HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
   HAL_TIM_Base_Start(&htim2);
-  __HAL_TIM_ENABLE(&htim2);
   
   
   /* USER CODE END 2 */
