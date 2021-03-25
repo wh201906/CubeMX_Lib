@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ARRAYLEN 64
+#define ARRAYLEN 5050
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,7 +49,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t buf[ARRAYLEN];
+uint8_t txBuf[ARRAYLEN];
+uint8_t rxBuf[ARRAYLEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,7 +61,10 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void sep()
+{
+  MyUSART1_WriteLine("\r\n--------------");
+}
 /* USER CODE END 0 */
 
 /**
@@ -102,15 +106,11 @@ int main(void)
   MyUSART1_WriteLine("SPIFlash Test");
   MyUSART1_WriteLine("0x01 Generate 0~ArrayLen");
   MyUSART1_WriteLine("0x02 Generate 0XFF~(0XFF-ArrayLen)");
-  MyUSART1_WriteLine("0x03 Read and output");
-  MyUSART1_WriteLine("0x04 Write");
-  MyUSART1_WriteLine("0x05 Erase");
-  // seperator
-  for(i=0;i<5;i++)
-  {
-    MyUSART1_WriteChar(0x55);
-    MyUSART1_WriteChar(0xAA);
-  }
+  MyUSART1_WriteLine("0x03 Dump txBuf");
+  MyUSART1_WriteLine("0x04 Dump ARRAYLEN of SPIFlash");
+  MyUSART1_WriteLine("0x05 Write");
+  MyUSART1_WriteLine("0x06 Erase");
+  sep();
 
   /* USER CODE END 2 */
 
@@ -125,19 +125,26 @@ int main(void)
     {
       if (cmdByte == 0x01) // Generate 0~ARRAYLEN
         for (i = 0; i < ARRAYLEN; i++)
-          buf[i] = i;
+          txBuf[i] = i;
       else if (cmdByte == 0x02) // Generate 0XFF~(0XFF-ARRAYLEN)
         for (i = 0; i < ARRAYLEN; i++)
-          buf[i] = 0xFF - 1;
-      else if (cmdByte == 0x03) // Read and output
+          txBuf[i] = 0xFF - i;
+      else if(cmdByte == 0x03) // Dump txBuf
       {
-        SPIFlash_Read(32766, buf, ARRAYLEN);
         for (i = 0; i < ARRAYLEN; i++)
-          MyUSART1_WriteChar(buf[i]);
+          printf("%02x ",txBuf[i]);
+      sep();
       }
-      else if (cmdByte == 0x04) // Write
-        SPIFlash_Write(32766, buf, ARRAYLEN);
-      else if (cmdByte == 0x05) // Erase
+      else if (cmdByte == 0x04) // Dump ARRAYLEN of SPIFlash
+      {
+        SPIFlash_Read(4080, rxBuf, ARRAYLEN);
+        for (i = 0; i < ARRAYLEN; i++)
+          printf("%02x ",rxBuf[i]);
+        sep();
+      }
+      else if (cmdByte == 0x05) // Write
+        SPIFlash_Write(4080, txBuf, ARRAYLEN);
+      else if (cmdByte == 0x06) // Erase
         SPIFlash_Erase(SPIFLASH_ERASE4K, 32768);
     }
   }

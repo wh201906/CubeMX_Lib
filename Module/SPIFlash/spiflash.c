@@ -192,7 +192,10 @@ void SPIFLASH_SendAddr(uint8_t operation, uint32_t addr)
 // which make the alignment, so I keep it in my code.
 void SPIFlash_Erase(uint8_t type, uint32_t addr)
 {
+  printf("Erase(type=%02x, addr=%u)\n", type, addr);
   SPIFlash_SetWriteEnabled(1);
+  while (SPIFlash_IsBusy())
+    ;
 
   if (type == SPIFLASH_ERASEALL)
   {
@@ -218,10 +221,10 @@ void SPIFlash_Erase(uint8_t type, uint32_t addr)
     addr &= (uint32_t)-1 << 16;
   else // treat as 4K
     addr &= (uint32_t)-1 << 12;
-
+  printf("Erase actural addr:%u\n", addr);
   SPIFLASH_SendAddr(type, addr);
   SPIFLASH_CS_H();
-
+  Delay_ms(500);
   while (SPIFlash_IsBusy())
     ;
   return;
@@ -241,19 +244,24 @@ uint8_t SPIFlash_ReadByte(uint32_t addr)
 // Just handle the tail
 void SPIFlash_Read(uint32_t addr, uint8_t *data, uint32_t len)
 {
+  printf("Read(addr=%u, data=0x%x, len=%u)\n", addr, data, len);
   // the maxLen for HAL_SPI_Receive() is 16bit(0~65535), so I need a loop
-  uint32_t processedLen = 0, currLen = 0;
+  uint32_t processedLen = 0, currLen = 0, i;
   SPIFLASH_SendAddr(SPIFLASH_READ, addr);
 
   while (processedLen < len)
   {
     currLen = len - processedLen;
     currLen = 65535 < currLen ? 65535 : currLen;
+    printf("ReadLoop:data=0x%x, processedLen=%u, currLen=%u\n", data, processedLen, currLen);
     HAL_SPI_Receive(SPIFlash_SPIHandler, data, currLen, SPIFlash_Timeout);
+    // for(i=0;i<currLen;i++)
+    // printf("%02x ",data[i]);
     processedLen += currLen;
     data += currLen;
   }
   SPIFLASH_CS_H();
+  MyUSART1_WriteLine("\r\n--------------");
 }
 
 // |---|---|---|---
@@ -261,9 +269,12 @@ void SPIFlash_Read(uint32_t addr, uint8_t *data, uint32_t len)
 // Handle head and tail for 256Byte alignment
 void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
 {
+  printf("Program(addr=%u, data=0x%x, len=%u)\n", addr, data, len);
   uint32_t processedLen = 0, currLen = 0;
 
   SPIFlash_SetWriteEnabled(1);
+  while (SPIFlash_IsBusy())
+    ;
 
   // Head trim
   currLen = 256 - (addr % 256);
@@ -271,6 +282,7 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
   // Body and tail
   while (processedLen < len)
   {
+    printf("ProgramLoop:addr=%u, data=0x%x, processedLen=%u, currLen=%u\n", addr, data, processedLen, currLen);
     SPIFLASH_SendAddr(SPIFLASH_PROGRAM, addr);
     HAL_SPI_Transmit(SPIFlash_SPIHandler, data, currLen, SPIFlash_Timeout);
     SPIFLASH_CS_H();
@@ -291,6 +303,7 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
 // Handle head and tail for 4kByte alignment
 void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
 {
+  printf("Write(addr=%u, data=0x%x, len=%u)\n", addr, data, len);
   uint32_t processedLen = 0, currLen = 0;
   uint32_t offset = 0, secPos = 0;
   uint16_t i;
@@ -305,17 +318,26 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
   {
     offset = addr & 0xFFF;
     secPos = addr & ((uint32_t)-1 << 12);
+    printf("WriteLoop:addr=%u, data=0x%x, processedLen=%u, offset=%u, secPos=%u, currLen=%u\n", addr, data, processedLen, offset, secPos, currLen);
     SPIFlash_Read(secPos, SPIFlash_Data_Buf, 4096);
     for (i = 0; i < currLen; i++)
     {
-      if (SPIFlash_Data_Buf[offset + i] != 0xFF && SPIFlash_Data_Buf[offset + i] != data[i])
+      if (SPIFlash_Data_Buf[offset + i] != 0xFF)
+      {
+        printf("Write Erase check failed, offset=%u, i=%u, data=%02x\n", offset, i, SPIFlash_Data_Buf[offset + i]);
         break;
+      }
     }
+    // i = 0;
     if (i < currLen)
     {
       SPIFlash_Erase(SPIFLASH_ERASE4K, secPos);
       for (i = 0; i < currLen; i++)
         SPIFlash_Data_Buf[offset + i] = data[i];
+      printf("WriteBuf:offset=%u, currLen=%u\n", offset, currLen);
+      // for(i=0;i<4096;i++)
+      // printf("%02x ",SPIFlash_Data_Buf[i]);
+      MyUSART1_WriteLine("\r\n--------------");
       SPIFlash_Program(secPos, SPIFlash_Data_Buf, 4096);
     }
     else
@@ -327,6 +349,7 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
     currLen = len - processedLen;
     currLen = 4096 < currLen ? 4096 : currLen;
   }
+  MyUSART1_WriteLine("\r\n--------------");
 }
 
 uint8_t SPIFlash_WriteByte(uint32_t addr, uint8_t val)

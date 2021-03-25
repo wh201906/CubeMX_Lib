@@ -8,6 +8,7 @@
 #include "main.h"
 #include "DELAY/delay.h"
 #include "spi.h"
+#include <stdio.h>
 
 #define SPIFLASH_CS_GPIO GPIOB
 #define SPIFLASH_CS_PIN GPIO_PIN_0
