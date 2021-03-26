@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ARRLEN 1024
+#define ARRLEN 8192
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +50,7 @@
 
 /* USER CODE BEGIN PV */
 
-uint16_t buf[ARRLEN];
+uint16_t buf[ARRLEN*3];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +78,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+ 
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -99,13 +99,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   SigIO_Init(&htim2,&hadc1);
-  HAL_ADC_Start(&hadc1);
-  //Extracted from HAL_ADC_Start_DMA()
-  hadc1.Instance->CR2 |= ADC_CR2_DMA;
   HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
-  HAL_DMAEx_MultiBufferStart(&SigIO_DMA_ADC, (uint32_t)(&(ADC1->DR)), (uint32_t)buf, (uint32_t)(buf+ARRLEN/2), ARRLEN/2);
-  HAL_DMAEx_MultiBufferStart(&SigIO_DMA_DAC, (uint32_t)(buf+ARRLEN/2), (uint32_t)(&(DAC->DHR12R2)), (uint32_t)buf, ARRLEN/2);
-  HAL_TIM_Base_Start(&htim2);
+  SigIO_Start(buf, ARRLEN);
   
   
   /* USER CODE END 2 */
