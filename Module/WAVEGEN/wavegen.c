@@ -56,7 +56,8 @@ void WaveGen_DMAInit()
     WaveGen_DMA_Handler.Init.Priority = DMA_PRIORITY_LOW;
     WaveGen_DMA_Handler.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     HAL_DMA_Init(&WaveGen_DMA_Handler);
-    __HAL_LINKDMA(&WaveGen_DAC_Handler,DMA_Handle2,WaveGen_DMA_Handler);
+    // Triggered by TIM, so linked to TIM_Handler
+    __HAL_LINKDMA(&WaveGen_TIM_Handler,hdma[TIM_DMA_ID_UPDATE],WaveGen_DMA_Handler);
 
 }
 
@@ -73,7 +74,7 @@ void WaveGen_TimerInit()
     WaveGen_TIM_Handler.Init.Prescaler=12;
     WaveGen_TIM_Handler.Init.Period=1;
     WaveGen_TIM_Handler.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
-    WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     HAL_TIM_PWM_Init(&WaveGen_TIM_Handler);
     
     TIM_CLKSourceConf.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
@@ -143,7 +144,7 @@ void WaveGen_setPWMState(uint8_t state)
         HAL_GPIO_Init(GPIOA,&GPIO_Initer);
         HAL_TIM_OC_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
         HAL_TIM_PWM_Stop(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
-        //HAL_TIM_Base_Start(&WaveGen_TIM_Handler); // On my H7 board, this function doesn't work.
+        // HAL_TIM_Base_Start(&WaveGen_TIM_Handler); // On my H7 board, this function doesn't work.
         __HAL_TIM_ENABLE(&WaveGen_TIM_Handler); // Works fine on my F4 and H7 board.
     }
     

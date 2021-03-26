@@ -96,12 +96,12 @@ int main(void)
   MX_TIM2_Init();
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
-    WaveGen_TimerInit();
-    WaveGen_DACInit();
-    WaveGen_DMAInit();
-    Delay_Init(168);
-    Key_Init();
-    WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095,WAVEGEN_BUFFER_MAX_SIZE);
+  WaveGen_TimerInit();
+  WaveGen_DACInit();
+  WaveGen_DMAInit();
+  Delay_Init(168);
+  Key_Init();
+  WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE,4095,WAVEGEN_BUFFER_MAX_SIZE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
