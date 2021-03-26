@@ -21,7 +21,6 @@
 #include "main.h"
 #include "adc.h"
 #include "dac.h"
-#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -29,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "SIGNAL/sigio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-DMA_HandleTypeDef hdma1;
+
 uint16_t buf[ARRLEN];
 /* USER CODE END PV */
 
@@ -61,26 +61,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void DMAInit()
-{
-  __HAL_RCC_DMA1_CLK_ENABLE();
 
-  hdma1.Instance = DMA1_Stream1;
-  hdma1.Init.Channel = DMA_CHANNEL_3;
-  hdma1.Init.Direction = DMA_MEMORY_TO_PERIPH;
-  hdma1.Init.PeriphInc = DMA_PINC_DISABLE;
-  hdma1.Init.MemInc = DMA_MINC_ENABLE;
-  hdma1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-  hdma1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-  hdma1.Init.Mode = DMA_CIRCULAR;
-  hdma1.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-  hdma1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-
-  HAL_DMA_DeInit(&hdma1);
-  HAL_DMA_Init(&hdma1);
-
-  __HAL_LINKDMA(&htim2, hdma[TIM_DMA_ID_UPDATE], hdma1);
-}
 /* USER CODE END 0 */
 
 /**
@@ -111,18 +92,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_DAC_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  DMAInit();
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)buf,ARRLEN);
+  SigIO_Init(&htim2,&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)buf, ARRLEN);
   HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
-  __HAL_TIM_ENABLE_DMA(&htim2,TIM_DMA_UPDATE);
-  HAL_DMA_Start(&hdma1,(uint32_t)buf,(uint32_t)(&(DAC->DHR12R2)),ARRLEN);
+  HAL_DMA_Start(&SigIO_DMA_DAC, (uint32_t)buf,(uint32_t)(&(DAC->DHR12R2)), ARRLEN);
+  // HAL_DMA_Start(&SigIO_DMA_ADC, (uint32_t)(&(ADC1->DR)), (uint32_t)buf, ARRLEN);
   HAL_TIM_Base_Start(&htim2);
   
   
