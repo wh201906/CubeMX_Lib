@@ -18,3 +18,6 @@
 1.028ms
 + 168M, 32point, psc=0, arr=167:  
 65.80us
+## Pass-through, 2Buf
++ 168M, 1024point, psc=0, arr=83:  
+513.0us

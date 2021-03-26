@@ -99,10 +99,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   SigIO_Init(&htim2,&hadc1);
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)buf, ARRLEN);
+  HAL_ADC_Start(&hadc1);
+  //Extracted from HAL_ADC_Start_DMA()
+  hadc1.Instance->CR2 |= ADC_CR2_DMA;
   HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
-  HAL_DMA_Start(&SigIO_DMA_DAC, (uint32_t)buf,(uint32_t)(&(DAC->DHR12R2)), ARRLEN);
-  // HAL_DMA_Start(&SigIO_DMA_ADC, (uint32_t)(&(ADC1->DR)), (uint32_t)buf, ARRLEN);
+  HAL_DMAEx_MultiBufferStart(&SigIO_DMA_ADC, (uint32_t)(&(ADC1->DR)), (uint32_t)buf, (uint32_t)(buf+ARRLEN/2), ARRLEN/2);
+  HAL_DMAEx_MultiBufferStart(&SigIO_DMA_DAC, (uint32_t)(buf+ARRLEN/2), (uint32_t)(&(DAC->DHR12R2)), (uint32_t)buf, ARRLEN/2);
   HAL_TIM_Base_Start(&htim2);
   
   
