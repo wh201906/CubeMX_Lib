@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ARRLEN 8192
+#define ARRLEN 1024
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
