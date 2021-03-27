@@ -29,6 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "SIGNAL/sigio.h"
+#include "arm_math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,6 +40,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ARRLEN 1024
+// for faster copy speed
+#define ARM_MATH_LOOPUNROLL
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,6 +54,17 @@
 /* USER CODE BEGIN PV */
 
 uint16_t buf[ARRLEN * 3];
+uint16_t procBuf[ARRLEN];
+
+arm_fir_instance_q15 firInst;
+const uint16_t firNb = 18;
+const uint16_t firCoef[18] = {
+        0,      0,      0,      0,    121,   1523,   3556,   5619,   6927,
+     6927,   5619,   3556,   1523,    121,      0,      0,      0,      0
+};
+
+q15_t firState[ARRLEN+18];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,7 +75,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void proc(uint16_t* addr, uint32_t len)
+{
+  arm_copy_q15(addr,procBuf,ARRLEN);
+  arm_fir_fast_q15(&firInst,procBuf,addr,ARRLEN);
+}
 /* USER CODE END 0 */
 
 /**
@@ -98,7 +116,11 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  
+  arm_fir_init_q15(&firInst,firNb,firCoef,firState,ARRLEN);
+  
   SigIO_Init(&htim2, &hadc1);
+  SigIO_ProcFunc=proc;
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
   SigIO_Start(buf, ARRLEN);
   

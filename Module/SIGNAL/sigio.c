@@ -13,11 +13,14 @@ uint32_t SigIO_PartLen;
 // REMEMBER TO CHANGE THE TYPE OF THIS VARIABLE!!!
 SigIO_TargetType *SigIO_BaseBufAddr;
 
+void (*SigIO_ProcFunc)(SigIO_TargetType *addr, uint32_t len);
+
 void SigIO_Init(TIM_HandleTypeDef *htim, ADC_HandleTypeDef *hadc)
 {
   SigIO_TIM = htim;
   SigIO_ADC = hadc;
   SigIO_DMA_Init();
+  SigIO_ProcFunc = NULL;
 }
 
 void SigIO_DMA_Init()
@@ -106,6 +109,8 @@ void DMA1_Stream1_IRQHandler()
 
 void DMA2_Stream0_IRQHandler()
 {
+  SigIO_TargetType *procPtr;
+
   __HAL_DMA_CLEAR_FLAG(&SigIO_DMA_ADC, __HAL_DMA_GET_TC_FLAG_INDEX(&SigIO_DMA_ADC));
   nextADCPtr += 1;
   nextADCPtr %= 3;
@@ -114,4 +119,10 @@ void DMA2_Stream0_IRQHandler()
     HAL_DMAEx_ChangeMemory(&SigIO_DMA_ADC, (uint32_t)(SigIO_BaseBufAddr + nextADCPtr * SigIO_PartLen), MEMORY1);
   else
     HAL_DMAEx_ChangeMemory(&SigIO_DMA_ADC, (uint32_t)(SigIO_BaseBufAddr + nextADCPtr * SigIO_PartLen), MEMORY0);
+
+  if (SigIO_ProcFunc != NULL)
+  {
+    procPtr = SigIO_BaseBufAddr + ((nextADCPtr + 1) % 3) * SigIO_PartLen;
+    SigIO_ProcFunc(procPtr, SigIO_PartLen);
+  }
 }

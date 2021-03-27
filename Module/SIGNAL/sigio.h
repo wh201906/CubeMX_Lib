@@ -12,4 +12,6 @@ void SigIO_DMA_Init(void);
 void SigIO_IT_Init(void);
 void SigIO_Start(SigIO_TargetType *bufAddr, uint32_t partLen);
 
+extern void (*SigIO_ProcFunc)(SigIO_TargetType *addr, uint32_t len);
+
 #endif
