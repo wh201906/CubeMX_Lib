@@ -50,7 +50,7 @@
 
 /* USER CODE BEGIN PV */
 
-uint16_t buf[ARRLEN*3];
+uint16_t buf[ARRLEN * 5];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,8 +98,8 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  SigIO_Init(&htim2,&hadc1);
-  HAL_DAC_Start(&hdac,DAC_CHANNEL_2);
+  SigIO_Init(&htim2, &hadc1);
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
   SigIO_Start(buf, ARRLEN);
   
   
