@@ -7,7 +7,11 @@ ADC_HandleTypeDef *SigIO_ADC;
 uint8_t nextADCPtr;
 uint8_t nextDACPtr;
 uint32_t SigIO_PartLen;
-void *SigIO_BaseBufAddr;
+
+// REMEMBER TO CHANGE THE TYPE OF THIS VARIABLE!!!
+// REMEMBER TO CHANGE THE TYPE OF THIS VARIABLE!!!
+// REMEMBER TO CHANGE THE TYPE OF THIS VARIABLE!!!
+SigIO_TargetType *SigIO_BaseBufAddr;
 
 void SigIO_Init(TIM_HandleTypeDef *htim, ADC_HandleTypeDef *hadc)
 {
@@ -74,15 +78,15 @@ void SigIO_IT_Init()
   SigIO_DMA_DAC.Instance->CR |= DMA_IT_TC;
 }
 
-void SigIO_Start(void *bufAddr, uint32_t partLen)
+void SigIO_Start(SigIO_TargetType *bufAddr, uint32_t partLen)
 {
   SigIO_BaseBufAddr = bufAddr;
   SigIO_PartLen = partLen;
   //Extracted from HAL_ADC_Start_DMA()
   SigIO_ADC->Instance->CR2 |= ADC_CR2_DMA;
   HAL_ADC_Start(SigIO_ADC);
-  nextADCPtr = 1;
-  nextDACPtr = 2;
+  nextADCPtr = 0;
+  nextDACPtr = 1;
   HAL_DMAEx_MultiBufferStart(&SigIO_DMA_ADC, (uint32_t)(&(ADC1->DR)), (uint32_t)(bufAddr + 0 * partLen), (uint32_t)(bufAddr + 1 * partLen), partLen);
   HAL_DMAEx_MultiBufferStart(&SigIO_DMA_DAC, (uint32_t)(bufAddr + 1 * partLen), (uint32_t)(&(DAC->DHR12R2)), (uint32_t)(bufAddr + 2 * partLen), partLen);
   HAL_TIM_Base_Start(SigIO_TIM);
@@ -91,8 +95,8 @@ void SigIO_Start(void *bufAddr, uint32_t partLen)
 void DMA1_Stream1_IRQHandler()
 {
   __HAL_DMA_CLEAR_FLAG(&SigIO_DMA_DAC, __HAL_DMA_GET_TC_FLAG_INDEX(&SigIO_DMA_DAC));
-  nextDACPtr += 2;
-  nextDACPtr %= 5;
+  nextDACPtr += 1;
+  nextDACPtr %= 3;
   // Switched from Memory1 to Memory0, Memory1 is accessible
   if ((SigIO_DMA_DAC.Instance->CR & DMA_SxCR_CT) == RESET)
     HAL_DMAEx_ChangeMemory(&SigIO_DMA_DAC, (uint32_t)(SigIO_BaseBufAddr + nextDACPtr * SigIO_PartLen), MEMORY1);
@@ -103,8 +107,8 @@ void DMA1_Stream1_IRQHandler()
 void DMA2_Stream0_IRQHandler()
 {
   __HAL_DMA_CLEAR_FLAG(&SigIO_DMA_ADC, __HAL_DMA_GET_TC_FLAG_INDEX(&SigIO_DMA_ADC));
-  nextADCPtr += 2;
-  nextADCPtr %= 5;
+  nextADCPtr += 1;
+  nextADCPtr %= 3;
   // Switched from Memory1 to Memory0, Memory1 is accessible
   if ((SigIO_DMA_ADC.Instance->CR & DMA_SxCR_CT) == RESET)
     HAL_DMAEx_ChangeMemory(&SigIO_DMA_ADC, (uint32_t)(SigIO_BaseBufAddr + nextADCPtr * SigIO_PartLen), MEMORY1);

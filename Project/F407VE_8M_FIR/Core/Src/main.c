@@ -50,7 +50,7 @@
 
 /* USER CODE BEGIN PV */
 
-uint16_t buf[ARRLEN * 5];
+uint16_t buf[ARRLEN * 3];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
