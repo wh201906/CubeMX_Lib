@@ -57,13 +57,17 @@ uint16_t buf[ARRLEN * 3];
 uint16_t procBuf[ARRLEN];
 
 arm_fir_instance_q15 firInst;
-const uint16_t firNb = 18;
-const uint16_t firCoef[18] = {
-        0,      0,      0,      0,    121,   1523,   3556,   5619,   6927,
-     6927,   5619,   3556,   1523,    121,      0,      0,      0,      0
+
+// the firNb must be even and >= 4
+// pad zero to satisfy this requirement
+#define firNb 24
+const uint16_t firCoef[24] = {
+      192,    921,    667,      0,      0,    311,   1624,    153,      0,
+        0,   5867,  13525,  13525,   5867,      0,      0,    153,   1624,
+      311,      0,      0,    667,    921,    192
 };
 
-q15_t firState[ARRLEN+18];
+q15_t firState[ARRLEN + firNb];
 
 /* USER CODE END PV */
 
