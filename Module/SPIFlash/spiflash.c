@@ -272,10 +272,6 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
   printf("Program(addr=%u, data=0x%x, len=%u)\n", addr, data, len);
   uint32_t processedLen = 0, currLen = 0;
 
-  SPIFlash_SetWriteEnabled(1);
-  while (SPIFlash_IsBusy())
-    ;
-
   // Head trim
   currLen = 256 - (addr % 256);
   currLen = len < currLen ? len : currLen;
@@ -283,6 +279,13 @@ void SPIFlash_Program(uint32_t addr, uint8_t *data, uint32_t len)
   while (processedLen < len)
   {
     printf("ProgramLoop:addr=%u, data=0x%x, processedLen=%u, currLen=%u\n", addr, data, processedLen, currLen);
+    
+    // After every page program, the WEL will be set to 0
+    // So it needs a WriteEnable
+    SPIFlash_SetWriteEnabled(1);
+    while (SPIFlash_IsBusy())
+      ;
+    
     SPIFLASH_SendAddr(SPIFLASH_PROGRAM, addr);
     HAL_SPI_Transmit(SPIFlash_SPIHandler, data, currLen, SPIFlash_Timeout);
     SPIFLASH_CS_H();
@@ -335,8 +338,8 @@ void SPIFlash_Write(uint32_t addr, uint8_t *data, uint32_t len)
       for (i = 0; i < currLen; i++)
         SPIFlash_Data_Buf[offset + i] = data[i];
       printf("WriteBuf:offset=%u, currLen=%u\n", offset, currLen);
-      // for(i=0;i<4096;i++)
-      // printf("%02x ",SPIFlash_Data_Buf[i]);
+      for(i=0;i<4096;i++)
+        printf("%02x ",SPIFlash_Data_Buf[i]);
       MyUSART1_WriteLine("\r\n--------------");
       SPIFlash_Program(secPos, SPIFlash_Data_Buf, 4096);
     }

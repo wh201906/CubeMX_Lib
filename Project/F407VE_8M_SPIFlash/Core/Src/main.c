@@ -133,7 +133,7 @@ int main(void)
       {
         for (i = 0; i < ARRAYLEN; i++)
           printf("%02x ",txBuf[i]);
-      sep();
+        sep();
       }
       else if (cmdByte == 0x04) // Dump ARRAYLEN of SPIFlash
       {
@@ -145,7 +145,7 @@ int main(void)
       else if (cmdByte == 0x05) // Write
         SPIFlash_Write(4080, txBuf, ARRAYLEN);
       else if (cmdByte == 0x06) // Erase
-        SPIFlash_Erase(SPIFLASH_ERASE4K, 32768);
+        SPIFlash_Erase(SPIFLASH_ERASE4K, 4080);
     }
   }
   /* USER CODE END 3 */
