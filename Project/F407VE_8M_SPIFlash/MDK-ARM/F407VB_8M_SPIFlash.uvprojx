@@ -543,6 +543,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\DELAY\delay.c</FilePath>
             </File>
+            <File>
+              <FileName>testbench.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\SPIFlash\testbench.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

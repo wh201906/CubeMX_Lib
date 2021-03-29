@@ -29,6 +29,7 @@
 #include "DELAY/delay.h"
 #include "SPIFlash/spiflash.h"
 #include "USART/myusart1.h"
+#include "SPIFlash/testbench.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -111,7 +112,10 @@ int main(void)
   MyUSART1_WriteLine("0x05 Write");
   MyUSART1_WriteLine("0x06 Erase");
   sep();
-
+  
+  Delay_ms(3000);
+  SPIFlash_FunctionTest();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
