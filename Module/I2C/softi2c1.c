@@ -66,6 +66,7 @@ uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
 
   return 1;
 }
+
 uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
 {
   uint32_t i;
