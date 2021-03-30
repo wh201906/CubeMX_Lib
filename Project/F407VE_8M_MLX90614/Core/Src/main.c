@@ -26,7 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "Delay/delay.h"
 #include "MLX90614/mlx90614.h"
-#include "OLED/oled_iic.h"
+#include "OLED/oled.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,7 +113,6 @@ int main(void)
     OLED_ShowFloat(5*6,0,ambTemp,TEXTSIZE_SMALL,REVERSE_OFF);
     OLED_ShowFloat(5*6,1,objTemp,TEXTSIZE_SMALL,REVERSE_OFF);
     Delay_ms(200);
-    
   }
   /* USER CODE END 3 */
 }
