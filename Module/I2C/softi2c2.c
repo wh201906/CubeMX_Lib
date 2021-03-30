@@ -86,7 +86,6 @@ uint8_t SoftI2C2_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
 
 void SoftI2C2_Start(void)
 {
-  SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(1);
   Delay_ticks(SoftI2C2_delayTicks); // setup time
@@ -101,7 +100,6 @@ void SoftI2C2_RepStart(void)
 {
   SOFTI2C2_SCL(0);
   Delay_ticks(SoftI2C2_delayTicks * 0.75);
-  SOFTI2C2_SDA_OUT();
   SOFTI2C2_SDA(1);
   Delay_ticks(SoftI2C2_delayTicks / 4);
   SoftI2C2_Start();
@@ -109,7 +107,6 @@ void SoftI2C2_RepStart(void)
 
 void SoftI2C2_Stop(void)
 {
-  SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(1);
   SOFTI2C2_SDA(0);
   Delay_ticks(SoftI2C2_delayTicks);     // setup time
@@ -122,7 +119,6 @@ void SoftI2C2_Stop(void)
 void SoftI2C2_SendACK(uint8_t ACK) // 0:ACK 1:NACK
 {
   SOFTI2C2_SCL(0); // change start
-  SOFTI2C2_SDA_OUT();
   SOFTI2C2_SDA(ACK);
   Delay_ticks(SoftI2C2_delayTicks * 0.75); // data setup time
   SOFTI2C2_SCL(1);                         // can be read
@@ -153,7 +149,6 @@ uint8_t SoftI2C2_WaitACK(void) // 0:ACK 1:NACK/No response
 void SoftI2C2_SendByte(uint8_t byte) // barely send a byte
 {
   int8_t i;
-  SOFTI2C2_SDA_OUT();
   SOFTI2C2_SCL(0);
   for (i = 7; i >= 0; i--)
   {
