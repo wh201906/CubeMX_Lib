@@ -1,20 +1,22 @@
 
 #include "OLED/codetab.h"
-#include "OLED/oled_iic.h"
+#include "OLED/oled.h"
 
-uint8_t RevState = 1;
+uint8_t isGlobalReverse = REVERSE_ON;
 uint8_t brightness = 0xff;
+uint8_t isCurrentReverse = REVERSE_OFF;
+uint8_t textSize = TEXTSIZE_SMALL;
 
 void WriteCmd(uint8_t I2C_Command) //写命令
 {
   SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x00, &I2C_Command, 1);
 }
 
-void WriteDat(uint8_t I2C_Data, uint8_t reverse) //写数据
+void WriteDat(uint8_t I2C_Data) //写数据
 {
-  if (reverse == REVERSE_OFF)
+  if (!isCurrentReverse)
     SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x40, &I2C_Data, 1);
-  else if (reverse == REVERSE_ON)
+  else
   {
     I2C_Data = ~I2C_Data;
     SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x40, &I2C_Data, 1);
@@ -37,7 +39,7 @@ void OLED_Init(void)
   WriteCmd(0x81);       //--set contrast control register
   WriteCmd(brightness); //亮度调节 0x00~0xff
   WriteCmd(0xa1);       //--set segment re-map 0 to 127
-  if (RevState)
+  if (isGlobalReverse)
     WriteCmd(0xa6);
   else
     WriteCmd(0xa7);
@@ -87,12 +89,6 @@ void OLED_CLS(void) //清屏
   OLED_Fill(0x00);
 }
 
-//--------------------------------------------------------------
-// Prototype      : void OLED_ON(void)
-// Calls          :
-// Parameters     : none
-// Description    : 将OLED从休眠中唤醒
-//--------------------------------------------------------------
 void OLED_ON(void)
 {
   WriteCmd(0X8D); //设置电荷泵
@@ -100,12 +96,6 @@ void OLED_ON(void)
   WriteCmd(0XAF); //OLED唤醒
 }
 
-//--------------------------------------------------------------
-// Prototype      : void OLED_OFF(void)
-// Calls          :
-// Parameters     : none
-// Description    : 让OLED休眠 -- 休眠模式下,OLED功耗不到10uA
-//--------------------------------------------------------------
 void OLED_OFF(void)
 {
   WriteCmd(0X8D); //设置电荷泵
@@ -119,12 +109,12 @@ void OLED_OFF(void)
 // Parameters     : x,y -- 起始点坐标(x:0~127, y:0~7); ch[] -- 要显示的字符串; TextSize -- 字符大小(1:6*8 ; 2:8*16)
 // Description    : 显示codetab.h中的ASCII字符,有6*8和8*16可选择
 //--------------------------------------------------------------
-void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t reverse)
+void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[])
 {
   uint8_t c = 0, i = 0, j = 0;
-  switch (TextSize)
+  switch (textSize)
   {
-  case 1:
+  case TEXTSIZE_SMALL:
   {
     while (ch[j] != '\0')
     {
@@ -136,13 +126,13 @@ void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t 
       }
       OLED_SetPos(x, y);
       for (i = 0; i < 6; i++)
-        WriteDat(F6x8[c][i], reverse);
+        WriteDat(F6x8[c][i]);
       x += 6;
       j++;
     }
   }
   break;
-  case 2:
+  case TEXTSIZE_BIG:
   {
     while (ch[j] != '\0')
     {
@@ -154,10 +144,10 @@ void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t 
       }
       OLED_SetPos(x, y);
       for (i = 0; i < 8; i++)
-        WriteDat(F8X16[c * 16 + i], reverse);
+        WriteDat(F8X16[c * 16 + i]);
       OLED_SetPos(x, y + 1);
       for (i = 0; i < 8; i++)
-        WriteDat(F8X16[c * 16 + i + 8], reverse);
+        WriteDat(F8X16[c * 16 + i + 8]);
       x += 8;
       j++;
     }
@@ -172,20 +162,20 @@ void OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[], uint8_t TextSize, uint8_t 
 // Parameters     : x,y -- 起始点坐标(x:0~127, y:0~7); index:汉字在codetab.h中的索引
 // Description    : 显示codetab.h中的汉字,16*16点阵
 //--------------------------------------------------------------
-void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index, uint8_t reverse)
+void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index)
 {
   uint8_t wm = 0;
   unsigned int adder = 32 * index;
   OLED_SetPos(x, y);
   for (wm = 0; wm < 16; wm++)
   {
-    WriteDat(F16x16[adder], reverse);
+    WriteDat(F16x16[adder]);
     adder += 1;
   }
   OLED_SetPos(x, y + 1);
   for (wm = 0; wm < 16; wm++)
   {
-    WriteDat(F16x16[adder], reverse);
+    WriteDat(F16x16[adder]);
     adder += 1;
   }
 }
@@ -196,7 +186,7 @@ void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index, uint8_t reverse)
 // Parameters     : x0,y0 -- 起始点坐标(x0:0~127, y0:0~7); x1,y1 -- 起点对角线(结束点)的坐标(x1:1~128,y1:1~8)
 // Description    : 显示BMP位图
 //--------------------------------------------------------------
-void OLED_DrawBMP(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t BMP[], uint8_t reverse)
+void OLED_DrawBMP(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t BMP[])
 {
   unsigned int j = 0;
   uint8_t x, y;
@@ -210,66 +200,78 @@ void OLED_DrawBMP(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t BMP[],
     OLED_SetPos(x0, y);
     for (x = x0; x < x1; x++)
     {
-      WriteDat(BMP[j++], reverse);
+      WriteDat(BMP[j++]);
     }
   }
 }
 
-void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch, uint8_t TextSize, uint8_t reverse)
+void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch)
 {
   uint8_t i = 0;
-  switch (TextSize)
+  switch (textSize)
   {
-  case 1:
+  case TEXTSIZE_SMALL:
   {
     ch -= 32;
     OLED_SetPos(x, y);
     for (i = 0; i < 6; i++)
-      WriteDat(F6x8[ch][i], reverse);
+      WriteDat(F6x8[ch][i]);
   }
   break;
-  case 2:
+  case TEXTSIZE_BIG:
   {
     ch -= 32;
     OLED_SetPos(x, y);
     for (i = 0; i < 8; i++)
-      WriteDat(F8X16[ch * 16 + i], reverse);
+      WriteDat(F8X16[ch * 16 + i]);
     OLED_SetPos(x, y + 1);
     for (i = 0; i < 8; i++)
-      WriteDat(F8X16[ch * 16 + i + 8], reverse);
+      WriteDat(F8X16[ch * 16 + i + 8]);
   }
   break;
   }
 }
 
-int OLED_ShowInt(uint8_t x, uint8_t y, int64_t val, uint8_t TextSize, uint8_t reverse)
+int OLED_ShowInt(uint8_t x, uint8_t y, int64_t val)
 {
   uint8_t str[22], len;
   len=myitoa(val,str,10);
-  OLED_ShowStr(x, y, str, TextSize, reverse);
+  OLED_ShowStr(x, y, str);
   return len;
 }
 
-int OLED_ShowFloat(uint8_t x, uint8_t y, double val, uint8_t TextSize, uint8_t reverse)
+int OLED_ShowFloat(uint8_t x, uint8_t y, double val)
 {
   uint8_t str[30],len;
   len=myftoa(val,str);
-  OLED_ShowStr(x, y, str, TextSize, reverse);
+  OLED_ShowStr(x, y, str);
   return (len);
 }
+
 void OLED_SetBrightness(uint8_t val)
 {
+  brightness = val;
   WriteCmd(0xAE);
   WriteCmd(0x81);
   WriteCmd(val);
   WriteCmd(0xAf);
 }
 
-void OLED_Reverse(void)
+void OLED_SetGlobalReverse(uint8_t state)
 {
-  RevState = !RevState;
-  if (RevState)
+  isGlobalReverse = !!state;
+  if (isGlobalReverse)
     WriteCmd(0xa6);
   else
     WriteCmd(0xa7);
+}
+
+void OLED_SetCurrentReverse(uint8_t state)
+{
+  isCurrentReverse = !!state;
+}
+
+void OLED_SetTextSize(uint8_t size)
+{
+  textSize = size;
 }
