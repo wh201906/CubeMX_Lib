@@ -18,6 +18,9 @@ extern uint8_t OLED_cursorX, OLED_cursorY;
 
 void WriteCmd(uint8_t I2C_Command);
 void WriteData(uint8_t I2C_Data);
+void FastWrite_Start(void);
+void FastWrite(uint8_t data);
+void FastWrite_Stop(void);
 void OLED_Init(void);
 void OLED_SetPos(uint8_t x, uint8_t y);
 void OLED_Fill(uint8_t data);

@@ -24,6 +24,22 @@ void WriteData(uint8_t I2C_Data) //写数据
   }
 }
 
+void FastWrite_Start(void)
+{
+  SoftI2C1_Start();
+  SoftI2C1_SendAddr(OLED_ADDRESS, SI2C_ADDR_7b, SI2C_WRITE);
+  SoftI2C1_SendByte_ACK(0x40, SI2C_ACK);
+}
+
+void FastWrite(uint8_t data)
+{
+  SoftI2C1_SendByte_ACK(data, SI2C_ACK);
+}
+void FastWrite_Stop(void)
+{
+  SoftI2C1_Stop();
+}
+
 void OLED_Init(void)
 {
   SoftI2C1_Init(400000);
@@ -69,17 +85,15 @@ void OLED_SetPos(uint8_t x, uint8_t y) //设置起始点坐标
 void OLED_Fill(uint8_t data)
 {
   uint16_t i;
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
   WriteCmd(0xb0);
   WriteCmd(0x00);
   WriteCmd(0x10);
-  SoftI2C1_Start();
-  SoftI2C1_SendAddr(OLED_ADDRESS, SI2C_ADDR_7b, SI2C_WRITE);
-  SoftI2C1_SendByte_ACK(0x40, SI2C_ACK);
+  FastWrite_Start();
   for (i = 0; i < 1024; i++)
-    SoftI2C1_SendByte_ACK(data, SI2C_ACK);
-  SoftI2C1_Stop();
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
+    FastWrite(data);
+  FastWrite_Stop();
+  //HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
 }
 
 void OLED_CLS(void) //清屏
@@ -105,66 +119,80 @@ uint8_t OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[])
 {
   uint8_t c = 0, i = 0, j = 0;
   uint8_t currX = x, currY = y;
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
   if (textSize == TEXTSIZE_SMALL)
   {
     OLED_SetPos(currX, currY);
+    FastWrite_Start();
     while (ch[j] != '\0')
     {
       c = ch[j] - ' ';
       if (currX > 122)
       {
+        FastWrite_Stop();
         currX = 0;
         currY++;
         OLED_SetPos(currX, currY);
+        FastWrite_Start();
       }
       for (i = 0; i < 6; i++)
-        WriteData(F6x8[c][i]);
+        FastWrite(F6x8[c][i]);
       currX += 6;
       j++;
     }
+    FastWrite_Stop();
   }
   else if (textSize == TEXTSIZE_BIG)
   {
     // Seperate into two parts
     OLED_SetPos(currX, currY * 2);
+    FastWrite_Start();
     while (ch[j] != '\0')
     {
       c = ch[j] - ' ';
       if (currX > 120)
       {
+        FastWrite_Stop();
         currX = 0;
         currY++;
         OLED_SetPos(currX, currY * 2);
+        FastWrite_Start();
       }
       for (i = 0; i < 8; i++)
-        WriteData(F8X16[c * 16 + i]);
+        FastWrite(F8X16[c * 16 + i]);
       currX += 8;
       j++;
     }
+    FastWrite_Stop();
     currX = x;
     currY = y;
     j = 0;
     OLED_SetPos(currX, currY * 2 + 1);
+    FastWrite_Start();
     while (ch[j] != '\0')
     {
       c = ch[j] - ' ';
       if (currX > 120)
       {
+        FastWrite_Stop();
         currX = 0;
         currY++;
         OLED_SetPos(currX, currY * 2 + 1);
+        FastWrite_Start();
       }
       for (i = 0; i < 8; i++)
-        WriteData(F8X16[c * 16 + i + 8]);
+        FastWrite(F8X16[c * 16 + i + 8]);
       currX += 8;
       j++;
     }
+    FastWrite_Stop();
   }
   if (textSize == TEXTSIZE_SMALL || textSize == TEXTSIZE_BIG)
   {
     OLED_cursorX = currX;
     OLED_cursorY = currY;
   }
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
   return j;
 }
 

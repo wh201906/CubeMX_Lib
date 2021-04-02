@@ -112,7 +112,7 @@ int main(void)
     //OLED_ShowFloat(OLED_cursorX,OLED_cursorY,ambTemp);
     OLED_ShowStr(0,1,"Tobj1234567890123456789012345:");
     //OLED_ShowFloat(OLED_cursorX,OLED_cursorY,objTemp);
-    OLED_Fill(0x00);
+    //OLED_Fill(0x00);
     Delay_ms(500);
   }
   /* USER CODE END 3 */
