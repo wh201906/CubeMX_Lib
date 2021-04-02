@@ -95,7 +95,7 @@ int main(void)
   MLX90614_Init();
   MLX90614_SetI2CAddr(0x5A,0);
   Delay_ms(100);
-  OLED_SetTextSize(TEXTSIZE_SMALL);
+  OLED_SetTextSize(TEXTSIZE_BIG);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,14 +105,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    ambTemp=MLX90614_GetTemp(MLX90614_TEMP_AMBIENT);
-    Delay_ms(50);
-    objTemp=MLX90614_GetTemp(MLX90614_TEMP_OBJECT);
-    OLED_ShowStr(0,0,"Tamb:");
-    OLED_ShowFloat(OLED_cursorX,OLED_cursorY,ambTemp);
+    //ambTemp=MLX90614_GetTemp(MLX90614_TEMP_AMBIENT);
+    //Delay_ms(50);
+    //objTemp=MLX90614_GetTemp(MLX90614_TEMP_OBJECT);
+    //OLED_ShowStr(0,0,"Tamb:");
+    //OLED_ShowFloat(OLED_cursorX,OLED_cursorY,ambTemp);
     OLED_ShowStr(0,1,"Tobj1234567890123456789012345:");
-    OLED_ShowFloat(OLED_cursorX,OLED_cursorY,objTemp);
-    Delay_ms(200);
+    //OLED_ShowFloat(OLED_cursorX,OLED_cursorY,objTemp);
+    OLED_Fill(0x00);
+    Delay_ms(500);
   }
   /* USER CODE END 3 */
 }

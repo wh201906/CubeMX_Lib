@@ -66,20 +66,20 @@ void OLED_SetPos(uint8_t x, uint8_t y) //设置起始点坐标
   WriteCmd((x & 0x0f) | 0x01);
 }
 
-void OLED_Fill(uint8_t fill_Data) //全屏填充
+void OLED_Fill(uint8_t data)
 {
-  uint8_t m, n;
-  for (m = 0; m < 8; m++)
-  {
-    WriteCmd(0xb0 + m); //page0-page1
-    WriteCmd(0x00);     //low column start address
-    WriteCmd(0x10);     //high column start address
-    for (n = 0; n < 128; n++)
-    {
-
-      WriteData(fill_Data);
-    }
-  }
+  uint16_t i;
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
+  WriteCmd(0xb0);
+  WriteCmd(0x00);
+  WriteCmd(0x10);
+  SoftI2C1_Start();
+  SoftI2C1_SendAddr(OLED_ADDRESS, SI2C_ADDR_7b, SI2C_WRITE);
+  SoftI2C1_SendByte_ACK(0x40, SI2C_ACK);
+  for (i = 0; i < 1024; i++)
+    SoftI2C1_SendByte_ACK(data, SI2C_ACK);
+  SoftI2C1_Stop();
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
 }
 
 void OLED_CLS(void) //清屏
@@ -104,49 +104,66 @@ void OLED_OFF(void)
 uint8_t OLED_ShowStr(uint8_t x, uint8_t y, uint8_t ch[])
 {
   uint8_t c = 0, i = 0, j = 0;
-  OLED_SetPos(x, y);
+  uint8_t currX = x, currY = y;
   if (textSize == TEXTSIZE_SMALL)
   {
+    OLED_SetPos(currX, currY);
     while (ch[j] != '\0')
     {
       c = ch[j] - ' ';
-      if (x > 122)
+      if (currX > 122)
       {
-        x = 0;
-        y++;
-        OLED_SetPos(x, y);
+        currX = 0;
+        currY++;
+        OLED_SetPos(currX, currY);
       }
       for (i = 0; i < 6; i++)
         WriteData(F6x8[c][i]);
-      x += 6;
+      currX += 6;
       j++;
     }
   }
   else if (textSize == TEXTSIZE_BIG)
   {
+    // Seperate into two parts
+    OLED_SetPos(currX, currY * 2);
     while (ch[j] != '\0')
     {
       c = ch[j] - ' ';
-      if (x > 120)
+      if (currX > 120)
       {
-        x = 0;
-        y++;
+        currX = 0;
+        currY++;
+        OLED_SetPos(currX, currY * 2);
       }
-      OLED_SetPos(x, y * 2);
       for (i = 0; i < 8; i++)
         WriteData(F8X16[c * 16 + i]);
-      OLED_SetPos(x, y * 2 + 1);
+      currX += 8;
+      j++;
+    }
+    currX = x;
+    currY = y;
+    j = 0;
+    OLED_SetPos(currX, currY * 2 + 1);
+    while (ch[j] != '\0')
+    {
+      c = ch[j] - ' ';
+      if (currX > 120)
+      {
+        currX = 0;
+        currY++;
+        OLED_SetPos(currX, currY * 2 + 1);
+      }
       for (i = 0; i < 8; i++)
         WriteData(F8X16[c * 16 + i + 8]);
-      x += 8;
+      currX += 8;
       j++;
     }
   }
-
   if (textSize == TEXTSIZE_SMALL || textSize == TEXTSIZE_BIG)
   {
-    OLED_cursorX = x;
-    OLED_cursorY = y;
+    OLED_cursorX = currX;
+    OLED_cursorY = currY;
   }
   return j;
 }

@@ -20,7 +20,7 @@ void WriteCmd(uint8_t I2C_Command);
 void WriteData(uint8_t I2C_Data);
 void OLED_Init(void);
 void OLED_SetPos(uint8_t x, uint8_t y);
-void OLED_Fill(uint8_t fill_Data);
+void OLED_Fill(uint8_t data);
 void OLED_CLS(void);
 void OLED_ON(void);
 void OLED_OFF(void);
