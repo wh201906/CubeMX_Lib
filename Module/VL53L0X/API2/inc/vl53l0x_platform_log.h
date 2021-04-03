@@ -44,6 +44,8 @@ extern "C"
  * @brief platform log function definition
  */
 
+#include "vl53l0x_platform.h"
+
   //#define VL53L0X_LOG_ENABLE 0
 
   enum

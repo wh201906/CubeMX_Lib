@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VL53L0X_TYPES_H_
 #define VL53L0X_TYPES_H_
 
+#include "main.h"
+
 /** use where fractional values are expected
  *
  * Given a floating point value f it's .16 bit point is (int)(f*(1<<16))*/

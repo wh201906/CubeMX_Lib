@@ -34,12 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * provide variable word size byte/Word/dword VL6180x register access via i2c
  *
  */
-#include "vl53l0x_platform.h"
-#include "vl53l0x_api.h"
+#include "../inc/vl53l0x_platform.h"
+#include "../inc/vl53l0x_api.h"
+#include "DELAY/delay.h"
+#include "I2C/softi2c2.h"
 
-#define LOG_FUNCTION_START(fmt, ... )           _LOG_FUNCTION_START(TRACE_MODULE_PLATFORM, fmt, ##__VA_ARGS__)
-#define LOG_FUNCTION_END(status, ... )          _LOG_FUNCTION_END(TRACE_MODULE_PLATFORM, status, ##__VA_ARGS__)
-#define LOG_FUNCTION_END_FMT(status, fmt, ... ) _LOG_FUNCTION_END_FMT(TRACE_MODULE_PLATFORM, status, fmt, ##__VA_ARGS__)
+#define LOG_FUNCTION_START(fmt, ...) _LOG_FUNCTION_START(TRACE_MODULE_PLATFORM, fmt, ##__VA_ARGS__)
+#define LOG_FUNCTION_END(status, ...) _LOG_FUNCTION_END(TRACE_MODULE_PLATFORM, status, ##__VA_ARGS__)
+#define LOG_FUNCTION_END_FMT(status, fmt, ...) _LOG_FUNCTION_END_FMT(TRACE_MODULE_PLATFORM, status, fmt, ##__VA_ARGS__)
 
 /**
  * @def I2C_BUFFER_CONFIG
@@ -61,200 +63,184 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #define I2C_BUFFER_CONFIG 0
 /** Maximum buffer size to be used in i2c */
-#define VL53L0X_MAX_I2C_XFER_SIZE   64 /* Maximum buffer size to be used in i2c */
+#define VL53L0X_MAX_I2C_XFER_SIZE 64 /* Maximum buffer size to be used in i2c */
 
 #if I2C_BUFFER_CONFIG == 0
-    /* GLOBAL config buffer */
-    uint8_t i2c_global_buffer[VL53L0X_MAX_I2C_XFER_SIZE];
+/* GLOBAL config buffer */
+uint8_t i2c_global_buffer[VL53L0X_MAX_I2C_XFER_SIZE];
 
-    #define DECL_I2C_BUFFER
-    #define VL53L0X_GetLocalBuffer(Dev, n_byte)  i2c_global_buffer
+#define DECL_I2C_BUFFER
+#define VL53L0X_GetLocalBuffer(Dev, n_byte) i2c_global_buffer
 
 #elif I2C_BUFFER_CONFIG == 1
-    /* ON STACK */
-    #define DECL_I2C_BUFFER  uint8_t LocBuffer[VL53L0X_MAX_I2C_XFER_SIZE];
-    #define VL53L0X_GetLocalBuffer(Dev, n_byte)  LocBuffer
+/* ON STACK */
+#define DECL_I2C_BUFFER uint8_t LocBuffer[VL53L0X_MAX_I2C_XFER_SIZE];
+#define VL53L0X_GetLocalBuffer(Dev, n_byte) LocBuffer
 #elif I2C_BUFFER_CONFIG == 2
-    /* user define buffer type declare DECL_I2C_BUFFER  as access  via VL53L0X_GetLocalBuffer */
-    #define DECL_I2C_BUFFER
+/* user define buffer type declare DECL_I2C_BUFFER  as access  via VL53L0X_GetLocalBuffer */
+#define DECL_I2C_BUFFER
 #else
 #error "invalid I2C_BUFFER_CONFIG "
 #endif
 
-
-#define VL53L0X_I2C_USER_VAR         /* none but could be for a flag var to get/pass to mutex interruptible  return flags and try again */
-#define VL53L0X_GetI2CAccess(Dev)    /* todo mutex acquire */
-#define VL53L0X_DoneI2CAcces(Dev)    /* todo mutex release */
-
-// the ranging_sensor_comms.dll will take care of the page selection
-VL53L0X_Error VL53L0X_WriteMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata, uint32_t count){
-
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int = 0;
-	uint8_t deviceAddress;
-
-    if (count>=VL53L0X_MAX_I2C_XFER_SIZE){
-        Status = VL53L0X_ERROR_INVALID_PARAMS;
-    }
-
-	deviceAddress = Dev->I2cDevAddr;
-
-	status_int = VL53L0X_write_multi(deviceAddress, index, pdata, count);
-
-	if (status_int != 0)
-		Status = VL53L0X_ERROR_CONTROL_INTERFACE;
-
-    return Status;
-}
+#define VL53L0X_I2C_USER_VAR      /* none but could be for a flag var to get/pass to mutex interruptible  return flags and try again */
+#define VL53L0X_GetI2CAccess(Dev) /* todo mutex acquire */
+#define VL53L0X_DoneI2CAcces(Dev) /* todo mutex release */
 
 // the ranging_sensor_comms.dll will take care of the page selection
-VL53L0X_Error VL53L0X_ReadMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata, uint32_t count){
-    VL53L0X_I2C_USER_VAR
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-	uint8_t deviceAddress;
+VL53L0X_Error VL53L0X_WriteMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata, uint32_t count)
+{
 
-    if (count>=VL53L0X_MAX_I2C_XFER_SIZE){
-        Status = VL53L0X_ERROR_INVALID_PARAMS;
-    }
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int = 0;
+  uint8_t deviceAddress;
 
-    deviceAddress = Dev->I2cDevAddr;
+  if (count >= VL53L0X_MAX_I2C_XFER_SIZE)
+  {
+    Status = VL53L0X_ERROR_INVALID_PARAMS;
+  }
 
-	status_int = VL53L0X_read_multi(deviceAddress, index, pdata, count);
+  deviceAddress = Dev->I2cDevAddr;
 
-	if (status_int != 0)
-		Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  status_int = SoftI2C2_Write(deviceAddress, SI2C_ADDR_7b, index, pdata, count);
 
-    return Status;
+  if (!status_int)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+
+  return Status;
 }
 
+// the ranging_sensor_comms.dll will take care of the page selection
+VL53L0X_Error VL53L0X_ReadMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata, uint32_t count)
+{
+  VL53L0X_I2C_USER_VAR
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
 
-VL53L0X_Error VL53L0X_WrByte(VL53L0X_DEV Dev, uint8_t index, uint8_t data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-	uint8_t deviceAddress;
+  if (count >= VL53L0X_MAX_I2C_XFER_SIZE)
+  {
+    Status = VL53L0X_ERROR_INVALID_PARAMS;
+  }
 
-    deviceAddress = Dev->I2cDevAddr;
+  deviceAddress = Dev->I2cDevAddr;
 
-	status_int = VL53L0X_write_byte(deviceAddress, index, data);
+  status_int = SoftI2C2_Read(deviceAddress, SI2C_ADDR_7b, index, pdata, count);
 
-	if (status_int != 0)
-		Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  if (!status_int)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
 
-    return Status;
+  return Status;
 }
 
-VL53L0X_Error VL53L0X_WrWord(VL53L0X_DEV Dev, uint8_t index, uint16_t data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-	uint8_t deviceAddress;
-
-    deviceAddress = Dev->I2cDevAddr;
-
-	status_int = VL53L0X_write_word(deviceAddress, index, data);
-
-	if (status_int != 0)
-		Status = VL53L0X_ERROR_CONTROL_INTERFACE;
-
-    return Status;
+VL53L0X_Error VL53L0X_WrByte(VL53L0X_DEV Dev, uint8_t index, uint8_t data)
+{
+  return VL53L0X_WriteMulti(Dev, index, &data, 1);
 }
 
-VL53L0X_Error VL53L0X_WrDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-	uint8_t deviceAddress;
+VL53L0X_Error VL53L0X_WrWord(VL53L0X_DEV Dev, uint8_t index, uint16_t data)
+{
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
 
-    deviceAddress = Dev->I2cDevAddr;
+  deviceAddress = Dev->I2cDevAddr;
 
-	status_int = VL53L0X_write_dword(deviceAddress, index, data);
+  // status_int = VL53L0X_write_word(deviceAddress, index, data);
 
-	if (status_int != 0)
-		Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  if (status_int != 0)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
 
-    return Status;
+  return Status;
 }
 
-VL53L0X_Error VL53L0X_UpdateByte(VL53L0X_DEV Dev, uint8_t index, uint8_t AndData, uint8_t OrData){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-    uint8_t deviceAddress;
-    uint8_t data;
+VL53L0X_Error VL53L0X_WrDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t data)
+{
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
 
-    deviceAddress = Dev->I2cDevAddr;
+  deviceAddress = Dev->I2cDevAddr;
 
-    status_int = VL53L0X_read_byte(deviceAddress, index, &data);
+  // status_int = VL53L0X_write_dword(deviceAddress, index, data);
+
+  if (status_int != 0)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+
+  return Status;
+}
+
+VL53L0X_Error VL53L0X_UpdateByte(VL53L0X_DEV Dev, uint8_t index, uint8_t AndData, uint8_t OrData)
+{
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
+  uint8_t data;
+
+  deviceAddress = Dev->I2cDevAddr;
+
+  // status_int = VL53L0X_read_byte(deviceAddress, index, &data);
+
+  if (status_int != 0)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+
+  if (Status == VL53L0X_ERROR_NONE)
+  {
+    data = (data & AndData) | OrData;
+    // status_int = VL53L0X_write_byte(deviceAddress, index, data);
 
     if (status_int != 0)
-        Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+      Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  }
 
-    if (Status == VL53L0X_ERROR_NONE) {
-        data = (data & AndData) | OrData;
-        status_int = VL53L0X_write_byte(deviceAddress, index, data);
-
-        if (status_int != 0)
-            Status = VL53L0X_ERROR_CONTROL_INTERFACE;
-    }
-
-    return Status;
+  return Status;
 }
 
-VL53L0X_Error VL53L0X_RdByte(VL53L0X_DEV Dev, uint8_t index, uint8_t *data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-    uint8_t deviceAddress;
-
-    deviceAddress = Dev->I2cDevAddr;
-
-    status_int = VL53L0X_read_byte(deviceAddress, index, data);
-
-    if (status_int != 0)
-        Status = VL53L0X_ERROR_CONTROL_INTERFACE;
-
-    return Status;
+VL53L0X_Error VL53L0X_RdByte(VL53L0X_DEV Dev, uint8_t index, uint8_t *data)
+{
+  return VL53L0X_ReadMulti(Dev, index, data, 1);
 }
 
-VL53L0X_Error VL53L0X_RdWord(VL53L0X_DEV Dev, uint8_t index, uint16_t *data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-    uint8_t deviceAddress;
+VL53L0X_Error VL53L0X_RdWord(VL53L0X_DEV Dev, uint8_t index, uint16_t *data)
+{
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
 
-    deviceAddress = Dev->I2cDevAddr;
+  deviceAddress = Dev->I2cDevAddr;
 
-    status_int = VL53L0X_read_word(deviceAddress, index, data);
+  // status_int = VL53L0X_read_word(deviceAddress, index, data);
 
-    if (status_int != 0)
-        Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  if (status_int != 0)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
 
-    return Status;
+  return Status;
 }
 
-VL53L0X_Error  VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data){
-    VL53L0X_Error Status = VL53L0X_ERROR_NONE;
-    int32_t status_int;
-    uint8_t deviceAddress;
+VL53L0X_Error VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data)
+{
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  int32_t status_int;
+  uint8_t deviceAddress;
 
-    deviceAddress = Dev->I2cDevAddr;
+  deviceAddress = Dev->I2cDevAddr;
 
-    status_int = VL53L0X_read_dword(deviceAddress, index, data);
+  // status_int = VL53L0X_read_dword(deviceAddress, index, data);
 
-    if (status_int != 0)
-        Status = VL53L0X_ERROR_CONTROL_INTERFACE;
+  if (status_int != 0)
+    Status = VL53L0X_ERROR_CONTROL_INTERFACE;
 
-    return Status;
+  return Status;
 }
 
-#define VL53L0X_POLLINGDELAY_LOOPNB  250
-VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev){
-    VL53L0X_Error status = VL53L0X_ERROR_NONE;
-    LOG_FUNCTION_START("");
+#define VL53L0X_POLLINGDELAY_LOOPNB 250
+VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev)
+{
+  VL53L0X_Error status = VL53L0X_ERROR_NONE;
+  LOG_FUNCTION_START("");
 
-    const DWORD cTimeout_ms = 1;
-    HANDLE hEvent = CreateEvent(0, TRUE, FALSE, 0);
-    if(hEvent != NULL)
-    {
-        WaitForSingleObject(hEvent,cTimeout_ms);
-    }
+  Delay_ms(1);
 
-    LOG_FUNCTION_END(status);
-    return status;
+  LOG_FUNCTION_END(status);
+  return status;
 }
