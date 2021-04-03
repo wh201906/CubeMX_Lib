@@ -99,23 +99,6 @@ typedef VL53L0X_Dev_t* VL53L0X_DEV;
  */
 
 /**
- * Lock comms interface to serialize all commands to a shared I2C interface for a specific device
- * @param   Dev       Device Handle
- * @return  VL53L0X_ERROR_NONE        Success
- * @return  "Other error code"    See ::VL53L0X_Error
- */
-VL53L0X_Error VL53L0X_LockSequenceAccess(VL53L0X_DEV Dev);
-
-/**
- * Unlock comms interface to serialize all commands to a shared I2C interface for a specific device
- * @param   Dev       Device Handle
- * @return  VL53L0X_ERROR_NONE        Success
- * @return  "Other error code"    See ::VL53L0X_Error
- */
-VL53L0X_Error VL53L0X_UnlockSequenceAccess(VL53L0X_DEV Dev);
-
-
-/**
  * Writes the supplied byte buffer to the device
  * @param   Dev       Device Handle
  * @param   index     The register index
