@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>2</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -562,6 +562,21 @@
               <FileName>softi2c2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\I2C\softi2c2.c</FilePath>
+            </File>
+            <File>
+              <FileName>myvl53L0x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\VL53L0X\myvl53L0x.c</FilePath>
+            </File>
+            <File>
+              <FileName>myusart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
             </File>
           </Files>
         </Group>

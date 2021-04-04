@@ -24,7 +24,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "DELAY/delay.h"
+#include "USART/myusart1.h"
+#include "VL53L0X/myvl53L0x.h"
+#include "UTIL/util.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,7 +68,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t st;
+  char str[10];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -88,7 +92,13 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  Delay_Init(168);
+  MyUSART1_Init();
+  Delay_ms(20);
+  MyUSART1_WriteLine("booted");
+  st = MyVL53L0X_Init(0x29);
+  myitoa(st,str,16);
+  MyUSART1_WriteLine(str);
   /* USER CODE END 2 */
 
   /* Infinite loop */
