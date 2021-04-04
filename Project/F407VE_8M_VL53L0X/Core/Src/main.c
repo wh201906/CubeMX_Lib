@@ -68,8 +68,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint8_t st;
-  char str[10];
+  char str[32];
+  int32_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,8 +96,9 @@ int main(void)
   MyUSART1_Init();
   Delay_ms(20);
   MyUSART1_WriteLine("booted");
-  st = MyVL53L0X_Init(0x29);
-  myitoa(st,str,16);
+  MyVL53L0X_Init(0x29);
+  val=MyVL53L0X_SetSenseMode(VL53L0X_SENSE_DEFAULT);
+  myitoa(val,str,10);
   MyUSART1_WriteLine(str);
   /* USER CODE END 2 */
 
@@ -108,6 +109,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    val=MyVL53L0X_GetDistance();
+    myitoa(val,str,10);
+    MyUSART1_WriteLine(str);
   }
   /* USER CODE END 3 */
 }

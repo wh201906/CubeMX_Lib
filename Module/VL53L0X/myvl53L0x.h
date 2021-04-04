@@ -7,9 +7,9 @@
 #define VL53L0X_SENSE_HIGH_ACCURACY 3
 // #define VL53L0X_Sense_config_t ;
 
-#include "API2/inc/vl53l0x_api.h"
-#include "API2/inc/vl53l0x_api_core.h"
-#include "API2/inc/vl53l0x_platform.h"
+#include "API/inc/vl53l0x_api.h"
+#include "API/inc/vl53l0x_api_core.h"
+#include "API/inc/vl53l0x_platform.h"
 #include "I2C/softi2c2.h"
 #include "main.h"
 
