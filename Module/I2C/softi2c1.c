@@ -60,8 +60,10 @@ uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
   SoftI2C1_RepStart();
   if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
     return 0;
-  for (i = 0; i < dataSize; i++)
+  for (i = 0; i < dataSize - 1; i++)
     *(dataBuf + i) = SoftI2C1_ReadByte_ACK(SI2C_ACK);
+  // The last reading should send NACK to end transfer
+  *(dataBuf + i) = SoftI2C1_ReadByte_ACK(SI2C_NACK);
   SoftI2C1_Stop();
 
   return 1;

@@ -48,6 +48,8 @@ extern "C"
 #   define VL53L0X_API
 #endif
 
+#define USE_I2C_2V8
+
 /** @defgroup VL53L0X_cut11_group VL53L0X cut1.1 Function Definition
  *  @brief    VL53L0X cut1.1 Function Definition
  *  @{

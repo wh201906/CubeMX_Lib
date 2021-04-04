@@ -60,8 +60,10 @@ uint8_t SoftI2C2_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAdd
   SoftI2C2_RepStart();
   if (!SoftI2C2_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
     return 0;
-  for (i = 0; i < dataSize; i++)
+  for (i = 0; i < dataSize - 1; i++)
     *(dataBuf + i) = SoftI2C2_ReadByte_ACK(SI2C_ACK);
+  // The last reading should send NACK to end transfer
+  *(dataBuf + i) = SoftI2C2_ReadByte_ACK(SI2C_NACK);
   SoftI2C2_Stop();
 
   return 1;
@@ -112,7 +114,6 @@ void SoftI2C2_Stop(void)
   Delay_ticks(SoftI2C2_delayTicks);     // setup time
   SOFTI2C2_SDA(1);                      // STOP: when CLK is high,DATA change form LOW to HIGH
   Delay_ticks(SoftI2C2_delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
-
   // when the transmition is stopped, the SCL should be high
 }
 
