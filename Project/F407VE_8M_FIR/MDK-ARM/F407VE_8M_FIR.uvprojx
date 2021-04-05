@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -567,6 +567,21 @@
               <FileName>sigio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\SIGNAL\sigio.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\Timer\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
+            <File>
+              <FileName>myusart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
             </File>
           </Files>
         </Group>

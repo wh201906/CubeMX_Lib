@@ -29,6 +29,9 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "SIGNAL/sigio.h"
+#include "Timer/timer.h"
+#include "USART/myusart1.h"
+#include "UTIL/util.h"
 #include "arm_math.h"
 /* USER CODE END Includes */
 
@@ -55,6 +58,7 @@
 
 uint16_t buf[ARRLEN * 3];
 uint16_t procBuf[ARRLEN];
+uint64_t testVal;
 
 arm_fir_instance_q15 firInst;
 
@@ -81,8 +85,12 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 void proc(uint16_t* addr, uint32_t len)
 {
+  Timer_Start();
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
   arm_copy_q15(addr,procBuf,ARRLEN);
   arm_fir_fast_q15(&firInst,procBuf,addr,ARRLEN);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
+  testVal=Timer_Stop();
 }
 /* USER CODE END 0 */
 
@@ -93,7 +101,7 @@ void proc(uint16_t* addr, uint32_t len)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t i;
+  char str[64];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -120,7 +128,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  
+  Timer_Init();
   arm_fir_init_q15(&firInst,firNb,firCoef,firState,ARRLEN);
   
   SigIO_Init(&htim2, &hadc1);
@@ -138,6 +146,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(500);
+    myitoa(testVal,str,10);
+    MyUSART1_WriteLine(str);
   }
   /* USER CODE END 3 */
 }

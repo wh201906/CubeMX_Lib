@@ -70,9 +70,9 @@ void SigIO_DMA_Init()
 
 void SigIO_IT_Init()
 {
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
   __HAL_DMA_CLEAR_FLAG(&SigIO_DMA_ADC, __HAL_DMA_GET_TC_FLAG_INDEX(&SigIO_DMA_ADC));
