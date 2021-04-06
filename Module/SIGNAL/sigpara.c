@@ -6,3 +6,13 @@ float32_t SigPara_RMS(const float32_t* data, uint32_t len)
   arm_rms_f32(data, len, &res);
   return res;
 }
+
+void SigPara_Freq_LF_Init(void)
+{
+
+}
+
+float32_t SigPara_Freq_LF(void)
+{
+
+}

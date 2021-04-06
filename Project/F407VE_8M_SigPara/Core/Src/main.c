@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATA_LEN 1024
+#define DATA_LEN 5
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -104,9 +104,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  HAL_TIM_Base_Start(&htim2);
+  //HAL_TIM_Base_Start(&htim2);
 
   /* USER CODE END 2 */
 
@@ -118,8 +119,9 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    HAL_ADC_Start_DMA(&hadc1,(uint32_t*)rawData,DATA_LEN);
-    Delay_ms(500);
+    //HAL_ADC_Start_DMA(&hadc1,(uint32_t*)rawData,DATA_LEN);
+    //Delay_ms(500);
+    
     // DMAContinuousRequests should be DISABLED, otherwise the data in buffer
     // is not all valid(might be overwrite)
     
@@ -130,9 +132,13 @@ int main(void)
     // So I need to reset ADC_CR2_DMA to restart transfer from ADC to DMA
     
     // set ADC_CR2_DMA to 0 then to 1
-    hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-    sprintf(str,"val: %f",RMS_Process()*3.3/4096);
-    MyUSART1_WriteLine(str);
+    
+    //hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+    //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
+    //MyUSART1_WriteLine(str);
+    
+    HAL_TIM_IC_Start_DMA(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,5);
+    Delay_ms(500);
     
   }
   /* USER CODE END 3 */
