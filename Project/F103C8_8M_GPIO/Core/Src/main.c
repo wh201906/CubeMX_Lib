@@ -26,6 +26,8 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
+#include "control.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,17 +58,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void LED(uint8_t state)
-{
-  // SET -> on, RESET -> off
-  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_2,state);
-}
-uint8_t KEY(void)
-{
-  // SET -> pressed, RESET -> released
-  // PA0 should be pulled down
-  return HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -76,7 +68,8 @@ uint8_t KEY(void)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char chr;
+  char str[64];
+  uint16_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -99,8 +92,22 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  
+  // init
   Delay_Init(72);
   MyUSART1_Init();
+  
+  // set all gpio high/low
+  CTRL_WriteAll(1);
+  
+  // blink
+  for(i=0;i<3;i++)
+  {
+  CTRL_LED(1);
+  Delay_ms(100);
+  CTRL_LED(0);
+  Delay_ms(100);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,10 +117,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //LED(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0));
-    if(MyUSART1_Read(&chr,1))
-      MyUSART1_WriteChar(chr);
-    LED(KEY());
+    if(MyUSART1_ReadUntil(str,'>'))
+    {
+      CTRL_LED(1);
+      CTRL_ReadCmd(str);
+      CTRL_LED(0);
+    }
   }
   /* USER CODE END 3 */
 }
