@@ -30,6 +30,7 @@
 #include "DELAY/delay.h"
 #include "SIGNAL/sigpara.h"
 #include "USART/myusart1.h"
+#include "UTIL/util.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,7 +40,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATA_LEN 5
+#define DATA_LEN 10
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -104,9 +105,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
-  MX_TIM4_Init();
+  //MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  SigPara_Freq_LF_Init();
   //HAL_TIM_Base_Start(&htim2);
 
   /* USER CODE END 2 */
@@ -137,8 +139,12 @@ int main(void)
     //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
     //MyUSART1_WriteLine(str);
     
-    HAL_TIM_IC_Start_DMA(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,5);
+    
+    SigPara_Freq_LF(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
+    //HAL_TIM_IC_Start_DMA(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
     Delay_ms(500);
+    myftoa(84000.0/(rawData[1]-rawData[0]),str);
+    MyUSART1_WriteLine(str);
     
   }
   /* USER CODE END 3 */

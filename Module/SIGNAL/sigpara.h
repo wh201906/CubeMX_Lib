@@ -2,8 +2,11 @@
 #define _SIGPARA_H
 
 #include "main.h"
+#include "tim.h"
 #include "arm_math.h"
 
 float32_t SigPara_RMS(const float32_t *data, uint32_t len);
+void SigPara_Freq_LF_Init(void);
+double SigPara_Freq_LF(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t *pData, uint16_t Length);
 
 #endif
