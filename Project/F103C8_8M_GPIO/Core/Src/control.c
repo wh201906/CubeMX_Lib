@@ -101,6 +101,7 @@ uint8_t CTRL_ReadCmd(char *str)
   char mode;
   char group[32];
   char pin[32];
+  char *pos;
   uint8_t state, pinNum;
   GPIO_TypeDef *G;
 
@@ -109,7 +110,22 @@ uint8_t CTRL_ReadCmd(char *str)
     str[state] = tolower(str[state]);
 
   // sepereate the command
-  sscanf(str, "%c,%s,%s,%u>", &mode, group, pin, &state);
+  mode = str[0];
+  str += 2; // the first comma is ignored
+  pos = str;
+  while (*(pos++) != ',')
+    ;
+  *(--pos) = '\0';
+  strcpy(group, str);
+  *(pos++) = ',';
+  str = pos;
+  while (*(pos++) != ',')
+    ;
+  *(--pos) = '\0';
+  strcpy(pin, str);
+  *(pos++) = ',';
+  str = pos;
+  state = myatoi(str);
 
   if (mode == 'w')
   {
@@ -158,7 +174,7 @@ uint8_t CTRL_ReadCmd(char *str)
 
 uint8_t CTRL_SendState(GPIO_TypeDef *grp, uint8_t pin)
 {
-  return MyUSART1_WriteStr(HAL_GPIO_ReadPin(grp, pinList[pin]) ? "1>" : "0>");
+  return MyUSART1_Write((HAL_GPIO_ReadPin(grp, pinList[pin]) ? "1>" : "0>"), 2);
 }
 
 uint8_t CTRL_WritePin(GPIO_TypeDef *grp, uint8_t pin, uint8_t state)

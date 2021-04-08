@@ -27,7 +27,6 @@
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
 #include "control.h"
-#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
