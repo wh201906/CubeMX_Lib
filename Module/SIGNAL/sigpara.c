@@ -2,6 +2,7 @@
 
 DMA_HandleTypeDef myhdma;
 TIM_HandleTypeDef myhtim;
+uint32_t ovrTimes;
 
 float32_t SigPara_RMS(const float32_t *data, uint32_t len)
 {
@@ -15,10 +16,10 @@ void SigPara_Freq_LF_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
-  
+
   __HAL_RCC_TIM4_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  
+
   myhtim.Instance = TIM4;
   myhtim.Init.Prescaler = 0;
   myhtim.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -37,6 +38,9 @@ void SigPara_Freq_LF_Init(void)
   sConfigIC.ICFilter = 0;
   HAL_TIM_IC_ConfigChannel(&myhtim, &sConfigIC, TIM_CHANNEL_1);
 
+  HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM4_IRQn);
+
   __HAL_RCC_GPIOD_CLK_ENABLE();
   GPIO_InitStruct.Pin = GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -44,7 +48,7 @@ void SigPara_Freq_LF_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-  
+
   __HAL_RCC_DMA1_CLK_ENABLE();
   myhdma.Instance = DMA1_Stream0;
   myhdma.Init.Channel = DMA_CHANNEL_2;
@@ -63,19 +67,31 @@ void SigPara_Freq_LF_Init(void)
 double SigPara_Freq_LF(void)
 {
   uint16_t buf[2];
-  HAL_DMA_Init(&myhdma); // to reset the DMA, otherwise the DMA will work only once.
-  __HAL_TIM_SET_COUNTER(&myhtim,0); // reset counter to 0 to reduce interrupt 
-  
+  HAL_DMA_Init(&myhdma);             // to reset the DMA, otherwise the DMA will work only once.
+  __HAL_TIM_SET_COUNTER(&myhtim, 0); // reset counter to 0 to reduce interrupt
+
   HAL_DMA_Start(&myhdma, (uint32_t)&myhtim.Instance->CCR1, (uint32_t)buf, 2);
-  
+
+  ovrTimes = 0;
+  __HAL_TIM_CLEAR_IT(&myhtim, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(&myhtim, TIM_IT_UPDATE);
+
   __HAL_TIM_ENABLE(&myhtim);
   __HAL_TIM_ENABLE_DMA(&myhtim, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
-  while(!__HAL_DMA_GET_FLAG(&myhdma,DMA_FLAG_TCIF0_4))
+  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF0_4))
     ;
+  __HAL_TIM_DISABLE_IT(&myhtim, TIM_IT_UPDATE);
   __HAL_TIM_DISABLE(&myhtim);
   __HAL_TIM_DISABLE_DMA(&myhtim, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
 
-  return (84000.0/(buf[1]-buf[0]));
+  return (84000.0 / (buf[1] + ovrTimes * 65536 - buf[0]));
+}
+
+void TIM4_IRQHandler(void)
+{
+  __HAL_TIM_CLEAR_IT(&myhtim, TIM_IT_UPDATE);
+  if ((DMA1->LISR & DMA_FLAG_HTIF0_4) && !(DMA1->LISR & DMA_FLAG_TCIF0_4)) // capturing the second edge
+    ovrTimes++;
 }
