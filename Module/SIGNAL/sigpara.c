@@ -60,21 +60,22 @@ void SigPara_Freq_LF_Init(void)
   __HAL_LINKDMA(&myhtim, hdma[TIM_DMA_ID_CC1], myhdma);
 }
 
-double SigPara_Freq_LF(uint32_t Channel, uint32_t *pData, uint16_t Length)
+double SigPara_Freq_LF(void)
 {
+  uint16_t buf[2];
   HAL_DMA_Init(&myhdma); // to reset the DMA, otherwise the DMA will work only once.
   __HAL_TIM_SET_COUNTER(&myhtim,0); // reset counter to 0 to reduce interrupt 
   
-  HAL_DMA_Start(&myhdma, (uint32_t)&myhtim.Instance->CCR1, (uint32_t)pData, Length);
+  HAL_DMA_Start(&myhdma, (uint32_t)&myhtim.Instance->CCR1, (uint32_t)buf, 2);
   
   __HAL_TIM_ENABLE(&myhtim);
   __HAL_TIM_ENABLE_DMA(&myhtim, TIM_DMA_CC1);
-  TIM_CCxChannelCmd(myhtim.Instance, Channel, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
+  TIM_CCxChannelCmd(myhtim.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
   while(!__HAL_DMA_GET_FLAG(&myhdma,DMA_FLAG_TCIF0_4))
     ;
   __HAL_TIM_DISABLE(&myhtim);
   __HAL_TIM_DISABLE_DMA(&myhtim, TIM_DMA_CC1);
-  TIM_CCxChannelCmd(myhtim.Instance, Channel, TIM_CCx_DISABLE);
+  TIM_CCxChannelCmd(myhtim.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
 
-  return 0;
+  return (84000.0/(buf[1]-buf[0]));
 }

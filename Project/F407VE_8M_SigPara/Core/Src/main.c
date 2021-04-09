@@ -138,12 +138,8 @@ int main(void)
     //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
     //MyUSART1_WriteLine(str);
     
-    
-    SigPara_Freq_LF(TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
-    //HAL_TIM_IC_Start_DMA(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
     Delay_ms(500);
-    //myftoa(84000.0/(rawData[1]-rawData[0]),str);
-    myitoa(rawData[1]-rawData[0],str,10);
+    myftoa(SigPara_Freq_LF(),str);
     MyUSART1_WriteLine(str);
     
   }
