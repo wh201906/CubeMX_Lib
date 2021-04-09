@@ -44,7 +44,8 @@ void SigPara_Freq_LF_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
+  
+  __HAL_RCC_DMA1_CLK_ENABLE();
   myhdma.Instance = DMA1_Stream0;
   myhdma.Init.Channel = DMA_CHANNEL_2;
   myhdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -59,21 +60,21 @@ void SigPara_Freq_LF_Init(void)
   __HAL_LINKDMA(&myhtim, hdma[TIM_DMA_ID_CC1], myhdma);
 }
 
-double SigPara_Freq_LF(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t *pData, uint16_t Length)
+double SigPara_Freq_LF(uint32_t Channel, uint32_t *pData, uint16_t Length)
 {
   HAL_DMA_Init(&myhdma); // to reset the DMA, otherwise the DMA will work only once.
-  myhtim.hdma[TIM_DMA_ID_CC1]->XferCpltCallback = TIM_DMACaptureCplt;
-  myhtim.hdma[TIM_DMA_ID_CC1]->XferHalfCpltCallback = TIM_DMACaptureHalfCplt;
-
-  myhtim.hdma[TIM_DMA_ID_CC1]->XferErrorCallback = TIM_DMAError;
-
-  HAL_DMA_Start_IT(myhtim.hdma[TIM_DMA_ID_CC1], (uint32_t)&myhtim.Instance->CCR1, (uint32_t)pData, Length);
-
-  __HAL_TIM_ENABLE_DMA(&myhtim, TIM_DMA_CC1);
-
-  TIM_CCxChannelCmd(myhtim.Instance, Channel, TIM_CCx_ENABLE);
-
+  __HAL_TIM_SET_COUNTER(&myhtim,0); // reset counter to 0 to reduce interrupt 
+  
+  HAL_DMA_Start(&myhdma, (uint32_t)&myhtim.Instance->CCR1, (uint32_t)pData, Length);
+  
   __HAL_TIM_ENABLE(&myhtim);
+  __HAL_TIM_ENABLE_DMA(&myhtim, TIM_DMA_CC1);
+  TIM_CCxChannelCmd(myhtim.Instance, Channel, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
+  while(!__HAL_DMA_GET_FLAG(&myhdma,DMA_FLAG_TCIF0_4))
+    ;
+  __HAL_TIM_DISABLE(&myhtim);
+  __HAL_TIM_DISABLE_DMA(&myhtim, TIM_DMA_CC1);
+  TIM_CCxChannelCmd(myhtim.Instance, Channel, TIM_CCx_DISABLE);
 
   return 0;
 }

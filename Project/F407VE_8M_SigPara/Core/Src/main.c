@@ -105,7 +105,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
-  //MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   SigPara_Freq_LF_Init();
@@ -140,10 +139,11 @@ int main(void)
     //MyUSART1_WriteLine(str);
     
     
-    SigPara_Freq_LF(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
+    SigPara_Freq_LF(TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
     //HAL_TIM_IC_Start_DMA(&htim4,TIM_CHANNEL_1,(uint32_t*)rawData,DATA_LEN);
     Delay_ms(500);
-    myftoa(84000.0/(rawData[1]-rawData[0]),str);
+    //myftoa(84000.0/(rawData[1]-rawData[0]),str);
+    myitoa(rawData[1]-rawData[0],str,10);
     MyUSART1_WriteLine(str);
     
   }
