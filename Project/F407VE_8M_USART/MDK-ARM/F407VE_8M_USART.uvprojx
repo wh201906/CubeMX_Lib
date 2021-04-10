@@ -449,11 +449,6 @@
               <FilePath>..\..\..\Module\I2C\softi2c1.c</FilePath>
             </File>
             <File>
-              <FileName>oled_iic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\OLED\oled_iic.c</FilePath>
-            </File>
-            <File>
               <FileName>myusart1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>

@@ -6,20 +6,13 @@
 
 #define MYUSART1_MAX_LEN 100
 
-#if defined(STM32H750xx) || defined(STM32L431xx)
-#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= (1u << (UART_IT_RXNE & UART_IT_MASK)))
-#endif
-#if defined(STM32F407xx) || defined(STM32F103xB)
-#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= ((UART_IT_RXNE) & UART_IT_MASK))
-#endif
-
 // used for bytes, lines and strings
 // for Writexx() functions, the 0 represents false, and the function can be wrapped with single if()
 // for ReadChar(), the result is the last fetched char in buffer;
 // for the rest of Readxx(), the result is the number of chars written into str[];
 
 int fputc(int ch, FILE *f);
-void MyUSART1_Init(void);
+void MyUSART1_Init(UART_HandleTypeDef* huart);
 void MyUSART1_WriteChar(uint8_t ch);
 uint8_t MyUSART1_Write(uint8_t *str, uint16_t len);
 uint8_t MyUSART1_WriteStr(uint8_t *str);                    // the \0 will BE sent;
@@ -60,6 +53,7 @@ add
 MyUSART1_IRQHandler(USARTx);
 in function
 USARTx_IRQHandler()
+(before HAL_UART_IRQHandler())
 
 Remember to enable usart interrupt in CubeMX
 */

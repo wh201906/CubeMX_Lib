@@ -3,39 +3,38 @@
 uint8_t MyUSART1_buffer[MYUSART1_MAX_LEN];
 uint32_t MyUSART1_bufferPos = 0;
 uint8_t MyUSART1_bufferOverflowFlag = 0;
+UART_HandleTypeDef *MyUSART1_dummyHandle;
 
 FILE __stdout;
 
 int fputc(int ch, FILE *f)
 {
-#if defined(STM32H750xx) || defined(STM32L431xx)
-  while ((USART1->ISR & UART_FLAG_TC) == 0)
+  while (!__HAL_UART_GET_FLAG(MyUSART1_dummyHandle, UART_FLAG_TC))
     ;
+#if defined(STM32H750xx) || defined(STM32L431xx)
   USART1->TDR = (uint8_t)ch;
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-  while ((USART1->SR & UART_FLAG_TC) == 0)
-    ;
   USART1->DR = (uint8_t)ch;
 #endif
   return ch;
 }
 
-void MyUSART1_Init(void)
+void MyUSART1_Init(UART_HandleTypeDef *huart)
 {
-  __MYUSART1_ENABLE_IT();
+  MyUSART1_dummyHandle = huart;
+  __HAL_UART_ENABLE_IT(MyUSART1_dummyHandle, UART_IT_RXNE);
+  ;
 }
 
 void MyUSART1_WriteChar(uint8_t ch)
 {
-#if defined(STM32H750xx) || defined(STM32L431xx)
-  while ((USART1->ISR & UART_FLAG_TC) == 0)
+  while (!__HAL_UART_GET_FLAG(MyUSART1_dummyHandle, UART_FLAG_TC))
     ;
+#if defined(STM32H750xx) || defined(STM32L431xx)
   USART1->TDR = ch;
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-  while ((USART1->SR & UART_FLAG_TC) == 0)
-    ;
   USART1->DR = ch;
 #endif
 }
@@ -216,14 +215,12 @@ void MyUSART1_ClearBuffer()
 void MyUSART1_IRQHandler(USART_TypeDef *source)
 {
 
-#if defined(STM32H750xx) || defined(STM32L431xx)
-  if ((USART1->ISR & UART_FLAG_RXNE) == 0)
+  if (!__HAL_UART_GET_FLAG(MyUSART1_dummyHandle, UART_FLAG_RXNE))
     return;
+#if defined(STM32H750xx) || defined(STM32L431xx)
   MyUSART1_buffer[MyUSART1_bufferPos++] = USART1->RDR;
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-  if ((USART1->SR & UART_FLAG_RXNE) == 0)
-    return;
   MyUSART1_buffer[MyUSART1_bufferPos++] = USART1->DR;
 #endif
   if (MyUSART1_bufferPos == MYUSART1_MAX_LEN)

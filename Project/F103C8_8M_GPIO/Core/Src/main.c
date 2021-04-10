@@ -94,7 +94,7 @@ int main(void)
   
   // init
   Delay_Init(72);
-  MyUSART1_Init();
+  MyUSART1_Init(&huart1);
   
   // set all gpio high/low
   CTRL_WriteAll(1);

@@ -27,7 +27,7 @@
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
 #include "GRIDKEY/gridkey.h"
-#include "OLED/oled_iic.h"
+//#include "OLED/oled_iic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -93,8 +93,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
     Delay_Init(168);
-    OLED_Init();
-    MyUSART1_Init();
+    //OLED_Init();
+    MyUSART1_Init(&huart1);
     printf("01234\r\n");
     MyUSART1_WriteChar('5');
     MyUSART1_Write("678\r\n666",5);
@@ -117,8 +117,8 @@ int main(void)
       int key=GridKey_Scan(0);
       if(key==255)
           continue;
-      OLED_ShowChar(6,displayPos,' ',TEXTSIZE_SMALL,REVERSE_OFF);
-      OLED_ShowInt(0,displayPos++,key,TEXTSIZE_SMALL,REVERSE_OFF);
+      //OLED_ShowChar(6,displayPos,' ',TEXTSIZE_SMALL,REVERSE_OFF);
+      //OLED_ShowInt(0,displayPos++,key,TEXTSIZE_SMALL,REVERSE_OFF);
       displayPos%=8;
       switch(key)
       {

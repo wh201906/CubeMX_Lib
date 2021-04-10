@@ -96,7 +96,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
     Delay_Init(480);
     OLED_Init();
-    MyUSART1_Init();
+    MyUSART1_Init(&huart1);
     printf("01234\r\n");
     MyUSART1_WriteChar('5');
     MyUSART1_Write("678\r\n666",5);
