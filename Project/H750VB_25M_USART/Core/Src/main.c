@@ -27,7 +27,7 @@
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
 #include "GRIDKEY/gridkey.h"
-#include "OLED/oled_iic.h"
+#include "OLED/oled.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,7 +106,7 @@ int main(void)
     MyUSART1_WriteLine("");
     MyUSART1_WriteStr("");
     Delay_ms(1000);
-    OLED_ShowStr(0,0,"USART_Test",TEXTSIZE_SMALL,REVERSE_OFF);
+    OLED_ShowStr(0,0,"USART_Test");
     
   /* USER CODE END 2 */
 
@@ -120,8 +120,8 @@ int main(void)
       int key=GridKey_Scan(0);
       if(key==255)
           continue;
-      OLED_ShowChar(6,displayPos,' ',TEXTSIZE_SMALL,REVERSE_OFF);
-      OLED_ShowInt(0,displayPos++,key,TEXTSIZE_SMALL,REVERSE_OFF);
+      OLED_ShowChar(6,displayPos,' ');
+      OLED_ShowInt(0,displayPos++,key);
       displayPos%=8;
       switch(key)
       {
@@ -170,7 +170,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   /** Supply configuration update enable
   */
@@ -213,14 +212,6 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_USART1;
-  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
-  PeriphClkInitStruct.Usart16ClockSelection = RCC_USART16CLKSOURCE_D2PCLK2;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }

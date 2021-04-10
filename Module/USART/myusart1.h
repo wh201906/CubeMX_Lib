@@ -6,11 +6,11 @@
 
 #define MYUSART1_MAX_LEN 100
 
-#if defined(STM32H750xx)
-#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= (USART_CR1_RXNEIE_RXFNEIE))
+#if defined(STM32H750xx) || defined(STM32L431xx)
+#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= (1u << (UART_IT_RXNE & UART_IT_MASK)))
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= ((UART_IT_RXNE)&UART_IT_MASK))
+#define __MYUSART1_ENABLE_IT() ((USART1)->CR1 |= ((UART_IT_RXNE) & UART_IT_MASK))
 #endif
 
 // used for bytes, lines and strings

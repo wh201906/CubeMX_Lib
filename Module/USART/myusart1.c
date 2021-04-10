@@ -8,13 +8,13 @@ FILE __stdout;
 
 int fputc(int ch, FILE *f)
 {
-#if defined(STM32H750xx)
-  while ((USART1->ISR & 0X40) == 0)
+#if defined(STM32H750xx) || defined(STM32L431xx)
+  while ((USART1->ISR & UART_FLAG_TC) == 0)
     ;
   USART1->TDR = (uint8_t)ch;
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-  while ((USART1->SR & 0X40) == 0)
+  while ((USART1->SR & UART_FLAG_TC) == 0)
     ;
   USART1->DR = (uint8_t)ch;
 #endif
@@ -28,13 +28,13 @@ void MyUSART1_Init(void)
 
 void MyUSART1_WriteChar(uint8_t ch)
 {
-#ifdef STM32H750xx
-  while ((USART1->ISR & 0X40) == 0)
+#if defined(STM32H750xx) || defined(STM32L431xx)
+  while ((USART1->ISR & UART_FLAG_TC) == 0)
     ;
   USART1->TDR = ch;
 #endif
 #if defined(STM32F407xx) || defined(STM32F103xB)
-  while ((USART1->SR & 0X40) == 0)
+  while ((USART1->SR & UART_FLAG_TC) == 0)
     ;
   USART1->DR = ch;
 #endif
@@ -216,7 +216,7 @@ void MyUSART1_ClearBuffer()
 void MyUSART1_IRQHandler(USART_TypeDef *source)
 {
 
-#if defined(STM32H750xx)
+#if defined(STM32H750xx) || defined(STM32L431xx)
   if ((USART1->ISR & UART_FLAG_RXNE) == 0)
     return;
   MyUSART1_buffer[MyUSART1_bufferPos++] = USART1->RDR;
