@@ -90,9 +90,9 @@ uint8_t MyVL53L0X_SingleMeasure(VL53L0X_RangingMeasurementData_t *RangingMeasure
 
 uint16_t MyVL53L0X_GetDistance(void)
 {
-  VL53L0X_RangingMeasurementData_t *RangingMeasurementData;
-  if (MyVL53L0X_SingleMeasure(RangingMeasurementData))
-    return RangingMeasurementData->RangeMilliMeter;
+  VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+  if (MyVL53L0X_SingleMeasure(&RangingMeasurementData) && RangingMeasurementData.RangeStatus !=4)
+    return RangingMeasurementData.RangeMilliMeter;
   else
     return 0xFFFF;
 }

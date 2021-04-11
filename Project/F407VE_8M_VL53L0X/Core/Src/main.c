@@ -93,7 +93,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  MyUSART1_Init();
+  MyUSART1_Init(&huart1);
   Delay_ms(20);
   MyUSART1_WriteLine("booted");
   MyVL53L0X_Init(0x29);
