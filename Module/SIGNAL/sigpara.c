@@ -35,7 +35,10 @@ void SigPara_Freq_LF_Init(void)
   sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
+  // Change this for different freq range
+  // If the freq is high, use lower filter value.
+  // If the freq is low, use higher filter value.
+  sConfigIC.ICFilter = 0x5;
   HAL_TIM_IC_ConfigChannel(&myhtim, &sConfigIC, TIM_CHANNEL_1);
 
   HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);

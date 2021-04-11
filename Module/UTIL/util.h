@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define MYUTIL_FLOAT_PRECISION 4
+#define MYUTIL_FLOAT_PRECISION 6
 
 uint16_t myitoa(int64_t val, char *str, uint8_t radix);
 uint8_t myftoa(double val, char *str);
