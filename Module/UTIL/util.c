@@ -44,8 +44,16 @@ uint8_t myftoa(double val, char *str)
   uint8_t len;
   len = myitoa(part, str, 10);
   str[len++] = '.';
-  part = (val < 0 ? part - val : val - part) * 1000; // 3 digit of float part.
-  len += myitoa(part, str + len, 10);
+  val = (val < 0 ? part - val : val - part);
+  for (int i = 0; i < MYUTIL_FLOAT_PRECISION; i++) // print decimal part from left to right
+  {
+    val *= 10;
+    str[len++] = (uint64_t)val % 10 + '0';
+  }
+  str[len] = '\0';
+  while (str[--len] == '0' && str[len - 1] != '.') // remove trailing zeros
+    str[len] = '\0';
+  len++;
   return len;
 }
 

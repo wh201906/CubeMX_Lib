@@ -108,6 +108,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   SigPara_Freq_LF_Init();
+  MyUSART1_Init(&huart1);
   //HAL_TIM_Base_Start(&htim2);
 
   /* USER CODE END 2 */
