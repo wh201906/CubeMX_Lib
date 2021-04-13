@@ -144,10 +144,10 @@ int main(void)
     //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
     //MyUSART1_WriteLine(str);
     
-    Delay_ms(500);
-    //myftoa(SigPara_Freq_LF(),str);
+    Delay_ms(200);
+    myftoa(__HAL_TIM_GET_COUNTER(&htim4),str);
     
-    //MyUSART1_WriteLine(str);
+    MyUSART1_WriteLine(str);
     
   }
   /* USER CODE END 3 */
