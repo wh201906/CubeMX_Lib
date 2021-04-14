@@ -24,7 +24,9 @@ def switch():
     st = str(request.form['state'])
     print(id, st)
     port = portDict[id]
-    cmd = 'w,' + port[0] + ',' + port[1] + ',' + '>'
+    cmd = 'w,' + port[0] + ',' + port[1] + ',' + st +'>'
+    print(cmd)
+    serialInst.write(bytes(cmd,'ascii'))
     return 'button switched'
 
 
