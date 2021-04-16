@@ -104,6 +104,97 @@ double SigPara_Freq_LF(void)
   return (84000.0 / (buf[1] + ovrTimes * 65536 - buf[0]));
 }
 
+static void SigPara_Freq_HF_TimerTIM_Init(void)
+{
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  myhtim2.Instance = TIM3;
+  myhtim2.Init.Prescaler = 9999;
+  myhtim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  myhtim2.Init.Period = 16800;
+  myhtim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  myhtim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  HAL_TIM_Base_Init(&myhtim2);
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  HAL_TIM_ConfigClockSource(&myhtim2, &sClockSourceConfig);
+
+  HAL_TIM_PWM_Init(&myhtim2);
+  HAL_TIM_OnePulse_Init(&myhtim2, TIM_OPMODE_SINGLE);
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_OC1REF;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
+  HAL_TIMEx_MasterConfigSynchronization(&myhtim2, &sMasterConfig);
+
+  sConfigOC.OCMode = TIM_OCMODE_PWM2;
+  sConfigOC.Pulse = 1;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  HAL_TIM_PWM_ConfigChannel(&myhtim2, &sConfigOC, TIM_CHANNEL_1);
+}
+
+static void SigPara_Freq_HF_CounterTIM_Init(void)
+{
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  myhtim1.Instance = TIM4;
+  myhtim1.Init.Prescaler = 0;
+  myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  myhtim1.Init.Period = 65535;
+  myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  HAL_TIM_Base_Init(&myhtim1);
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
+  sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
+  sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
+  sClockSourceConfig.ClockFilter = 0;
+  HAL_TIM_ConfigClockSource(&myhtim1, &sClockSourceConfig);
+
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_GATED;
+  sSlaveConfig.InputTrigger = TIM_TS_ITR2;
+  HAL_TIM_SlaveConfigSynchro(&myhtim1, &sSlaveConfig);
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  HAL_TIMEx_MasterConfigSynchronization(&myhtim1, &sMasterConfig);
+}
+
+static void SigPara_Freq_HF_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+}
+
+void SigPara_Freq_HF_Init(void)
+{
+  SigPara_Freq_HF_TimerTIM_Init();
+  SigPara_Freq_HF_CounterTIM_Init();
+  SigPara_Freq_HF_GPIO_Init();
+}
+
+double SigPara_Freq_HF(void)
+{
+  __HAL_TIM_SET_COUNTER(&myhtim1, 0);
+  __HAL_TIM_SET_COUNTER(&myhtim2, 0);
+  __HAL_TIM_ENABLE(&myhtim1);
+  __HAL_TIM_ENABLE(&myhtim2); // start timer after the counter is enabled for better precision
+  while (myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
+    ;
+  return __HAL_TIM_GET_COUNTER(&myhtim1);
+}
+
 void TIM4_IRQHandler(void)
 {
   __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
