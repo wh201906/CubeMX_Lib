@@ -146,6 +146,7 @@ int main(void)
     
     Delay_ms(200);
     myftoa(__HAL_TIM_GET_COUNTER(&htim4),str);
+    //myftoa(SigPara_Freq_LF(),str);
     
     MyUSART1_WriteLine(str);
     
