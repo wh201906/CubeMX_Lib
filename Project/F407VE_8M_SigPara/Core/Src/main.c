@@ -142,7 +142,7 @@ int main(void)
     //MyUSART1_WriteLine(str);
     
     Delay_ms(200);
-    myftoa(SigPara_Freq_HF(),str);
+    myftoa(SigPara_Freq_HF(62400),str); // 62400 contains 7 and 3, which can counteract the prime factor in 84MHz
     //myftoa(SigPara_Freq_LF(),str);
     
     MyUSART1_WriteLine(str);

@@ -5,13 +5,19 @@
 #include "tim.h"
 #include "arm_math.h"
 
+#define SIGPARA_HTIM1_CLK 84000000.0
+#define SIGPARA_HTIM2_CLK 84000000.0
+
 float32_t SigPara_RMS(const float32_t *data, uint32_t len);
 static void SigPara_Freq_LF_TIM_Init(void);
 static void SigPara_Freq_LF_GPIO_Init(void);
 static void SigPara_Freq_LF_DMA_Init(void);
 void SigPara_Freq_LF_Init(void);
 double SigPara_Freq_LF(void);
+static void SigPara_Freq_HF_TimerTIM_Init(void);
+static void SigPara_Freq_HF_CounterTIM_Init(void);
+static void SigPara_Freq_HF_GPIO_Init(void);
 void SigPara_Freq_HF_Init(void);
-double SigPara_Freq_HF(void);
+double SigPara_Freq_HF(uint32_t countTimes);
 
 #endif

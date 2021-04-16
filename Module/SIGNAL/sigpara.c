@@ -101,7 +101,8 @@ double SigPara_Freq_LF(void)
   __HAL_TIM_DISABLE_DMA(&myhtim1, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
 
-  return (84000.0 / (buf[1] + ovrTimes * 65536 - buf[0]));
+  return (SIGPARA_HTIM1_CLK / (buf[1] + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1) - buf[0]));
+  ;
 }
 
 static void SigPara_Freq_HF_TimerTIM_Init(void)
@@ -112,9 +113,9 @@ static void SigPara_Freq_HF_TimerTIM_Init(void)
 
   __HAL_RCC_TIM3_CLK_ENABLE();
   myhtim2.Instance = TIM3;
-  myhtim2.Init.Prescaler = 9999;
+  myhtim2.Init.Prescaler = 0;
   myhtim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim2.Init.Period = 16800;
+  myhtim2.Init.Period = 65535;
   myhtim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   myhtim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   HAL_TIM_Base_Init(&myhtim2);
@@ -183,23 +184,35 @@ void SigPara_Freq_HF_Init(void)
 {
   SigPara_Freq_HF_TimerTIM_Init();
   SigPara_Freq_HF_CounterTIM_Init();
+  HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM4_IRQn);
   SigPara_Freq_HF_GPIO_Init();
 }
 
-double SigPara_Freq_HF(void)
+double SigPara_Freq_HF(uint32_t countTimes)
 {
+  uint32_t edgeNum;
   __HAL_TIM_SET_COUNTER(&myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&myhtim2, 0);
+  __HAL_TIM_SET_AUTORELOAD(&myhtim2, countTimes);
+
+  ovrTimes = 0;
+  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(&myhtim1, TIM_IT_UPDATE);
+
   __HAL_TIM_ENABLE(&myhtim1);
   __HAL_TIM_ENABLE(&myhtim2);                 // start timer after the counter is enabled for better precision
   while (myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
     ;
-  return __HAL_TIM_GET_COUNTER(&myhtim1);
+  edgeNum = __HAL_TIM_GET_COUNTER(&myhtim1) + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1);
+  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum);
 }
 
 void TIM4_IRQHandler(void)
 {
   __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
   if ((DMA1->LISR & DMA_FLAG_HTIF0_4) && !(DMA1->LISR & DMA_FLAG_TCIF0_4)) // capturing the second edge
+    ovrTimes++;
+  else if (myhtim2.Instance->CR1 & TIM_CR1_CEN)
     ovrTimes++;
 }
