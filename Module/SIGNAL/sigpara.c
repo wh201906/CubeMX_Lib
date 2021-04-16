@@ -110,6 +110,7 @@ static void SigPara_Freq_HF_TimerTIM_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
+  __HAL_RCC_TIM3_CLK_ENABLE();
   myhtim2.Instance = TIM3;
   myhtim2.Init.Prescaler = 9999;
   myhtim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -141,6 +142,7 @@ static void SigPara_Freq_HF_CounterTIM_Init(void)
   TIM_SlaveConfigTypeDef sSlaveConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
+  __HAL_RCC_TIM4_CLK_ENABLE();
   myhtim1.Instance = TIM4;
   myhtim1.Init.Prescaler = 0;
   myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -189,7 +191,7 @@ double SigPara_Freq_HF(void)
   __HAL_TIM_SET_COUNTER(&myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&myhtim2, 0);
   __HAL_TIM_ENABLE(&myhtim1);
-  __HAL_TIM_ENABLE(&myhtim2); // start timer after the counter is enabled for better precision
+  __HAL_TIM_ENABLE(&myhtim2);                 // start timer after the counter is enabled for better precision
   while (myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
     ;
   return __HAL_TIM_GET_COUNTER(&myhtim1);

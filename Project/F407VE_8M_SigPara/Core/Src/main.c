@@ -105,8 +105,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
-  //MX_TIM3_Init();
-  //MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   //SigPara_Freq_LF_Init();
@@ -114,9 +112,6 @@ int main(void)
   //HAL_TIM_Base_Start(&htim2);
   
   SigPara_Freq_HF_Init();
-  //SigPara_Freq_HF();
-  //HAL_TIM_Base_Start(&htim3);
-  //HAL_TIM_Base_Start(&htim4);
   
   /* USER CODE END 2 */
 
