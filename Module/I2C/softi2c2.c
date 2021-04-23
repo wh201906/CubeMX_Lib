@@ -109,8 +109,10 @@ void SoftI2C2_RepStart(void)
 
 void SoftI2C2_Stop(void)
 {
-  SOFTI2C2_SCL(1);
+  SOFTI2C2_SCL(0);
   SOFTI2C2_SDA(0);
+  Delay_ticks(SoftI2C2_delayTicks / 4);
+  SOFTI2C2_SCL(1);
   Delay_ticks(SoftI2C2_delayTicks);     // setup time
   SOFTI2C2_SDA(1);                      // STOP: when CLK is high,DATA change form LOW to HIGH
   Delay_ticks(SoftI2C2_delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
