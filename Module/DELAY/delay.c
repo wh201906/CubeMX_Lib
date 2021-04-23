@@ -41,15 +41,16 @@ void Delay_ticks(uint32_t ticks)
   uint32_t told, tnow, tcnt = 0;
   uint32_t reload = SysTick->LOAD;
   told = SysTick->VAL;
+
   while (1)
   {
     tnow = SysTick->VAL;
     if (tnow != told)
     {
       if (tnow < told)
-        tcnt += told - tnow;
+        tcnt += told - tnow + 1; // +1 for compensation
       else
-        tcnt += reload - tnow + told;
+        tcnt += reload - tnow + told + 1; // +1 for compensation
       told = tnow;
       if (tcnt >= ticks)
         break;
