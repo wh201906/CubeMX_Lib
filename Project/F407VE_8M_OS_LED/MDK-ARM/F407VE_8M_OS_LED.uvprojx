@@ -10,8 +10,8 @@
       <TargetName>F407VE_8M_OS_LED</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060960::V5.06 update 7 (build 960)::ARMCC</pCCUsed>
-      <uAC6>0</uAC6>
+      <pCCUsed>6150000::V6.15::ARMCLANG</pCCUsed>
+      <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F407VETx</Device>
@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>2</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -322,7 +322,7 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>3</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/include";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";../../../Module</IncludePath>
+              <IncludePath>../Core/Inc;"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/include";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";../../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -576,7 +576,7 @@
             <File>
               <FileName>port.c</FileName>
               <FileType>1</FileType>
-              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c</FilePath>
+              <FilePath>C:\Users\when how\STM32Cube\Repository\STM32Cube_FW_F4_V1.26.0\Middlewares\Third_Party\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c</FilePath>
             </File>
           </Files>
         </Group>
