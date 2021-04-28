@@ -46,7 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+osThreadId_t ledTaskGrp[8];
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -62,17 +62,10 @@ const osThreadAttr_t keyTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for led0Task */
-osThreadId_t led0TaskHandle;
-const osThreadAttr_t led0Task_attributes = {
-  .name = "led0Task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for led1Task */
-osThreadId_t led1TaskHandle;
-const osThreadAttr_t led1Task_attributes = {
-  .name = "led1Task",
+/* Definitions for ledTask */
+osThreadId_t ledTaskHandle;
+const osThreadAttr_t ledTask_attributes = {
+  .name = "ledTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
@@ -84,8 +77,7 @@ const osThreadAttr_t led1Task_attributes = {
 
 void StartDefaultTask(void *argument);
 void StartKeyTask(void *argument);
-void StartLED0Task(void *argument);
-void StartLED1Task(void *argument);
+void StartLEDTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -96,7 +88,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+  uint8_t i;
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -122,13 +114,12 @@ void MX_FREERTOS_Init(void) {
   /* creation of keyTask */
   keyTaskHandle = osThreadNew(StartKeyTask, NULL, &keyTask_attributes);
 
-  /* creation of led0Task */
-  led0TaskHandle = osThreadNew(StartLED0Task, NULL, &led0Task_attributes);
-
-  /* creation of led1Task */
-  led1TaskHandle = osThreadNew(StartLED1Task, NULL, &led1Task_attributes);
+  /* creation of ledTask */
+  ledTaskHandle = osThreadNew(StartLEDTask, NULL, &ledTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  for(i = 1; i < 8; i++) // 0 is used by default ledTask
+    ledTaskGrp[i] = osThreadNew(StartLEDTask, (void *)i, &ledTask_attributes);
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -174,42 +165,25 @@ void StartKeyTask(void *argument)
   /* USER CODE END StartKeyTask */
 }
 
-/* USER CODE BEGIN Header_StartLED0Task */
+/* USER CODE BEGIN Header_StartLEDTask */
 /**
-* @brief Function implementing the led0Task thread.
+* @brief Function implementing the ledTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartLED0Task */
-void StartLED0Task(void *argument)
+/* USER CODE END Header_StartLEDTask */
+void StartLEDTask(void *argument)
 {
-  /* USER CODE BEGIN StartLED0Task */
+  /* USER CODE BEGIN StartLEDTask */
+  uint8_t pin;
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
-    osDelay(200);
+    pin = (uint8_t)argument;
+    HAL_GPIO_TogglePin(GPIOB, 1u << pin);
+    osDelay(50);
   }
-  /* USER CODE END StartLED0Task */
-}
-
-/* USER CODE BEGIN Header_StartLED1Task */
-/**
-* @brief Function implementing the led1Task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartLED1Task */
-void StartLED1Task(void *argument)
-{
-  /* USER CODE BEGIN StartLED1Task */
-  /* Infinite loop */
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_7);
-    osDelay(500);
-  }
-  /* USER CODE END StartLED1Task */
+  /* USER CODE END StartLEDTask */
 }
 
 /* Private application code --------------------------------------------------*/

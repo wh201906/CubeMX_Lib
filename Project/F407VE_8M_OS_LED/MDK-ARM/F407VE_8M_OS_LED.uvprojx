@@ -529,6 +529,11 @@
           <GroupName>Middlewares/FreeRTOS</GroupName>
           <Files>
             <File>
+              <FileName>port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:\Users\when how\STM32Cube\Repository\STM32Cube_FW_F4_V1.26.0\Middlewares\Third_Party\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c</FilePath>
+            </File>
+            <File>
               <FileName>croutine.c</FileName>
               <FileType>1</FileType>
               <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c</FilePath>
@@ -572,11 +577,6 @@
               <FileName>heap_4.c</FileName>
               <FileType>1</FileType>
               <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c</FilePath>
-            </File>
-            <File>
-              <FileName>port.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:\Users\when how\STM32Cube\Repository\STM32Cube_FW_F4_V1.26.0\Middlewares\Third_Party\FreeRTOS\Source\portable\GCC\ARM_CM4F\port.c</FilePath>
             </File>
           </Files>
         </Group>
