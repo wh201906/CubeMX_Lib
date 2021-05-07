@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -70,6 +71,15 @@ void LED_Init()
   G.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &G);
 }
+
+// only vaild when the original OCmode is PWM1(OC1M=3'b110)
+void TIM_SetOutput(TIM_HandleTypeDef* htim, uint8_t state)
+{
+  if(state)
+    htim->Instance->CCMR1 |= TIM_CCMR1_OC1M_1;
+  else
+    htim->Instance->CCMR1 &= ~TIM_CCMR1_OC1M_1;
+}
 /* USER CODE END 0 */
 
 /**
@@ -103,12 +113,16 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   
   Delay_Init(72);
   MyUSART1_Init(&huart1);
   OLED_Init();
   LED_Init();
+  HAL_TIM_PWM_Init(&htim2);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  TIM_SetOutput(&htim2, 0);
   
   Delay_ms(20);
   OLED_ShowStr(0,0,"VL53L0X");
@@ -117,7 +131,9 @@ int main(void)
   if(val)
   {
     OLED_ShowStr(0,0,"Inited!");
+    TIM_SetOutput(&htim2, 1);
     Delay_ms(1000);
+    TIM_SetOutput(&htim2, 0);
     OLED_CLS();
     OLED_SetTextSize(TEXTSIZE_BIG);
   }
@@ -137,8 +153,17 @@ int main(void)
     Delay_ms(100);
     
     val=MyVL53L0X_GetDistance();
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, val>threshold);
-    
+    if(val<threshold)
+    {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+      TIM_SetOutput(&htim2, 1);
+    }
+    else
+    {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+      TIM_SetOutput(&htim2, 0);
+    }
+    __HAL_TIM_SetAutoreload(&htim2, (val/100+1)*100);
     myitoa(val,str,10);
     OLED_ShowStr(OLED_cursorX,OLED_cursorY,"    ");
     OLED_ShowStr(0,0,str);
