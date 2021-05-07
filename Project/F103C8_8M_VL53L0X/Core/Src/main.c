@@ -58,7 +58,18 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void LED_Init()
+{
+  GPIO_InitTypeDef G;
+  
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+  G.Pin = GPIO_PIN_2;
+  G.Mode = GPIO_MODE_OUTPUT_PP;
+  G.Pull = GPIO_NOPULL;
+  G.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &G);
+}
 /* USER CODE END 0 */
 
 /**
@@ -70,6 +81,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   char str[32];
   int32_t val;
+  int32_t threshold=1000;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,14 +104,27 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  
   Delay_Init(72);
   MyUSART1_Init(&huart1);
+  OLED_Init();
+  LED_Init();
+  
   Delay_ms(20);
-  MyUSART1_WriteLine("booted");
+  OLED_ShowStr(0,0,"VL53L0X");
   MyVL53L0X_Init(0x29);
-  val=MyVL53L0X_SetSenseMode(VL53L0X_SENSE_DEFAULT);
-  myitoa(val,str,10);
-  MyUSART1_WriteLine(str);
+  val=MyVL53L0X_SetSenseMode(VL53L0X_SENSE_LONG_RANGE);
+  if(val)
+  {
+    OLED_ShowStr(0,0,"Inited!");
+    Delay_ms(1000);
+    OLED_CLS();
+    OLED_SetTextSize(TEXTSIZE_BIG);
+  }
+  else
+  {
+    OLED_ShowStr(0,0,"Failed to boot!");
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,9 +135,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(100);
+    
     val=MyVL53L0X_GetDistance();
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, val>threshold);
+    
     myitoa(val,str,10);
-    MyUSART1_WriteLine(str);
+    OLED_ShowStr(OLED_cursorX,OLED_cursorY,"    ");
+    OLED_ShowStr(0,0,str);
   }
   /* USER CODE END 3 */
 }
