@@ -1,6 +1,8 @@
 #ifndef _SOFTI2C_COMMON_H
 #define _SOFTI2C_COMMON_H
 
+#include "UTIL/gpio_compat.h"
+
 #define SI2C_ACK 0
 #define SI2C_NACK 1
 
