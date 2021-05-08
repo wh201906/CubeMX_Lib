@@ -29,6 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "USART/myusart1.h"
+#include "USART/myusart2.h"
 #include "SIGNAL/myfft.h"
 /* USER CODE END Includes */
 
@@ -106,12 +107,14 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(120);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
-  MyUSART1_Init();
+  MyUSART1_Init(&huart1);
+  MyUSART2_Init(&huart2);
   Delay_ms(500);
   HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   MyFFT_Init(sampleRate);
@@ -139,13 +142,13 @@ int main(void)
       //printAll(fftData,sizeof(fftData));
       
       // Init transfer
-      MyUSART1_ClearBuffer();
+      MyUSART2_ClearBuffer();
       str[0]=0x00;
       j=0;
       
       // Write command
-      MyUSART1_Write("cle 1,0\xFF\xFF\xFF",10);
-      MyUSART1_Write("addt 1,0,480\xFF\xFF\xFF",15);
+      MyUSART2_Write("cle 1,0\xFF\xFF\xFF",10);
+      MyUSART2_Write("addt 1,0,480\xFF\xFF\xFF",15);
       
        // Wait for response in 30ms
       for(i=0;i<15;i++)
@@ -153,7 +156,7 @@ int main(void)
         if(str[0]==0xFE)
           break;
         Delay_ms(2);
-        j=MyUSART1_Read(str+j,4);
+        j=MyUSART2_Read(str+j,4);
       }
       arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
       tmp=256/tmp;
@@ -162,17 +165,17 @@ int main(void)
       for(i=0;i<480;i++)
       {
         outVal=fftData[479-i]*tmp;
-        MyUSART1_WriteChar(outVal);
+        MyUSART2_WriteChar(outVal);
       }
       Delay_ms(5);
-      MyUSART1_ClearBuffer();
+      MyUSART2_ClearBuffer();
       // DMA DOES take the bandwidth, so I start it after UART transmition.
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
     for(i=0;i<10;i++)
     {
       Delay_ms(30);
-      j=MyUSART1_Read(str,3);
+      j=MyUSART2_Read(str,3);
       if(j==3)
       {
         sampleRate = str[0]&0xFF;
@@ -189,8 +192,7 @@ int main(void)
       }
     }
     
-    
-    MyUSART1_ClearBuffer();
+    MyUSART2_ClearBuffer();
   }
   /* USER CODE END 3 */
 }
