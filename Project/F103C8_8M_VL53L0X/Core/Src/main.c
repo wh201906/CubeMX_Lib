@@ -38,6 +38,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define KEY_DOWN_PIN GPIO_PIN_4
+#define KEY_OK_PIN GPIO_PIN_5
+#define KEY_UP_PIN GPIO_PIN_6
+#define KEY_DOWN 4
+#define KEY_OK 5
+#define KEY_UP 6
+#define KEY_MIN 4
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,7 +55,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint32_t extiCounter[3] = {0};
+int32_t threshold = 1000;
+int32_t newThresh = 1000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,7 +100,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
   char str[32];
   int32_t val;
-  int32_t threshold=1000;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -136,6 +144,9 @@ int main(void)
     TIM_SetOutput(&htim2, 0);
     OLED_CLS();
     OLED_SetTextSize(TEXTSIZE_BIG);
+    OLED_ShowStr(0,0, "Dist: ");
+    OLED_ShowStr(0,2, "Thre: ");
+    OLED_ShowStr(0,4, "New: ");
   }
   else
   {
@@ -152,8 +163,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     Delay_ms(100);
     
-    val=MyVL53L0X_GetDistance();
-    if(val<threshold)
+    val = MyVL53L0X_GetDistance();
+    if(val < threshold)
     {
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
       TIM_SetOutput(&htim2, 1);
@@ -165,8 +176,19 @@ int main(void)
     }
     __HAL_TIM_SetAutoreload(&htim2, (val/100+1)*100);
     myitoa(val,str,10);
+    OLED_ShowStr(6*8,0,str);
     OLED_ShowStr(OLED_cursorX,OLED_cursorY,"    ");
-    OLED_ShowStr(0,0,str);
+    
+    val = threshold;
+    myitoa(val,str,10);
+    OLED_ShowStr(6*8,2,str);
+    OLED_ShowStr(OLED_cursorX,OLED_cursorY,"    ");
+    
+    val = newThresh;
+    myitoa(val,str,10);
+    OLED_ShowStr(5*8,4,str);
+    OLED_ShowStr(OLED_cursorX,OLED_cursorY,"    ");
+    
   }
   /* USER CODE END 3 */
 }
@@ -210,7 +232,44 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void KeyHandler(uint8_t GPIO_id)
+{
+  if(GPIO_id == KEY_UP && newThresh < 2000)
+    newThresh += 100;
+  else if(GPIO_id == KEY_DOWN && newThresh > 100)
+    newThresh -= 100;
+  else if(GPIO_id == KEY_OK)
+    threshold = newThresh;
+}
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  uint8_t GPIO_id;
+  uint32_t ticks;
+  if(GPIO_Pin == KEY_UP_PIN)
+    GPIO_id = KEY_UP;
+  else if(GPIO_Pin == KEY_OK_PIN)
+    GPIO_id = KEY_OK;
+  else if(GPIO_Pin == KEY_DOWN_PIN)
+    GPIO_id = KEY_DOWN;
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_Pin) == GPIO_PIN_RESET) // negedge, pressed
+  {
+    extiCounter[GPIO_id - KEY_MIN] = HAL_GetTick();
+  }
+  else // posedge, released
+  {
+    ticks = HAL_GetTick();
+    if(ticks < extiCounter[GPIO_id - KEY_MIN])
+      ticks = ((uint64_t)0xFFFFFFFF + ticks - extiCounter[GPIO_id - KEY_MIN]);
+    else
+      ticks -= extiCounter[GPIO_id - KEY_MIN];
+    
+    if(ticks < 20) // prevent jitter
+      return;
+    
+    KeyHandler(GPIO_id); 
+  }
+}
 /* USER CODE END 4 */
 
 /**
