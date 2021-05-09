@@ -37,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATALEN 1024
+#define DATALEN 4096
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -70,6 +70,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint16_t i;
+  int32_t val;
+  uint8_t* ptr;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,8 +98,26 @@ int main(void)
   MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  for(i = 0; i < DATALEN; i++)
-    data[i] = (double)i/DATALEN * 0xFFFF;
+  ptr=(uint8_t*)data;
+  for(i = 0; i < DATALEN/2; i++)
+  {
+    val = -32768 + (double)i/(DATALEN/2.0) * 65535;
+    
+    //val = __REV(val);
+    //val = __RBIT(val);
+    //data[i] = val;
+    
+    //val = __RBIT(val);
+    //data[i] = (uint32_t)val>>16;
+    
+    //data[i] = val;
+    //data[i] = __REV16(data[i]);
+    
+    // the LSB of data[i] seems to be the sign bit
+    //data[i] = (val<<1)&((uint32_t)-1<<1); // force positive
+    data[i] = (val<<1)|1u; // force negative
+    data[i+1] = data[i];
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,7 +128,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(500);
-    HAL_I2S_Transmit_DMA(&hi2s2, data, DATALEN);
+    HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)data, DATALEN);
   }
   /* USER CODE END 3 */
 }
@@ -176,7 +196,8 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
+  // __disable_irq();
+  return;
   while (1)
   {
   }
