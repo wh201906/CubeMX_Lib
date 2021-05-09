@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
+#include "math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,7 +38,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATALEN 4096
+#define DATALEN 32
+#define PI 3.14159265
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,7 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t data[DATALEN];
+int16_t data[DATALEN*2];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,8 +72,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint16_t i;
-  int32_t val;
-  uint8_t* ptr;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,30 +94,17 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART1_UART_Init();
-  // MX_SDIO_SD_Init();
+  MX_SDIO_SD_Init();
   MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  ptr=(uint8_t*)data;
-  for(i = 0; i < DATALEN/2; i++)
+  for(i = 0; i < DATALEN; i++)
   {
-    val = -32768 + (double)i/(DATALEN/2.0) * 65535;
-    
-    //val = __REV(val);
-    //val = __RBIT(val);
-    //data[i] = val;
-    
-    //val = __RBIT(val);
-    //data[i] = (uint32_t)val>>16;
-    
-    //data[i] = val;
-    //data[i] = __REV16(data[i]);
-    
-    // the LSB of data[i] seems to be the sign bit
-    //data[i] = (val<<1)&((uint32_t)-1<<1); // force positive
-    data[i] = (val<<1)|1u; // force negative
+    data[i] = sin(2.0*PI*i/DATALEN) * 32767;
     data[i+1] = data[i];
   }
+  Delay_ms(500);
+  HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)data, DATALEN);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,7 +115,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(500);
-    HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)data, DATALEN);
   }
   /* USER CODE END 3 */
 }
