@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "fatfs.h"
 #include "i2s.h"
 #include "sdio.h"
 #include "usart.h"
@@ -96,6 +97,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SDIO_SD_Init();
   MX_I2S2_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   for(i = 0; i < DATALEN; i++)
