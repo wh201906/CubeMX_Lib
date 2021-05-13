@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;         "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";         "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";         "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";         "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";         ../../../Module;../FATFS/Target;../FATFS/App;"C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FatFs/src"</IncludePath>
+              <IncludePath>../Core/Inc;            "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";            "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";            "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";            "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";            ../../../Module;   ../FATFS/Target;   ../FATFS/App;   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FatFs/src"</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -608,6 +608,16 @@
               <FileName>delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\DELAY\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
+            <File>
+              <FileName>myusart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1224,9 +1234,9 @@
               </FileOption>
             </File>
             <File>
-              <FileName>cc936.c</FileName>
+              <FileName>ccsbcs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FatFs/src/option/cc936.c</FilePath>
+              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Middlewares/Third_Party/FatFs/src/option/ccsbcs.c</FilePath>
               <FileOption>
                 <CommonProperty>
                   <UseCPPCompiler>2</UseCPPCompiler>

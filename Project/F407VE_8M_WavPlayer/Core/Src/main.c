@@ -30,6 +30,8 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "math.h"
+#include "USART/myusart1.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +102,8 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
+  MyUSART1_Init(&huart1);
+  printf("booted\r\n");
   for(i = 0; i < DATALEN; i++)
   {
     data[i] = sin(2.0*PI*i/DATALEN) * 32767;
