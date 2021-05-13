@@ -34,42 +34,71 @@
 */
 
 #include "vl53l1_platform.h"
-#include <string.h>
-#include <time.h>
-#include <math.h>
+#include "DELAY/delay.h"
+#include "I2C/softi2c2.h"
 
-int8_t VL53L1_WriteMulti( uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_WriteMulti(VL53L1X_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count)
+{
+  if (SoftI2C2_Write(Dev->I2cDevAddr, SI2C_ADDR_7b, index, pdata, count))
+    return VL53L1X_ERROR_NONE;
+  else
+    return VL53L1X_ERROR_ERROR;
 }
 
-int8_t VL53L1_ReadMulti(uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count){
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_ReadMulti(VL53L1X_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count)
+{
+  if (SoftI2C2_Read(Dev->I2cDevAddr, SI2C_ADDR_7b, index, pdata, count))
+    return VL53L1X_ERROR_NONE;
+  else
+    return VL53L1X_ERROR_ERROR;
 }
 
-int8_t VL53L1_WrByte(uint16_t dev, uint16_t index, uint8_t data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_WrByte(VL53L1X_DEV dev, uint16_t index, uint8_t data)
+{
+  return VL53L1X_WriteMulti(Dev, index, &data, 1);
 }
 
-int8_t VL53L1_WrWord(uint16_t dev, uint16_t index, uint16_t data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_WrWord(VL53L1X_DEV dev, uint16_t index, uint16_t data)
+{
+  uint8_t buffer[2] = {data >> 8, data & 0xFF};
+  return VL53L1X_WriteMulti(Dev, index, buffer, 2);
 }
 
-int8_t VL53L1_WrDWord(uint16_t dev, uint16_t index, uint32_t data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_WrDWord(VL53L1X_DEV dev, uint16_t index, uint32_t data)
+{
+  uint8_t buffer[4] = {(data >> 24) & 0xFF, (data >> 16) & 0xFF, (data >> 8) & 0xFF, data & 0xFF};
+  return VL53L1X_WriteMulti(Dev, index, buffer, 4);
 }
 
-int8_t VL53L1_RdByte(uint16_t dev, uint16_t index, uint8_t *data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_RdByte(VL53L1X_DEV dev, uint16_t index, uint8_t *data)
+{
+  return VL53L1X_ReadMulti(Dev, index, data, 1);
 }
 
-int8_t VL53L1_RdWord(uint16_t dev, uint16_t index, uint16_t *data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_RdWord(VL53L1X_DEV dev, uint16_t index, uint16_t *data)
+{
+  VL53L1X_Error Status = VL53L1X_ERROR_NONE;
+  uint8_t buffer[2];
+  Status = VL53L1X_ReadMulti(Dev, index, buffer, 2);
+  if (Status != VL53L1X_ERROR_NONE)
+    return Status;
+  *data = ((uint16_t)buffer[0] << 8) + (uint16_t)buffer[1];
+  return Status;
 }
 
-int8_t VL53L1_RdDWord(uint16_t dev, uint16_t index, uint32_t *data) {
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_RdDWord(VL53L1X_DEV dev, uint16_t index, uint32_t *data)
+{
+  VL53L1X_Error Status = VL53L1X_ERROR_NONE;
+  uint8_t buffer[4];
+  Status = VL53L1X_ReadMulti(Dev, index, buffer, 4);
+  if (Status != VL53L1X_ERROR_NONE)
+    return Status;
+  *data = ((uint32_t)buffer[0] << 24) + ((uint32_t)buffer[1] << 16) + ((uint32_t)buffer[2] << 8) + (uint32_t)buffer[3];
+  return Status;
 }
 
-int8_t VL53L1_WaitMs(uint16_t dev, int32_t wait_ms){
-	return 0; // to be implemented
+VL53L1X_Error VL53L1_WaitMs(VL53L1X_DEV dev, int32_t wait_ms)
+{
+  Delay_ms(1);
+  return VL53L1X_ERROR_NONE;
 }

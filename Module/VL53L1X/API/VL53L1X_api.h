@@ -65,8 +65,8 @@
  * @brief Functions definition
  */
 
-#ifndef _API_H_
-#define _API_H_
+#ifndef _VL53L1X_API_H_
+#define _VL53L1X_API_H_
 
 #include "vl53l1_platform.h"
 
@@ -76,6 +76,8 @@
 #define VL53L1X_IMPLEMENTATION_VER_REVISION  0000
 
 typedef int8_t VL53L1X_ERROR;
+#define VL53L1X_ERROR_NONE		((VL53L1X_Error)	0)
+#define VL53L1X_ERROR_ERROR		((VL53L1X_Error)	1)
 
 #define SOFT_RESET											0x0000
 #define VL53L1_I2C_SLAVE__DEVICE_ADDRESS					0x0001
