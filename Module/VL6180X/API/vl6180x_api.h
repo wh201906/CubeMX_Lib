@@ -1,5 +1,5 @@
 /*******************************************************************************
-Copyright © 2015, STMicroelectronics International N.V.
+Copyright ï¿½ 2015, STMicroelectronics International N.V.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -923,94 +923,6 @@ int VL6180x_ClearInterrupt(VL6180xDev_t dev, uint8_t IntClear);
 #define VL6180x_ClearAllInterrupt(dev) VL6180x_ClearInterrupt(dev, INTERRUPT_CLEAR_ERROR|INTERRUPT_CLEAR_RANGING|INTERRUPT_CLEAR_ALS)
 
 /** @}  */
-
-
-/** @defgroup api_reg API Register access functions
- *  @brief    Registers access functions called by API core functions
- *  @ingroup api_ll
- *  @{
- */
-
-/**
- * Write VL6180x single byte register
- * @param dev   The device
- * @param index The register index
- * @param data  8 bit register data
- * @return success
- */
-int VL6180x_WrByte(VL6180xDev_t dev, uint16_t index, uint8_t data);
-/**
- * Thread safe VL6180x Update (rd/modify/write) single byte register
- *
- * Final_reg = (Initial_reg & and_data) |or_data
- *
- * @param dev   The device
- * @param index The register index
- * @param AndData  8 bit and data
- * @param OrData   8 bit or data
- * @return 0 on success
- */
-int VL6180x_UpdateByte(VL6180xDev_t dev, uint16_t index, uint8_t AndData, uint8_t OrData);
-/**
- * Write VL6180x word register
- * @param dev   The device
- * @param index The register index
- * @param data  16 bit register data
- * @return  0 on success
- */
-int VL6180x_WrWord(VL6180xDev_t dev, uint16_t index, uint16_t data);
-/**
- * Write VL6180x double word (4 byte) register
- * @param dev   The device
- * @param index The register index
- * @param data  32 bit register data
- * @return  0 on success
- */
-int VL6180x_WrDWord(VL6180xDev_t dev, uint16_t index, uint32_t data);
-
-/**
- * Read VL6180x single byte register
- * @param dev   The device
- * @param index The register index
- * @param data  pointer to 8 bit data
- * @return 0 on success
- */
-int VL6180x_RdByte(VL6180xDev_t dev, uint16_t index, uint8_t *data);
-
-/**
- * Read VL6180x word (2byte) register
- * @param dev   The device
- * @param index The register index
- * @param data  pointer to 16 bit data
- * @return 0 on success
- */
-int VL6180x_RdWord(VL6180xDev_t dev, uint16_t index, uint16_t *data);
-
-/**
- * Read VL6180x dword (4byte) register
- * @param dev   The device
- * @param index The register index
- * @param data  pointer to 32 bit data
- * @return 0 on success
- */
-int VL6180x_RdDWord(VL6180xDev_t dev, uint16_t index, uint32_t *data);
-
-
-/**
- * Read VL6180x multiple bytes
- * @note required only if #VL6180x_HAVE_MULTI_READ is set
- * @param dev   The device
- * @param index The register index
- * @param data  pointer to 8 bit data
- * @param nData number of data bytes to read
- * @return 0 on success
- */
-int VL6180x_RdMulti(VL6180xDev_t dev, uint16_t index, uint8_t *data, int nData);
-
-/** @}  */
-
-
-
 
 #ifdef __cplusplus
 }

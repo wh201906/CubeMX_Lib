@@ -33,10 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VL6180x_PLATFORM
 #define VL6180x_PLATFORM
 
-/* this is a typical ansi and posix example with multithread and i2c lock concern */
-#include <unistd.h>
-#include <pthread.h>
-
 /**
  * @file vl6180x_platform.h
  *
@@ -216,88 +212,8 @@ void VL6180x_PollDelay(VL6180xDev_t dev); /* usualy best implemanted a a real fu
  *  @brief Default value : does nothing. Macro to be deleted it you implement a real function
  * @ingroup api_platform
  */
-#define VL6180x_PollDelay(dev)  (void)0
-
-
-
-
 
 #if VL6180X_LOG_ENABLE
-#include <sys/time.h>
-#include <stdio.h>
-extern FILE * log_file;
-
-#define trace_printf fprinf
-#define LOG_GET_TIME() clock()
-
-/**
- * @brief Log function start.
- *
- * @param  fmt  Text and printf formating for any extra argument.\n
- *              It can be " " when there is nothing else than the function entry to log.
- * @param  ...  (\__VA_ARGS__) extra argument if any, but it can be none.
- *
- * @note Formatting a string can take considerable amount of cycles. Typically "sprinting" 4 int arguments and function name take 5-10K on common 32 bit µC\n
- * It depends on implementation. The tracing is very intrusive and resources consuming .
- *
- * Example of time logging using printf and LOG_GET_TIME() macro \n
- * @code
- * #define LOG_FUNCTION_START(fmt, ... )  printf("beg %s @%d\t" fmt "\n", __func__, LOG_GET_TIME(), ##__VA_ARGS__)
- * @endcode
- * @ingroup api_platform
- */
-#define LOG_FUNCTION_START(fmt, ... ) \
-    fprintf(log_file, "VL61080 beg %s start @%d\t" fmt "\n", __FUNCTION__, LOG_GET_TIME(), ##__VA_ARGS__)
-
-/**
- * @brief  Logging function end with status.
- *
- * @param  status final status (%d)
- *   
- * Example of time logging using printf and LOG_GET_TIME() macro \n
- * @code
- * #define LOG_FUNCTION_END(status)   printf("end %s @%d %d\n", __func__, LOG_GET_TIME(), (int)status)
- * @endcode
-
- * @ingroup api_platform
- */
-#define LOG_FUNCTION_END(status)\
-        fprintf(log_file, "VL61080  end %s @%d %d\n", __FUNCTION__, LOG_GET_TIME(), (int)status)
-
-
-/**
- * @brief  Log function end along with extra optional formated arguments.
- *
- * @param  status final status (%d)
- * @param  fmt printf format and string
- * @param  ... (\__VA_ARGS__) extra argument for printf or va_args type function
- *   
- * Example of time logging using printf and LOG_GET_TIME() macro. \n
- * @code
- * #define LOG_FUNCTION_END_FMT(status, fmt, ... )  printf("End %s @%d %d\t"fmt"\n" , __func__, LOG_GET_TIME(), (int)status,##__VA_ARGS__)
- * @endcode
-
- * @ingroup api_platform
- */
-#define LOG_FUNCTION_END_FMT(status, fmt, ... )\
-        fprintf(log_file, "End %s @%d %d\t"fmt"\n" , __FUNCTION__, LOG_GET_TIME(), (int)status,##__VA_ARGS__)
-
-
-/**
- * @brief Log error raised in API
- *
- * Implementation may abort execution but it's not an API requirement
- *
- * @param  fmt      text and printf like format list
- * @param  ...      (\__VA_ARGS__)    optional variable to be formated
- *
- * Example of error logging using printf and LOG_GET_TIME() macro \n
- * @code
- * #define VL6180x_ErrLog(msg, ... ) printf("Err in  %s line %d @%dt" msg "\n" , __func__, __LINE__, LOG_GET_TIME(), msg ,##__VA_ARGS__)
- * @endcode
- * @ingroup api_platform
- */
-#define VL6180x_ErrLog( fmt, ...)  fprintf(stderr, "VL6180x_ErrLog %s" fmt "\n", __func__, ##__VA_ARGS__)
 
 #else /* VL6180X_LOG_ENABLE no logging */
     #define LOG_FUNCTION_START(...) (void)0
@@ -305,6 +221,90 @@ extern FILE * log_file;
     #define LOG_FUNCTION_END_FMT(...) (void)0
     #define VL6180x_ErrLog(... ) (void)0
 #endif /* else */
+
+/** @defgroup api_reg API Register access functions
+ *  @brief    Registers access functions called by API core functions
+ *  @ingroup api_ll
+ *  @{
+ */
+
+/**
+ * Write VL6180x single byte register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  8 bit register data
+ * @return success
+ */
+int VL6180x_WrByte(VL6180xDev_t dev, uint16_t index, uint8_t data);
+/**
+ * Thread safe VL6180x Update (rd/modify/write) single byte register
+ *
+ * Final_reg = (Initial_reg & and_data) |or_data
+ *
+ * @param dev   The device
+ * @param index The register index
+ * @param AndData  8 bit and data
+ * @param OrData   8 bit or data
+ * @return 0 on success
+ */
+int VL6180x_UpdateByte(VL6180xDev_t dev, uint16_t index, uint8_t AndData, uint8_t OrData);
+/**
+ * Write VL6180x word register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  16 bit register data
+ * @return  0 on success
+ */
+int VL6180x_WrWord(VL6180xDev_t dev, uint16_t index, uint16_t data);
+/**
+ * Write VL6180x double word (4 byte) register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  32 bit register data
+ * @return  0 on success
+ */
+int VL6180x_WrDWord(VL6180xDev_t dev, uint16_t index, uint32_t data);
+
+/**
+ * Read VL6180x single byte register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  pointer to 8 bit data
+ * @return 0 on success
+ */
+int VL6180x_RdByte(VL6180xDev_t dev, uint16_t index, uint8_t *data);
+
+/**
+ * Read VL6180x word (2byte) register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  pointer to 16 bit data
+ * @return 0 on success
+ */
+int VL6180x_RdWord(VL6180xDev_t dev, uint16_t index, uint16_t *data);
+
+/**
+ * Read VL6180x dword (4byte) register
+ * @param dev   The device
+ * @param index The register index
+ * @param data  pointer to 32 bit data
+ * @return 0 on success
+ */
+int VL6180x_RdDWord(VL6180xDev_t dev, uint16_t index, uint32_t *data);
+
+/**
+ * Read VL6180x multiple bytes
+ * @note required only if #VL6180x_HAVE_MULTI_READ is set
+ * @param dev   The device
+ * @param index The register index
+ * @param data  pointer to 8 bit data
+ * @param nData number of data bytes to read
+ * @return 0 on success
+ */
+int VL6180x_RdMulti(VL6180xDev_t dev, uint16_t index, uint8_t *data, int nData);
+
+int VL6180x_WrMulti(VL6180xDev_t dev, uint16_t index, uint8_t *data, int nData);
+/** @}  */
 
 #endif  /* VL6180x_PLATFORM */
 
