@@ -52,7 +52,7 @@
 /* USER CODE BEGIN PV */
 uint8_t buf[128];
 WaveGen_WaveType currType;
-uint16_t currMaxVal = 4095;
+uint32_t currVpp = 3000, currFreq=10000;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,14 +63,32 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void setWavePara()
+uint16_t vppCompensate(uint32_t vpp)
 {
-  return;
+  if(vpp==3000)
+    return 4095;
+  return 1*vpp;
+}
+void setWavePara(uint32_t vpp, uint32_t freq)
+{
+  if(vpp!=currVpp)
+  {
+    currVpp=vpp;
+    WaveGen_setDataBuffer(currType, vppCompensate(currVpp), WAVEGEN_BUFFER_MAX_SIZE);
+  }
+  if(currType==WAVEGEN_WAVETYPE_SQUARE_PWM)
+  {
+    WaveGen_setTIMArr(84000000.0/freq+0.5);
+  }
+  else
+  {
+    WaveGen_setTIMArr(84000000.0/freq/WAVEGEN_BUFFER_MAX_SIZE+0.5);
+  }
 }
 void setWaveType(WaveGen_WaveType type)
 {
   currType=type;
-  WaveGen_setDataBuffer(type, currMaxVal, WAVEGEN_BUFFER_MAX_SIZE);
+  WaveGen_setDataBuffer(type, currVpp, WAVEGEN_BUFFER_MAX_SIZE);
   WaveGen_setPWMState(type==WAVEGEN_WAVETYPE_SQUARE_PWM);
 }
 /* USER CODE END 0 */
@@ -134,7 +152,12 @@ int main(void)
     if(MyUSART2_ReadUntil(buf,0x5A))
     {
       if(buf[0]==0x01)
-        setWavePara();
+      {
+        uint32_t freq, vpp;
+        freq = *(uint32_t*)(buf+1);
+        vpp = *(uint32_t*)(buf+5);
+        setWavePara(vpp, freq);
+      }
       else
         setWaveType(buf[0]);
     }

@@ -198,9 +198,11 @@ void WaveGen_setDataBuffer(WaveGen_WaveType waveType, uint16_t vpp, uint16_t len
 void WaveGen_setTIMPara(uint16_t psc, uint32_t arr)
 {
   __HAL_TIM_SET_AUTORELOAD(&WaveGen_TIM_Handler, arr);
+  __HAL_TIM_SET_COMPARE(&WaveGen_TIM_Handler, TIM_CHANNEL_1, arr/2+1);
   __HAL_TIM_SET_PRESCALER(&WaveGen_TIM_Handler, psc);
 }
 void WaveGen_setTIMArr(uint32_t arr)
 {
   __HAL_TIM_SET_AUTORELOAD(&WaveGen_TIM_Handler, arr);
+  __HAL_TIM_SET_COMPARE(&WaveGen_TIM_Handler, TIM_CHANNEL_1, arr/2+1);
 }
