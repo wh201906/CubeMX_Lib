@@ -132,7 +132,7 @@ void WaveGen_setPWMState(uint8_t state)
     HAL_DMA_Start(&WaveGen_DMA_Handler, (uint32_t)WaveGen_dataBuffer, (uint32_t)(&(DAC->DHR12R2)), WAVEGEN_BUFFER_MAX_SIZE);
 #endif
 #ifdef STM32H750xx
-    HAL_DMA_Start(&WaveGen_DMA_Handler, (uint32_t)WaveGen_dataBuffer, (uint32_t)(&(DAC1->DHR12R2)), WAVEGEN_BUFFER_MAX_SIZE);
+    HAL_DMA_Start(&WaveGen_DMA_Handler, (uint32_t)WaveGen_dataBuffer, (uint32_t)(&(DAC1->DHR8R2)), WAVEGEN_BUFFER_MAX_SIZE);
 #endif
     HAL_DAC_Start(&WaveGen_DAC_Handler, DAC_CHANNEL_2); // necessary , and MUST be used AFTER __HAL_RCC_DMA1_CLK_ENABLE()
 
@@ -155,46 +155,43 @@ void WaveGen_setTimerState(uint8_t state)
 
 void WaveGen_setDataBuffer(WaveGen_WaveType waveType, uint16_t vpp, uint16_t len) // 0~4096 -> 0~3.3V
 {
-  uint16_t base = 2048;
-  WaveGen_currLen = len;
-  if (vpp > 3300)
-    vpp = 3300;
-  double amp = vpp * 2047.0 / 3300.0;
   uint16_t i;
+  vpp /= 2;
+  WaveGen_currLen = len;
   if (waveType == WAVEGEN_WAVETYPE_SINE)
   {
     for (i = 0; i < len; i++)
     {
-      WaveGen_dataBuffer[i] = (uint16_t)(base + sin((double)i * 6.283185307 / len) * amp);
+      WaveGen_dataBuffer[i] = (uint16_t)(vpp + sin((double)i * 6.283185307 / len) * vpp);
     }
   }
   else if (waveType == WAVEGEN_WAVETYPE_RAMP)
   {
     for (i = 0; i < len; i++)
     {
-      WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / len - 0.5) * 2 * amp);
+      WaveGen_dataBuffer[i] = (uint16_t)(vpp + ((double)i / len - 0.5) * 2 * vpp);
     }
   }
   else if (waveType == WAVEGEN_WAVETYPE_SQUARE)
   {
     for (i = 0; i < len / 2; i++)
     {
-      WaveGen_dataBuffer[i] = base + amp;
+      WaveGen_dataBuffer[i] = vpp + vpp;
     }
     for (i = len / 2; i < len; i++)
     {
-      WaveGen_dataBuffer[i] = base - amp;
+      WaveGen_dataBuffer[i] = vpp - vpp;
     }
   }
   else if (waveType == WAVEGEN_WAVETYPE_TRIANGLE)
   {
     for (i = 0; i < len / 2; i++)
     {
-      WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)i / len - 0.25) * 4 * amp);
+      WaveGen_dataBuffer[i] = (uint16_t)(vpp + ((double)i / len - 0.25) * 4 * vpp);
     }
     for (i = len / 2; i < len; i++)
     {
-      WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)(len - i) / len - 0.25) * 4 * amp);
+      WaveGen_dataBuffer[i] = (uint16_t)(vpp + ((double)(len - i) / len - 0.25) * 4 * vpp);
     }
   }
 }
