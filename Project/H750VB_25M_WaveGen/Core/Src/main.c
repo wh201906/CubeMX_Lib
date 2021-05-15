@@ -102,7 +102,7 @@ int main(void)
   WaveGen_DMAInit();
   Delay_Init(480);
   Key_Init();
-  WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 255, WAVEGEN_BUFFER_MAX_SIZE);
+  WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
   WaveGen_setTIMArr(74);
 
   /* USER CODE END 2 */
@@ -128,22 +128,22 @@ int main(void)
     }
     else if (state == 1)
     {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 255, WAVEGEN_BUFFER_MAX_SIZE);
+      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
       WaveGen_setPWMState(0);
     }
     else if (state == 2)
     {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_RAMP, 255, WAVEGEN_BUFFER_MAX_SIZE);
+      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_RAMP, 4095, WAVEGEN_BUFFER_MAX_SIZE);
       WaveGen_setPWMState(0);
     }
     else if (state == 3)
     {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SQUARE, 255, WAVEGEN_BUFFER_MAX_SIZE);
+      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SQUARE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
       WaveGen_setPWMState(0);
     }
     else if (state == 4)
     {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_TRIANGLE, 255, WAVEGEN_BUFFER_MAX_SIZE);
+      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_TRIANGLE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
       WaveGen_setPWMState(0);
     }
   }
