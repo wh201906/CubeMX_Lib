@@ -78,11 +78,11 @@ void setWavePara(uint32_t vpp, uint32_t freq)
   }
   if(currType==WAVEGEN_WAVETYPE_SQUARE_PWM)
   {
-    WaveGen_setTIMArr(84000000.0/freq+0.5);
+    WaveGen_setTIMArr((uint32_t)(240000000.0/freq+0.5)-1);
   }
   else
   {
-    WaveGen_setTIMArr(84000000.0/freq/WAVEGEN_BUFFER_MAX_SIZE+0.5);
+    WaveGen_setTIMArr(((uint32_t)240000000.0/freq/WAVEGEN_BUFFER_MAX_SIZE+0.5)-1);
   }
 }
 void setWaveType(WaveGen_WaveType type)

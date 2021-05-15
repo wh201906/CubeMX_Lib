@@ -5,7 +5,7 @@
 #include "math.h"
 
 //#define WAVEGEN_BUFFER_MAX_SIZE 4096
-#define WAVEGEN_BUFFER_MAX_SIZE 32
+#define WAVEGEN_BUFFER_MAX_SIZE 48
 
 typedef enum _WaveGen_WaveType
 {
