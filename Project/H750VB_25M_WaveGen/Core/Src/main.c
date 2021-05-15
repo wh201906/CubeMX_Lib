@@ -63,6 +63,15 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*
+uint64_t searchFreqSolution(uint32_t freq)
+{
+  uint32_t i, start;
+  for(i = start;i< start+50;i++)
+  {
+    
+  }
+}*/
 uint16_t vppCompensate(uint32_t vpp)
 {
   return 2048;
