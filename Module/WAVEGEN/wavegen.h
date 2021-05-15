@@ -21,5 +21,7 @@ void WaveGen_DMAInit();
 void WaveGen_TimerInit(void);
 void WaveGen_setPWMState(uint8_t state);
 void WaveGen_setDataBuffer(WaveGen_WaveType waveType, uint16_t vpp, uint16_t len);
+void WaveGen_setTIMPara(uint16_t psc, uint32_t arr);
+void WaveGen_setTIMArr(uint32_t arr);
 
 #endif

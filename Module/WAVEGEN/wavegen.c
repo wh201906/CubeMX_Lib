@@ -6,6 +6,7 @@ DAC_HandleTypeDef WaveGen_DAC_Handler;
 TIM_OC_InitTypeDef TIM_OCIniter = {0};
 
 WaveGen_WaveType WaveGen_currentWaveType;
+uint32_t WaveGen_currLen;
 
 uint16_t WaveGen_dataBuffer[WAVEGEN_BUFFER_MAX_SIZE];
 
@@ -69,8 +70,8 @@ void WaveGen_TimerInit()
 
   WaveGen_TIM_Handler.Instance = TIM2;
   WaveGen_TIM_Handler.Init.CounterMode = TIM_COUNTERMODE_UP;
-  WaveGen_TIM_Handler.Init.Prescaler = 12;
-  WaveGen_TIM_Handler.Init.Period = 1;
+  WaveGen_TIM_Handler.Init.Prescaler = 0;
+  WaveGen_TIM_Handler.Init.Period = 12;
   WaveGen_TIM_Handler.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   WaveGen_TIM_Handler.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   HAL_TIM_PWM_Init(&WaveGen_TIM_Handler);
@@ -95,7 +96,7 @@ void WaveGen_setPWMState(uint8_t state)
 
     TIM_OCIniter.OCMode = TIM_OCMODE_PWM1;
     TIM_OCIniter.OCPolarity = TIM_OCPOLARITY_HIGH;
-    TIM_OCIniter.Pulse = 1; // must be higher than 0;
+    TIM_OCIniter.Pulse = __HAL_TIM_GET_AUTORELOAD(&WaveGen_TIM_Handler)/2 + 1; // must be higher than 0;
     TIM_OCIniter.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&WaveGen_TIM_Handler, &TIM_OCIniter, TIM_CHANNEL_1);
     HAL_TIM_OC_Start(&WaveGen_TIM_Handler, TIM_CHANNEL_1);
@@ -155,6 +156,7 @@ void WaveGen_setTimerState(uint8_t state)
 void WaveGen_setDataBuffer(WaveGen_WaveType waveType, uint16_t vpp, uint16_t len) // 0~4096 -> 0~3.3V
 {
   uint16_t base = 2048;
+  WaveGen_currLen = len;
   if (vpp > 3300)
     vpp = 3300;
   double amp = vpp * 2047.0 / 3300.0;
@@ -195,4 +197,14 @@ void WaveGen_setDataBuffer(WaveGen_WaveType waveType, uint16_t vpp, uint16_t len
       WaveGen_dataBuffer[i] = (uint16_t)(base + ((double)(len - i) / len - 0.25) * 4 * amp);
     }
   }
+}
+
+void WaveGen_setTIMPara(uint16_t psc, uint32_t arr)
+{
+  __HAL_TIM_SET_AUTORELOAD(&WaveGen_TIM_Handler, arr);
+  __HAL_TIM_SET_PRESCALER(&WaveGen_TIM_Handler, psc);
+}
+void WaveGen_setTIMArr(uint32_t arr)
+{
+  __HAL_TIM_SET_AUTORELOAD(&WaveGen_TIM_Handler, arr);
 }

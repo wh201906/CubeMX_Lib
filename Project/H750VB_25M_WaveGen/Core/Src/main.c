@@ -103,6 +103,7 @@ int main(void)
   Delay_Init(480);
   Key_Init();
   WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
+  WaveGen_setTIMArr(74);
 
   /* USER CODE END 2 */
 
