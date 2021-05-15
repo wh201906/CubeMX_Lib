@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32H750xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;  ../../../Module; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include"; "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Include"</IncludePath>
+              <IncludePath>../Core/Inc;   ../../../Module;  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Include"</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -462,6 +462,21 @@
               <FileName>wavegen.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\WAVEGEN\wavegen.c</FilePath>
+            </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
+            <File>
+              <FileName>myusart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>myusart2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart2.c</FilePath>
             </File>
           </Files>
         </Group>

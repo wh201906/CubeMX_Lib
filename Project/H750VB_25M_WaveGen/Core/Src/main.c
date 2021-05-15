@@ -29,7 +29,8 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "WAVEGEN/wavegen.h"
-#include "KEY/key.h"
+#include "USART/myusart1.h"
+#include "USART/myusart2.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,7 +50,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t buf[128];
+WaveGen_WaveType currType;
+uint16_t currMaxVal = 4095;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,7 +63,16 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void setWavePara()
+{
+  return;
+}
+void setWaveType(WaveGen_WaveType type)
+{
+  currType=type;
+  WaveGen_setDataBuffer(type, currMaxVal, WAVEGEN_BUFFER_MAX_SIZE);
+  WaveGen_setPWMState(type==WAVEGEN_WAVETYPE_SQUARE_PWM);
+}
 /* USER CODE END 0 */
 
 /**
@@ -97,11 +109,15 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  Delay_Init(480);
+  
   WaveGen_TimerInit();
   WaveGen_DACInit();
   WaveGen_DMAInit();
-  Delay_Init(480);
-  Key_Init();
+  
+  MyUSART1_Init(&huart1);
+  MyUSART2_Init(&huart2);
+  
   WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
   WaveGen_setTIMArr(74);
 
@@ -109,42 +125,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t key;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
     Delay_ms(200);
-    key = Key_Scan();
-    if (key == 0)
+    if(MyUSART2_ReadUntil(buf,0x5A))
     {
-      state++;
-      state %= 5;
-    }
-    if (state == 0)
-    {
-      WaveGen_setPWMState(1);
-    }
-    else if (state == 1)
-    {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SINE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
-      WaveGen_setPWMState(0);
-    }
-    else if (state == 2)
-    {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_RAMP, 4095, WAVEGEN_BUFFER_MAX_SIZE);
-      WaveGen_setPWMState(0);
-    }
-    else if (state == 3)
-    {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_SQUARE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
-      WaveGen_setPWMState(0);
-    }
-    else if (state == 4)
-    {
-      WaveGen_setDataBuffer(WAVEGEN_WAVETYPE_TRIANGLE, 4095, WAVEGEN_BUFFER_MAX_SIZE);
-      WaveGen_setPWMState(0);
+      if(buf[0]==0x01)
+        setWavePara();
+      else
+        setWaveType(buf[0]);
     }
   }
   /* USER CODE END 3 */
