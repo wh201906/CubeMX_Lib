@@ -1,0 +1,465 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_02x16_Odd_Even J1
+U 1 1 609B51F0
+P 4400 3400
+F 0 "J1" H 4450 4317 50  0000 C CNN
+F 1 "Board" H 4450 4226 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x16_P2.54mm_Vertical" H 4400 3400 50  0001 C CNN
+F 3 "~" H 4400 3400 50  0001 C CNN
+	1    4400 3400
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x17_Odd_Even J2
+U 1 1 609B69A4
+P 2550 3400
+F 0 "J2" H 2600 4417 50  0000 C CNN
+F 1 "Screen" H 2600 4326 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x17_P2.54mm_Vertical" H 2550 3400 50  0001 C CNN
+F 3 "~" H 2550 3400 50  0001 C CNN
+	1    2550 3400
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0101
+U 1 1 609B8B9A
+P 4750 4250
+F 0 "#PWR0101" H 4750 4000 50  0001 C CNN
+F 1 "GND" H 4755 4077 50  0000 C CNN
+F 2 "" H 4750 4250 50  0001 C CNN
+F 3 "" H 4750 4250 50  0001 C CNN
+	1    4750 4250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4600 4100 4750 4100
+Wire Wire Line
+	4750 4100 4750 4250
+Text Label 5100 3900 2    50   ~ 0
+FSMC_D13
+Text Label 5100 3800 2    50   ~ 0
+FSMC_D11
+Text Label 5100 3700 2    50   ~ 0
+FSMC_D9
+Text Label 5100 3600 2    50   ~ 0
+FSMC_D7
+Text Label 5100 3500 2    50   ~ 0
+FSMC_D5
+Text Label 5100 3400 2    50   ~ 0
+FSMC_D3
+Text Label 5100 3300 2    50   ~ 0
+FSMC_D1
+Text Label 5100 4000 2    50   ~ 0
+FSMC_D15
+Wire Wire Line
+	4600 4000 5100 4000
+Wire Wire Line
+	4600 3900 5100 3900
+Wire Wire Line
+	4600 3800 5100 3800
+Wire Wire Line
+	4600 3700 5100 3700
+Wire Wire Line
+	4600 3600 5100 3600
+Wire Wire Line
+	4600 3500 5100 3500
+Wire Wire Line
+	4600 3400 5100 3400
+Wire Wire Line
+	4600 3300 5100 3300
+Text Label 3600 4000 0    50   ~ 0
+FSMC_D14
+Text Label 3600 3900 0    50   ~ 0
+FSMC_D12
+Text Label 3600 3800 0    50   ~ 0
+FSMC_D10
+Text Label 3600 3700 0    50   ~ 0
+FSMC_D8
+Text Label 3600 3600 0    50   ~ 0
+FSMC_D6
+Text Label 3600 3500 0    50   ~ 0
+FSMC_D4
+Text Label 3600 3400 0    50   ~ 0
+FSMC_D2
+Text Label 3600 3300 0    50   ~ 0
+FSMC_D0
+Wire Wire Line
+	3600 4000 4100 4000
+Wire Wire Line
+	3600 3900 4100 3900
+Wire Wire Line
+	3600 3800 4100 3800
+Wire Wire Line
+	3600 3700 4100 3700
+Wire Wire Line
+	3600 3600 4100 3600
+Wire Wire Line
+	3600 3500 4100 3500
+Wire Wire Line
+	3600 3400 4100 3400
+Wire Wire Line
+	3600 3300 4100 3300
+Text Label 3600 4100 0    50   ~ 0
+RST
+Wire Wire Line
+	3600 4100 4100 4100
+Text Label 5100 3200 2    50   ~ 0
+FSMC_NOE
+Wire Wire Line
+	4600 3200 5100 3200
+Text Label 5100 3100 2    50   ~ 0
+FSMC_Ax
+Wire Wire Line
+	4600 3100 5100 3100
+Text Label 5100 3000 2    50   ~ 0
+T_SCK
+Wire Wire Line
+	4600 3000 5100 3000
+Text Label 5100 2900 2    50   ~ 0
+T_MOSI
+Wire Wire Line
+	4600 2900 5100 2900
+Text Label 5100 2800 2    50   ~ 0
+T_PEN
+Wire Wire Line
+	4600 2800 5100 2800
+Text Label 3600 3200 0    50   ~ 0
+FSMC_NWE
+Wire Wire Line
+	3600 3200 4100 3200
+Text Label 3600 3100 0    50   ~ 0
+FSMC_NEx
+Wire Wire Line
+	3600 3100 4100 3100
+Text Label 3600 3000 0    50   ~ 0
+T_CS
+Wire Wire Line
+	3600 3000 4100 3000
+Text Label 3600 2900 0    50   ~ 0
+T_MISO
+Wire Wire Line
+	3600 2900 4100 2900
+Text Label 3600 2800 0    50   ~ 0
+LCD_BL
+Wire Wire Line
+	3600 2800 4100 2800
+$Comp
+L power:GND2 #PWR0102
+U 1 1 609C6810
+P 3900 2550
+F 0 "#PWR0102" H 3900 2300 50  0001 C CNN
+F 1 "GND2" H 3905 2377 50  0000 C CNN
+F 2 "" H 3900 2550 50  0001 C CNN
+F 3 "" H 3900 2550 50  0001 C CNN
+	1    3900 2550
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3900 2550 3900 2600
+Wire Wire Line
+	3900 2700 4100 2700
+Wire Wire Line
+	4100 2600 3900 2600
+Connection ~ 3900 2600
+Wire Wire Line
+	3900 2600 3900 2700
+$Comp
+L power:+3.3V #PWR0103
+U 1 1 609CA9DC
+P 4900 2600
+F 0 "#PWR0103" H 4900 2450 50  0001 C CNN
+F 1 "+3.3V" V 4915 2773 50  0000 C CNN
+F 2 "" H 4900 2600 50  0001 C CNN
+F 3 "" H 4900 2600 50  0001 C CNN
+	1    4900 2600
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4600 2600 4900 2600
+NoConn ~ 4600 2700
+Text Label 1750 2700 0    50   ~ 0
+FSMC_NWE
+Text Label 1750 2800 0    50   ~ 0
+RST
+Text Label 1750 2900 0    50   ~ 0
+FSMC_D1
+Text Label 1750 3000 0    50   ~ 0
+FSMC_D3
+Text Label 1750 3100 0    50   ~ 0
+FSMC_D5
+Text Label 1750 2600 0    50   ~ 0
+FSMC_NEx
+Wire Wire Line
+	2750 4000 3250 4000
+Wire Wire Line
+	1750 2600 2250 2600
+Wire Wire Line
+	1750 2700 2250 2700
+Wire Wire Line
+	1750 2800 2250 2800
+Wire Wire Line
+	1750 2900 2250 2900
+Wire Wire Line
+	1750 3000 2250 3000
+Text Label 1750 3300 0    50   ~ 0
+FSMC_D9
+Text Label 1750 3400 0    50   ~ 0
+FSMC_D11
+Text Label 1750 3500 0    50   ~ 0
+FSMC_D13
+Text Label 1750 3600 0    50   ~ 0
+FSMC_D15
+Text Label 1750 3700 0    50   ~ 0
+LCD_BL
+Text Label 1750 3200 0    50   ~ 0
+FSMC_D7
+Wire Wire Line
+	1750 3100 2250 3100
+Wire Wire Line
+	1750 3200 2250 3200
+Wire Wire Line
+	1750 3300 2250 3300
+Wire Wire Line
+	1750 3400 2250 3400
+Wire Wire Line
+	1750 3500 2250 3500
+Wire Wire Line
+	2250 3700 1750 3700
+Text Label 1750 4000 0    50   ~ 0
+T_MISO
+Text Label 1750 4100 0    50   ~ 0
+T_PEN
+Text Label 1750 4200 0    50   ~ 0
+T_CS
+Wire Wire Line
+	1750 4000 2250 4000
+Wire Wire Line
+	1750 4100 2250 4100
+Wire Wire Line
+	1750 4200 2250 4200
+Text Label 3250 2700 2    50   ~ 0
+FSMC_NOE
+Text Label 3250 2800 2    50   ~ 0
+FSMC_D0
+Text Label 3250 2900 2    50   ~ 0
+FSMC_D2
+Text Label 3250 3000 2    50   ~ 0
+FSMC_D4
+Wire Wire Line
+	2750 2700 3250 2700
+Wire Wire Line
+	2750 2800 3250 2800
+Wire Wire Line
+	2750 2900 3250 2900
+Wire Wire Line
+	2750 3000 3250 3000
+Text Label 3250 2600 2    50   ~ 0
+FSMC_Ax
+Wire Wire Line
+	2750 2600 3250 2600
+Text Label 3250 3200 2    50   ~ 0
+FSMC_D8
+Text Label 3250 3300 2    50   ~ 0
+FSMC_D10
+Text Label 3250 3400 2    50   ~ 0
+FSMC_D12
+Text Label 3250 3500 2    50   ~ 0
+FSMC_D14
+Wire Wire Line
+	2750 3200 3250 3200
+Wire Wire Line
+	2750 3300 3250 3300
+Wire Wire Line
+	2750 3400 3250 3400
+Wire Wire Line
+	2750 3500 3250 3500
+Text Label 3250 3100 2    50   ~ 0
+FSMC_D6
+Wire Wire Line
+	2750 3100 3250 3100
+Text Label 3250 4000 2    50   ~ 0
+T_MOSI
+Text Label 3250 4200 2    50   ~ 0
+T_SCK
+$Comp
+L power:+3.3V #PWR0104
+U 1 1 609E291F
+P 1950 3800
+F 0 "#PWR0104" H 1950 3650 50  0001 C CNN
+F 1 "+3.3V" V 1965 3973 50  0000 C CNN
+F 2 "" H 1950 3800 50  0001 C CNN
+F 3 "" H 1950 3800 50  0001 C CNN
+	1    1950 3800
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2250 3800 1950 3800
+$Comp
+L power:GND #PWR0105
+U 1 1 609E44A1
+P 1600 3950
+F 0 "#PWR0105" H 1600 3700 50  0001 C CNN
+F 1 "GND" H 1605 3777 50  0000 C CNN
+F 2 "" H 1600 3950 50  0001 C CNN
+F 3 "" H 1600 3950 50  0001 C CNN
+	1    1600 3950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2250 3900 1600 3900
+Wire Wire Line
+	1600 3900 1600 3950
+$Comp
+L power:GND #PWR0106
+U 1 1 609E99A3
+P 3450 4250
+F 0 "#PWR0106" H 3450 4000 50  0001 C CNN
+F 1 "GND" H 3455 4077 50  0000 C CNN
+F 2 "" H 3450 4250 50  0001 C CNN
+F 3 "" H 3450 4250 50  0001 C CNN
+	1    3450 4250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2750 3600 3450 3600
+Wire Wire Line
+	3450 3600 3450 3800
+Wire Wire Line
+	2750 3800 3450 3800
+Connection ~ 3450 3800
+Wire Wire Line
+	3450 3800 3450 4250
+Wire Wire Line
+	2750 3700 3050 3700
+$Comp
+L power:+3.3V #PWR0107
+U 1 1 60A0333E
+P 3050 3700
+F 0 "#PWR0107" H 3050 3550 50  0001 C CNN
+F 1 "+3.3V" V 3065 3873 50  0000 C CNN
+F 2 "" H 3050 3700 50  0001 C CNN
+F 3 "" H 3050 3700 50  0001 C CNN
+	1    3050 3700
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2750 3900 3050 3900
+$Comp
+L power:+5V #PWR0108
+U 1 1 60A0AF9C
+P 3050 3900
+F 0 "#PWR0108" H 3050 3750 50  0001 C CNN
+F 1 "+5V" V 3065 4073 50  0000 C CNN
+F 2 "" H 3050 3900 50  0001 C CNN
+F 3 "" H 3050 3900 50  0001 C CNN
+	1    3050 3900
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2750 4200 3250 4200
+Wire Wire Line
+	1750 3600 2250 3600
+NoConn ~ 2750 4100
+$Comp
+L Connector:Conn_01x02_Female J5
+U 1 1 60AAE584
+P 6000 2950
+F 0 "J5" H 6028 2926 50  0000 L CNN
+F 1 "Conn_01x02_Female" H 6028 2835 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6000 2950 50  0001 C CNN
+F 3 "~" H 6000 2950 50  0001 C CNN
+	1    6000 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x02_Female J4
+U 1 1 60AAEFFD
+P 6000 2600
+F 0 "J4" H 6028 2576 50  0000 L CNN
+F 1 "Conn_01x02_Female" H 6028 2485 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6000 2600 50  0001 C CNN
+F 3 "~" H 6000 2600 50  0001 C CNN
+	1    6000 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x02_Female J3
+U 1 1 60AB1D20
+P 6000 2250
+F 0 "J3" H 6028 2226 50  0000 L CNN
+F 1 "Conn_01x02_Female" H 6028 2135 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6000 2250 50  0001 C CNN
+F 3 "~" H 6000 2250 50  0001 C CNN
+	1    6000 2250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR01
+U 1 1 60AB4B61
+P 5550 2100
+F 0 "#PWR01" H 5550 1950 50  0001 C CNN
+F 1 "+5V" H 5565 2273 50  0000 C CNN
+F 2 "" H 5550 2100 50  0001 C CNN
+F 3 "" H 5550 2100 50  0001 C CNN
+	1    5550 2100
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR02
+U 1 1 60AB52F8
+P 5550 2500
+F 0 "#PWR02" H 5550 2350 50  0001 C CNN
+F 1 "+3.3V" H 5565 2673 50  0000 C CNN
+F 2 "" H 5550 2500 50  0001 C CNN
+F 3 "" H 5550 2500 50  0001 C CNN
+	1    5550 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR03
+U 1 1 60AB55BD
+P 5550 3100
+F 0 "#PWR03" H 5550 2850 50  0001 C CNN
+F 1 "GND" H 5555 2927 50  0000 C CNN
+F 2 "" H 5550 3100 50  0001 C CNN
+F 3 "" H 5550 3100 50  0001 C CNN
+	1    5550 3100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5800 2350 5800 2250
+Wire Wire Line
+	5550 2100 5550 2250
+Wire Wire Line
+	5550 2250 5800 2250
+Connection ~ 5800 2250
+Wire Wire Line
+	5800 2600 5800 2700
+Wire Wire Line
+	5800 2950 5800 3050
+Wire Wire Line
+	5550 2500 5550 2600
+Wire Wire Line
+	5550 2600 5800 2600
+Connection ~ 5800 2600
+Wire Wire Line
+	5550 3100 5550 3050
+Wire Wire Line
+	5550 3050 5800 3050
+Connection ~ 5800 3050
+$EndSCHEMATC
