@@ -74,7 +74,7 @@ uint64_t searchFreqSolution(uint32_t freq)
 }*/
 uint16_t vppCompensate(uint32_t vpp)
 {
-  return 2048;
+  return vpp;
   //if(3000)
     //return 20;
   //return 1*vpp;
