@@ -97,7 +97,8 @@ int main(void)
   Delay_ms(200);
   LCD_Init();
   myitoa(lcddev.id,lcd_id,16);
-  POINT_COLOR=RED;
+  LCD_SetPointColor(BLACK);
+  LCD_SetBkGNDColor(BLUE);
   Delay_ms(200);
   /* USER CODE END 2 */
 
@@ -123,13 +124,12 @@ int main(void)
 			case 10:LCD_Clear(LGRAY);break;
 			case 11:LCD_Clear(BROWN);break;
 		}
-		POINT_COLOR=RED;	  
-		LCD_ShowString(30,10,210,24,24,"Migrated from");	
-    LCD_ShowString(30,40,210,24,24,"ALIENTEK 24x24");	
+		LCD_ShowString(30,10,210,24,24,"Migrated from");
+    LCD_ShowString(30,40,210,24,24,"ALIENTEK 24x24");
 		LCD_ShowString(30,70,200,16,16,"TFTLCD TEST");
 		LCD_ShowString(30,90,200,16,16,"16x16");
-    LCD_ShowString(30,110,200,12,12,lcd_id);    
-		LCD_ShowString(30,125,200,12,12,"12x12");	      					 
+    LCD_ShowString(30,110,200,12,12,lcd_id);
+		LCD_ShowString(30,125,200,12,12,"12x12");
 		x++;
 		if(x==12)x=0;
     Delay_ms(1000);
