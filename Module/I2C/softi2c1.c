@@ -1,34 +1,85 @@
 #include "softi2c1.h"
 
-uint16_t SoftI2C1_delayTicks = 0;
-uint16_t SoftI2C1_halfTicks = 0;
+uint8_t SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, GPIO_TypeDef *SDA_GPIO, uint8_t SCL_PinID, uint8_t SDA_PinID)
+{
+  port->SCL_GPIO = SCL_GPIO;
+  port->SDA_GPIO = SDA_GPIO;
+  port->SCL_PinID = SCL_PinID;
+  port->SDA_PinID = SDA_PinID;
+  port->SCL_Pin = ((uint16_t)1u << SCL_PinID);
+  port->SDA_Pin = ((uint16_t)1u << SDA_PinID);
+}
 
-void SoftI2C1_Init(uint32_t speed)
+void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed, uint8_t addrLen)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  SOFTI2C1_SCL_CLKEN();
-  SOFTI2C1_SDA_CLKEN();
+#if defined(__HAL_RCC_GPIOA_CLK_ENABLE) // GPIOA exists
+  if (SCL_GPIO == GPIOA || SDA_GPIO == GPIOA)
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOB_CLK_ENABLE) // GPIOB exists
+  if (SCL_GPIO == GPIOB || SDA_GPIO == GPIOB)
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOC_CLK_ENABLE) // GPIOC exists
+  if (SCL_GPIO == GPIOC || SDA_GPIO == GPIOC)
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOD_CLK_ENABLE) // GPIOD exists
+  if (SCL_GPIO == GPIOD || SDA_GPIO == GPIOD)
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOE_CLK_ENABLE) // GPIOE exists
+  if (SCL_GPIO == GPIOE || SDA_GPIO == GPIOE)
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOF_CLK_ENABLE) // GPIOF exists
+  if (SCL_GPIO == GPIOF || SDA_GPIO == GPIOF)
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOG_CLK_ENABLE) // GPIOG exists
+  if (SCL_GPIO == GPIOG || SDA_GPIO == GPIOG)
+    __HAL_RCC_GPIOG_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOH_CLK_ENABLE) // GPIOH exists
+  if (SCL_GPIO == GPIOH || SDA_GPIO == GPIOH)
+    __HAL_RCC_GPIOH_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOI_CLK_ENABLE) // GPIOI exists
+  if (SCL_GPIO == GPIOI || SDA_GPIO == GPIOI)
+    __HAL_RCC_GPIOI_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOJ_CLK_ENABLE) // GPIOJ exists
+  if (SCL_GPIO == GPIOJ || SDA_GPIO == GPIOJ)
+    __HAL_RCC_GPIOJ_CLK_ENABLE();
+#endif
+#if defined(__HAL_RCC_GPIOK_CLK_ENABLE) // GPIOK exists(168pin max)
+  if (SCL_GPIO == GPIOK || SDA_GPIO == GPIOK)
+    __HAL_RCC_GPIOK_CLK_ENABLE();
+#endif
 
-  SOFTI2C1_SCL(1);
-  SOFTI2C1_SDA(1);
-  GPIO_InitStruct.Pin = SOFTI2C1_SCL_PIN;
+  SOFTI2C_SCL(port, 1);
+  SOFTI2C_SDA(port, 1);
+
+  GPIO_InitStruct.Pin = port->SCL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(SOFTI2C1_SCL_GPIO, &GPIO_InitStruct);
+  HAL_GPIO_Init(port->SCL_GPIO, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = SOFTI2C1_SDA_PIN;
-  HAL_GPIO_Init(SOFTI2C1_SDA_GPIO, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = port->SDA_Pin;
+  HAL_GPIO_Init(port->SDA_GPIO, &GPIO_InitStruct);
 
-  SoftI2C1_delayTicks = Delay_GetSYSFreq() / speed / 2;
-  SoftI2C1_halfTicks = (SoftI2C1_delayTicks >> 1) + 1;
+  port->delayTicks = Delay_GetSYSFreq() / speed / 2;
+  port->halfTicks = (port->delayTicks >> 1) + 1;
+  port->addrLen = addrLen;
 }
 
-uint8_t SoftI2C1_SendAddr(uint16_t addr, uint8_t addrLen, uint8_t RorW)
+uint8_t SoftI2C1_SendAddr(SoftI2C_Port *port, uint16_t addr, uint8_t RorW)
 {
   uint8_t buf;
-  if (addrLen == SI2C_ADDR_7b)
+  if (port->addrLen == SI2C_ADDR_7b)
   {
     buf = ((addr & 0x007F) << 1u) | RorW;
     return SoftI2C1_SendByte_ACK(buf, SI2C_ACK);
@@ -88,139 +139,139 @@ uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAd
   return 1;
 }
 
-void SoftI2C1_Start(void)
+void SoftI2C_Start(SoftI2C_Port *port)
 {
-  SOFTI2C1_SCL(1);
-  SOFTI2C1_SDA(1);
-  Delay_ticks(SoftI2C1_delayTicks); // setup time
-  SOFTI2C1_SDA(0);                  // START: when CLK is high,DATA change form HIGH to LOW
-  Delay_ticks(SoftI2C1_delayTicks); // hold time
+  SOFTI2C_SCL(port, 1);
+  SOFTI2C_SDA(port, 1);
+  Delay_ticks(port->delayTicks); // setup time
+  SOFTI2C_SDA(port, 0);          // START: when CLK is high,DATA change form HIGH to LOW
+  Delay_ticks(port->delayTicks); // hold time
 
-  SOFTI2C1_SCL(0); // cannot be read
-  Delay_ticks(SoftI2C1_delayTicks);
+  SOFTI2C_SCL(port, 0); // cannot be read
+  Delay_ticks(port->delayTicks);
 }
 
-void SoftI2C1_RepStart(void)
+void SoftI2C_RepStart(SoftI2C_Port *port)
 {
-  SOFTI2C1_SCL(0);
-  Delay_ticks(SoftI2C1_halfTicks);
-  SOFTI2C1_SDA(1);
-  Delay_ticks(SoftI2C1_halfTicks);
-  SoftI2C1_Start();
+  SOFTI2C_SCL(port, 0);
+  Delay_ticks(port->halfTicks);
+  SOFTI2C_SDA(port, 1);
+  Delay_ticks(port->halfTicks);
+  SoftI2C_Start(port);
 }
 
-void SoftI2C1_Stop(void)
+void SoftI2C_Stop(SoftI2C_Port *port)
 {
-  SOFTI2C1_SCL(0);
-  SOFTI2C1_SDA(0);
-  Delay_ticks(SoftI2C1_halfTicks);
-  SOFTI2C1_SCL(1);
-  Delay_ticks(SoftI2C1_delayTicks);     // setup time
-  SOFTI2C1_SDA(1);                      // STOP: when CLK is high,DATA change form LOW to HIGH
+  SOFTI2C_SCL(port, 0);
+  SOFTI2C_SDA(port, 0);
+  Delay_ticks(port->halfTicks);
+  SOFTI2C_SCL(port, 1);
+  Delay_ticks(port->delayTicks);        // setup time
+  SOFTI2C_SDA(port, 1);                 // STOP: when CLK is high,DATA change form LOW to HIGH
   Delay_ticks(SoftI2C1_delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
   // when the transmition is stopped, the SCL should be high
 }
 
-void SoftI2C1_SendACK(uint8_t ACK) // 0:ACK 1:NACK
+void SoftI2C_SendACK(SoftI2C_Port *port, uint8_t ACK) // 0:ACK 1:NACK
 {
-  SOFTI2C1_SCL(0); // change start
-  Delay_ticks(SoftI2C1_halfTicks);
-  SOFTI2C1_SDA(ACK);
-  Delay_ticks(SoftI2C1_halfTicks); // data setup time
-  SOFTI2C1_SCL(1);                       // can be read
-  Delay_ticks(SoftI2C1_delayTicks);      // hold
-  SOFTI2C1_SCL(0);                       // cannot be read
-  Delay_ticks(SoftI2C1_halfTicks); // data setup time & SCL_LOW & SMBus requirement
+  SOFTI2C_SCL(port, 0); // change start
+  Delay_ticks(port->halfTicks);
+  SOFTI2C_SDA(port, ACK);
+  Delay_ticks(port->halfTicks);  // data setup time
+  SOFTI2C_SCL(port, 1);          // can be read
+  Delay_ticks(port->delayTicks); // hold
+  SOFTI2C_SCL(port, 0);          // cannot be read
+  Delay_ticks(port->halfTicks);  // data setup time & SCL_LOW & SMBus requirement
 }
 
-uint8_t SoftI2C1_WaitACK(void) // 0:ACK 1:NACK/No response
+uint8_t SoftI2C_WaitACK(SoftI2C_Port *port) // 0:ACK 1:NACK/No response
 {
   uint16_t waitTime = 0;
   uint8_t result = 0;
-  SOFTI2C1_SDA_IN();
-  SOFTI2C1_SCL(0);
-  Delay_ticks(SoftI2C1_halfTicks);
-  SOFTI2C1_SCL(1);
-  Delay_ticks(SoftI2C1_halfTicks); // data setup time
-  result = SOFTI2C1_READSDA();
-  Delay_ticks(SoftI2C1_halfTicks);
-  SOFTI2C1_SCL(0);
-  Delay_ticks(SoftI2C1_halfTicks); // data setup time & SCL_LOW & SMBus requirement
+  SOFTI2C_SDA_IN(port);
+  SOFTI2C_SCL(port, 0);
+  Delay_ticks(port->halfTicks);
+  SOFTI2C_SCL(port, 1);
+  Delay_ticks(port->halfTicks); // data setup time
+  result = SOFTI2C_READSDA(port);
+  Delay_ticks(port->halfTicks);
+  SOFTI2C_SCL(port, 0);
+  Delay_ticks(port->halfTicks); // data setup time & SCL_LOW & SMBus requirement
   if (result == SI2C_NACK)
-    SoftI2C1_Stop();
+    SoftI2C_Stop(port);
   return result;
 }
 
 // 8 SCL clock, just send a byte
-void SoftI2C1_SendByte(uint8_t byte) // barely send a byte
+void SoftI2C_SendByte(SoftI2C_Port *port, uint8_t byte) // barely send a byte
 {
   int8_t i;
-  SOFTI2C1_SCL(0);
+  SOFTI2C_SCL(port, 0);
   for (i = 7; i >= 0; i--)
   {
-    SOFTI2C1_SDA((byte >> i) & 1u);
-    Delay_ticks(SoftI2C1_halfTicks); // data setup time
-    SOFTI2C1_SCL(1);
-    Delay_ticks(SoftI2C1_delayTicks); // data hold time
-    SOFTI2C1_SCL(0);
-    Delay_ticks(SoftI2C1_halfTicks); // data setup time & SCL_LOW & SMBus requirement
+    SOFTI2C_SDA(port, (byte >> i) & 1u);
+    Delay_ticks(port->halfTicks); // data setup time
+    SOFTI2C_SCL(port, 1);
+    Delay_ticks(port->delayTicks); // data hold time
+    SOFTI2C_SCL(port, 0);
+    Delay_ticks(port->halfTicks); // data setup time & SCL_LOW & SMBus requirement
   }
 }
 
 // 8 SCL clock, just read a byte
-uint8_t SoftI2C1_ReadByte(void) // barely read a byte
+uint8_t SoftI2C_ReadByte(SoftI2C_Port *port) // barely read a byte
 {
   uint8_t i, result = 0;
-  SOFTI2C1_SDA_IN();
+  SOFTI2C_SDA_IN(port);
   for (i = 0; i < 8; i++)
   {
-    SOFTI2C1_SCL(0);
-    Delay_ticks(SoftI2C1_delayTicks); // data setup time & SCL_LOW & SMBus requirement
-    SOFTI2C1_SCL(1);
+    SOFTI2C_SCL(port, 0);
+    Delay_ticks(port->delayTicks); // data setup time & SCL_LOW & SMBus requirement
+    SOFTI2C_SCL(port, 1);
     result <<= 1;
-    Delay_ticks(SoftI2C1_halfTicks); // data setup time
-    result |= SOFTI2C1_READSDA();
-    Delay_ticks(SoftI2C1_halfTicks); // data hold time
+    Delay_ticks(port->halfTicks); // data setup time
+    result |= SOFTI2C_READSDA(port);
+    Delay_ticks(port->halfTicks); // data hold time
   }
   return result;
 }
 
 // 9 SCL clock, treat the 9th bit as ACK/NACK
 // If SI2C_NACK is given, it will always return true(ignore ACK/NACK)
-// If SI2C_ACK is given, it will retry SOFTI2C1_RETRYTIMES if no ACK is detected,
+// If SI2C_ACK is given, it will retry SOFTI2C_RETRYTIMES if no ACK is detected,
 // and it will return whether the ACK is detected finally.
-uint8_t SoftI2C1_SendByte_ACK(uint8_t byte, uint8_t handleACK) // handle ACK and retry
+uint8_t SoftI2C_SendByte_ACK(SoftI2C_Port *port, uint8_t byte, uint8_t handleACK) // handle ACK and retry
 {
   uint8_t i;
   if (handleACK == SI2C_NACK)
   {
-    SoftI2C1_SendByte(byte);
-    SOFTI2C1_SDA_IN();
-    SOFTI2C1_SCL(0);
-    Delay_ticks(SoftI2C1_halfTicks); // data setup time
-    SOFTI2C1_SCL(1);                       // can be read
-    Delay_ticks(SoftI2C1_delayTicks);      // hold
-    SOFTI2C1_SCL(0);                       // cannot be read
-    Delay_ticks(SoftI2C1_halfTicks); // data setup time & SCL_LOW & SMBus requirement
+    SoftI2C_SendByte(port, byte);
+    SOFTI2C_SDA_IN(port);
+    SOFTI2C_SCL(port, 0);
+    Delay_ticks(port->halfTicks);  // data setup time
+    SOFTI2C_SCL(port, 1);          // can be read
+    Delay_ticks(port->delayTicks); // hold
+    SOFTI2C_SCL(port, 0);          // cannot be read
+    Delay_ticks(port->halfTicks);  // data setup time & SCL_LOW & SMBus requirement
     return 1;
   }
   else
   {
-    for (i = 0; i < SOFTI2C1_RETRYTIMES; i++)
+    for (i = 0; i < SOFTI2C_RETRYTIMES; i++)
     {
-      SoftI2C1_SendByte(byte);
-      if (SoftI2C1_WaitACK() == SI2C_ACK)
+      SoftI2C_SendByte(port, byte);
+      if (SoftI2C_WaitACK(port) == SI2C_ACK)
         break;
     }
-    return (i < SOFTI2C1_RETRYTIMES);
+    return (i < SOFTI2C_RETRYTIMES);
   }
 }
 
 // 9 SCL clock, send ACK/NACK after data received
-uint8_t SoftI2C1_ReadByte_ACK(uint8_t ACK)
+uint8_t SoftI2C_ReadByte_ACK(SoftI2C_Port *port, uint8_t ACK)
 {
   uint8_t result;
-  result = SoftI2C1_ReadByte();
-  SoftI2C1_SendACK(ACK);
+  result = SoftI2C_ReadByte(port);
+  SoftI2C_SendACK(port, ACK);
   return result;
 }

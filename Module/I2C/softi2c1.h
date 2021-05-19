@@ -5,44 +5,42 @@
 #include "DELAY/delay.h"
 #include "softi2c_common.h"
 
+typedef struct _SoftI2C_Port
+{
+  GPIO_TypeDef *SCL_GPIO, *SDA_GPIO;
+  uint8_t SCL_PinID, SDA_PinID;
+  uint16_t SCL_Pin, SDA_Pin;
+  uint16_t delayTicks, halfTicks;
+  uint8_t addrLen;
+} SoftI2C_Port;
+
 // ****** configuration start ******
-#define SOFTI2C1_SCL_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
-#define SOFTI2C1_SDA_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
-
-#define SOFTI2C1_SCL_GPIO GPIOB
-#define SOFTI2C1_SDA_GPIO GPIOB
-
-#define SOFTI2C1_SCL_PINID 8
-#define SOFTI2C1_SDA_PINID 9
-
-#define SOFTI2C1_RETRYTIMES 3
+#define SOFTI2C_RETRYTIMES 3
 // ****** configuration end ******
 
-#define SOFTI2C1_SCL_PIN ((uint16_t)1u << SOFTI2C1_SCL_PINID)
-#define SOFTI2C1_SDA_PIN ((uint16_t)1u << SOFTI2C1_SDA_PINID)
-
-#define SOFTI2C1_SCL(__PINSTATE__) (SOFTI2C1_SCL_GPIO->BSRR = (uint32_t)SOFTI2C1_SCL_PIN << ((__PINSTATE__) ? (0u) : (16u)))
-#define SOFTI2C1_SDA(__PINSTATE__) (SOFTI2C1_SDA_GPIO->BSRR = (uint32_t)SOFTI2C1_SDA_PIN << ((__PINSTATE__) ? (0u) : (16u)))
-#define SOFTI2C1_READSDA() ((SOFTI2C1_SDA_GPIO->IDR >> SOFTI2C1_SDA_PINID) & 1u)
+#define SOFTI2C_SCL(__PORT__, __PINSTATE__) (__PORT__->SCL_GPIO->BSRR = (uint32_t)(__PORT__->SCL_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SOFTI2C_SDA(__PORT__, __PINSTATE__) (__PORT__->SDA_GPIO->BSRR = (uint32_t)(__PORT__->SDA_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SOFTI2C_READSDA(__PORT__) ((__PORT__->SDA_GPIO->IDR >> __PORT__->SDA_PinID) & 1u)
 
 // Release SDA to read data
-#define SOFTI2C1_SDA_IN() SOFTI2C1_SDA(1)
+#define SOFTI2C_SDA_IN(__PORT__) SOFTI2C_SDA(__PORT__, 1)
 
 // For most of the cases
-void SoftI2C1_Init(uint32_t speed);
-uint8_t SoftI2C1_SendAddr(uint16_t addr, uint8_t addrLen, uint8_t RorW);
-uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
-uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
+uint8_t SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, GPIO_TypeDef *SDA_GPIO, uint8_t SCL_PinID, uint8_t SDA_PinID);
+void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed);
+uint8_t SoftI2C1_SendAddr(SoftI2C_Port *port, uint16_t addr, uint8_t RorW);
+uint8_t SoftI2C1_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
+uint8_t SoftI2C1_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
 
 // Low Layer
-void SoftI2C1_Start(void);
-void SoftI2C1_RepStart(void);
-void SoftI2C1_Stop(void);
-void SoftI2C1_SendACK(uint8_t ACK);
-uint8_t SoftI2C1_WaitACK(void);
-void SoftI2C1_SendByte(uint8_t byte);
-uint8_t SoftI2C1_ReadByte(void);
-uint8_t SoftI2C1_SendByte_ACK(uint8_t byte, uint8_t handleACK);
-uint8_t SoftI2C1_ReadByte_ACK(uint8_t ACK);
+void SoftI2C_Start(SoftI2C_Port *port);
+void SoftI2C_RepStart(SoftI2C_Port *port);
+void SoftI2C_Stop(SoftI2C_Port *port);
+void SoftI2C_SendACK(SoftI2C_Port *port, uint8_t ACK);
+uint8_t SoftI2C_WaitACK(SoftI2C_Port *port);
+void SoftI2C_SendByte(SoftI2C_Port *port, uint8_t byte);
+uint8_t SoftI2C_ReadByte(SoftI2C_Port *port);
+uint8_t SoftI2C_SendByte_ACK(SoftI2C_Port *port, uint8_t byte, uint8_t handleACK);
+uint8_t SoftI2C_ReadByte_ACK(SoftI2C_Port *port, uint8_t ACK);
 
 #endif
