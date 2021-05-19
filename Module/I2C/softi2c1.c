@@ -76,65 +76,65 @@ void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed, uint8_t addrLen)
   port->addrLen = addrLen;
 }
 
-uint8_t SoftI2C1_SendAddr(SoftI2C_Port *port, uint16_t addr, uint8_t RorW)
+uint8_t SoftI2C_SendAddr(SoftI2C_Port *port, uint16_t addr, uint8_t RorW)
 {
   uint8_t buf;
   if (port->addrLen == SI2C_ADDR_7b)
   {
     buf = ((addr & 0x007F) << 1u) | RorW;
-    return SoftI2C1_SendByte_ACK(buf, SI2C_ACK);
+    return SoftI2C_SendByte_ACK(port, buf, SI2C_ACK);
   }
   else
   {
     // 111100XX with first 2 bits
     buf = ((addr & 0x0003) << 1u) | RorW;
     buf |= 0x78;
-    if (!SoftI2C1_SendByte_ACK(buf, SI2C_ACK))
+    if (!SoftI2C_SendByte_ACK(port, buf, SI2C_ACK))
       return 0;
 
     // the last 8 bits
     buf = addr & 0x00FF;
-    return SoftI2C1_SendByte_ACK(buf, SI2C_ACK);
+    return SoftI2C_SendByte_ACK(port, buf, SI2C_ACK);
   }
 }
 
-uint8_t SoftI2C1_Read(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
+uint8_t SoftI2C_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
 {
   uint32_t i;
 
-  SoftI2C1_Start();
-  if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_WRITE))
+  SoftI2C_Start(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_WRITE))
     return 0;
-  if (!SoftI2C1_SendByte_ACK(memAddr, SI2C_ACK))
+  if (!SoftI2C_SendByte_ACK(port, memAddr, SI2C_ACK))
     return 0;
   // SoftI2C1_Stop(); // A STOP and START signal is required on some devices.
   // SoftI2C1_Start();
 
-  SoftI2C1_RepStart();
-  if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_READ))
+  SoftI2C_RepStart(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_READ))
     return 0;
   for (i = 0; i < dataSize - 1; i++)
-    *(dataBuf + i) = SoftI2C1_ReadByte_ACK(SI2C_ACK);
+    *(dataBuf + i) = SoftI2C_ReadByte_ACK(port, SI2C_ACK);
   // The last reading should send NACK to end transfer
-  *(dataBuf + i) = SoftI2C1_ReadByte_ACK(SI2C_NACK);
-  SoftI2C1_Stop();
+  *(dataBuf + i) = SoftI2C_ReadByte_ACK(port, SI2C_NACK);
+  SoftI2C_Stop(port);
 
   return 1;
 }
 
-uint8_t SoftI2C1_Write(uint16_t deviceAddr, uint8_t deviceAddrLen, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
+uint8_t SoftI2C_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
 {
   uint32_t i;
 
-  SoftI2C1_Start();
-  if (!SoftI2C1_SendAddr(deviceAddr, deviceAddrLen, SI2C_WRITE))
+  SoftI2C_Start(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_WRITE))
     return 0;
-  if (!SoftI2C1_SendByte_ACK(memAddr, SI2C_ACK))
+  if (!SoftI2C_SendByte_ACK(port, memAddr, SI2C_ACK))
     return 0;
   for (i = 0; i < dataSize; i++)
-    if (!SoftI2C1_SendByte_ACK(*(dataBuf + i), SI2C_ACK))
+    if (!SoftI2C_SendByte_ACK(port, *(dataBuf + i), SI2C_ACK))
       return 0;
-  SoftI2C1_Stop();
+  SoftI2C_Stop(port);
 
   return 1;
 }
