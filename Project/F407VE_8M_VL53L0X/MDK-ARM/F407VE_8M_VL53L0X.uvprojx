@@ -524,11 +524,6 @@
               <FilePath>..\..\..\Module\DELAY\delay.c</FilePath>
             </File>
             <File>
-              <FileName>softi2c2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\I2C\softi2c2.c</FilePath>
-            </File>
-            <File>
               <FileName>myvl53L0x.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL53L0X\myvl53L0x.c</FilePath>
@@ -577,6 +572,11 @@
               <FileName>vl53l0x_platform_log.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL53L0X\API\src\vl53l0x_platform_log.c</FilePath>
+            </File>
+            <File>
+              <FileName>softi2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\I2C\softi2c.c</FilePath>
             </File>
           </Files>
         </Group>

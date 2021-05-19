@@ -2,6 +2,8 @@
 
 uint8_t MLX90614_addr = 0x5A;
 
+SoftI2C_Port MLX90614_port;
+
 uint8_t MLX90614_WriteROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t data)
 {
   uint8_t tmp[3];
@@ -11,13 +13,13 @@ uint8_t MLX90614_WriteROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t data)
   tmp[2] = CRC8_CalcByte(0, deviceAddr << 1);
   tmp[2] = CRC8_CalcByte(tmp[2], romAddr & 0x1F | 0x20);
   tmp[2] = CRC8_Calc(tmp[2], tmp, 2);
-  return SoftI2C2_Write(deviceAddr, SI2C_ADDR_7b, romAddr & 0x1F | 0x20, tmp, 3);
+  return SoftI2C_Write(&MLX90614_port, deviceAddr, romAddr & 0x1F | 0x20, tmp, 3);
 }
 
 uint8_t MLX90614_ReadReg(uint16_t deviceAddr, uint8_t regAddr, uint16_t *data)
 {
   uint8_t tmp[3], res, crc;
-  res = SoftI2C2_Read(deviceAddr, SI2C_ADDR_7b, regAddr, tmp, 3);
+  res = SoftI2C_Read(&MLX90614_port, deviceAddr, regAddr, tmp, 3);
   if (!res)
     return 0;
   crc = CRC8_CalcByte(0, deviceAddr << 1);
@@ -43,7 +45,8 @@ uint8_t MLX90614_ReadROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t *data)
 void MLX90614_Init(void)
 {
   CRC8_Init(0x07); // the polynomial of SMBus is 0x07
-  SoftI2C2_Init(100000);
+  SoftI2C_SetPort(&MLX90614_port, GPIOB, 6, GPIOB, 7);
+  SoftI2C_Init(&MLX90614_port, 100000, SI2C_ADDR_7b);
   Delay_ms(600);
 }
 
@@ -60,16 +63,16 @@ void MLX90614_Sleep(uint8_t enterSleep) // 1:sleep 0:wakeup
 {
   uint8_t pec = 0xE8;
   if (enterSleep)
-    SoftI2C2_Write(MLX90614_addr, SI2C_ADDR_7b, 0xFF, &pec, 1);
+    SoftI2C_Write(&MLX90614_port, MLX90614_addr, 0xFF, &pec, 1);
   else
   {
-    SOFTI2C2_SDA(1);
-    SOFTI2C2_SCL(0);
+    SOFTI2C_SDA(&MLX90614_port, 1);
+    SOFTI2C_SCL(&MLX90614_port, 0);
     Delay_ms(1);
-    SOFTI2C2_SDA(0);
-    SOFTI2C2_SCL(1);
+    SOFTI2C_SDA(&MLX90614_port, 0);
+    SOFTI2C_SCL(&MLX90614_port, 1);
     Delay_ms(34);
-    SOFTI2C2_SDA(1);
+    SOFTI2C_SDA(&MLX90614_port, 1);
     Delay_ms(250);
   }
 }

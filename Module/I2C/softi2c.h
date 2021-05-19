@@ -3,7 +3,7 @@
 
 #include "main.h"
 #include "DELAY/delay.h"
-#include "softi2c_common.h"
+#include "UTIL/gpio_compat.h"
 
 typedef struct _SoftI2C_Port
 {
@@ -18,16 +18,25 @@ typedef struct _SoftI2C_Port
 #define SOFTI2C_RETRYTIMES 3
 // ****** configuration end ******
 
-#define SOFTI2C_SCL(__PORT__, __PINSTATE__) (__PORT__->SCL_GPIO->BSRR = (uint32_t)(__PORT__->SCL_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
-#define SOFTI2C_SDA(__PORT__, __PINSTATE__) (__PORT__->SDA_GPIO->BSRR = (uint32_t)(__PORT__->SDA_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
-#define SOFTI2C_READSDA(__PORT__) ((__PORT__->SDA_GPIO->IDR >> __PORT__->SDA_PinID) & 1u)
+#define SOFTI2C_SCL(__PORT__, __PINSTATE__) ((__PORT__)->SCL_GPIO->BSRR = (uint32_t)((__PORT__)->SCL_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SOFTI2C_SDA(__PORT__, __PINSTATE__) ((__PORT__)->SDA_GPIO->BSRR = (uint32_t)((__PORT__)->SDA_Pin) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SOFTI2C_READSDA(__PORT__) (((__PORT__)->SDA_GPIO->IDR >> (__PORT__)->SDA_PinID) & 1u)
 
 // Release SDA to read data
-#define SOFTI2C_SDA_IN(__PORT__) SOFTI2C_SDA(__PORT__, 1)
+#define SOFTI2C_SDA_IN(__PORT__) SOFTI2C_SDA((__PORT__), 1)
+
+#define SI2C_ACK 0
+#define SI2C_NACK 1
+
+#define SI2C_WRITE 0
+#define SI2C_READ 1
+
+#define SI2C_ADDR_7b 0
+#define SI2C_ADDR_10b 1
 
 // For most of the cases
-uint8_t SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, GPIO_TypeDef *SDA_GPIO, uint8_t SCL_PinID, uint8_t SDA_PinID);
-void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed);
+void SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
+void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed, uint8_t addrLen);
 uint8_t SoftI2C_SendAddr(SoftI2C_Port *port, uint16_t addr, uint8_t RorW);
 uint8_t SoftI2C_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
 uint8_t SoftI2C_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);

@@ -1,6 +1,6 @@
-#include "softi2c1.h"
+#include "softi2c.h"
 
-uint8_t SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, GPIO_TypeDef *SDA_GPIO, uint8_t SCL_PinID, uint8_t SDA_PinID)
+void SoftI2C_SetPort(SoftI2C_Port *port, GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID)
 {
   port->SCL_GPIO = SCL_GPIO;
   port->SDA_GPIO = SDA_GPIO;
@@ -15,47 +15,47 @@ void SoftI2C_Init(SoftI2C_Port *port, uint32_t speed, uint8_t addrLen)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 #if defined(__HAL_RCC_GPIOA_CLK_ENABLE) // GPIOA exists
-  if (SCL_GPIO == GPIOA || SDA_GPIO == GPIOA)
+  if (port->SCL_GPIO == GPIOA || port->SDA_GPIO == GPIOA)
     __HAL_RCC_GPIOA_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOB_CLK_ENABLE) // GPIOB exists
-  if (SCL_GPIO == GPIOB || SDA_GPIO == GPIOB)
+  if (port->SCL_GPIO == GPIOB || port->SDA_GPIO == GPIOB)
     __HAL_RCC_GPIOB_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOC_CLK_ENABLE) // GPIOC exists
-  if (SCL_GPIO == GPIOC || SDA_GPIO == GPIOC)
+  if (port->SCL_GPIO == GPIOC || port->SDA_GPIO == GPIOC)
     __HAL_RCC_GPIOC_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOD_CLK_ENABLE) // GPIOD exists
-  if (SCL_GPIO == GPIOD || SDA_GPIO == GPIOD)
+  if (port->SCL_GPIO == GPIOD || port->SDA_GPIO == GPIOD)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOE_CLK_ENABLE) // GPIOE exists
-  if (SCL_GPIO == GPIOE || SDA_GPIO == GPIOE)
+  if (port->SCL_GPIO == GPIOE || port->SDA_GPIO == GPIOE)
     __HAL_RCC_GPIOE_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOF_CLK_ENABLE) // GPIOF exists
-  if (SCL_GPIO == GPIOF || SDA_GPIO == GPIOF)
+  if (port->SCL_GPIO == GPIOF || port->SDA_GPIO == GPIOF)
     __HAL_RCC_GPIOF_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOG_CLK_ENABLE) // GPIOG exists
-  if (SCL_GPIO == GPIOG || SDA_GPIO == GPIOG)
+  if (port->SCL_GPIO == GPIOG || port->SDA_GPIO == GPIOG)
     __HAL_RCC_GPIOG_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOH_CLK_ENABLE) // GPIOH exists
-  if (SCL_GPIO == GPIOH || SDA_GPIO == GPIOH)
+  if (port->SCL_GPIO == GPIOH || port->SDA_GPIO == GPIOH)
     __HAL_RCC_GPIOH_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOI_CLK_ENABLE) // GPIOI exists
-  if (SCL_GPIO == GPIOI || SDA_GPIO == GPIOI)
+  if (port->SCL_GPIO == GPIOI || port->SDA_GPIO == GPIOI)
     __HAL_RCC_GPIOI_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOJ_CLK_ENABLE) // GPIOJ exists
-  if (SCL_GPIO == GPIOJ || SDA_GPIO == GPIOJ)
+  if (port->SCL_GPIO == GPIOJ || port->SDA_GPIO == GPIOJ)
     __HAL_RCC_GPIOJ_CLK_ENABLE();
 #endif
 #if defined(__HAL_RCC_GPIOK_CLK_ENABLE) // GPIOK exists(168pin max)
-  if (SCL_GPIO == GPIOK || SDA_GPIO == GPIOK)
+  if (port->SCL_GPIO == GPIOK || port->SDA_GPIO == GPIOK)
     __HAL_RCC_GPIOK_CLK_ENABLE();
 #endif
 
@@ -103,7 +103,7 @@ uint8_t SoftI2C_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, u
   uint32_t i;
 
   SoftI2C_Start(port);
-  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_WRITE))
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_WRITE))
     return 0;
   if (!SoftI2C_SendByte_ACK(port, memAddr, SI2C_ACK))
     return 0;
@@ -111,7 +111,7 @@ uint8_t SoftI2C_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, u
   // SoftI2C1_Start();
 
   SoftI2C_RepStart(port);
-  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_READ))
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_READ))
     return 0;
   for (i = 0; i < dataSize - 1; i++)
     *(dataBuf + i) = SoftI2C_ReadByte_ACK(port, SI2C_ACK);
@@ -127,7 +127,7 @@ uint8_t SoftI2C_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, 
   uint32_t i;
 
   SoftI2C_Start(port);
-  if (!SoftI2C_SendAddr(port, deviceAddr, deviceAddrLen, SI2C_WRITE))
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_WRITE))
     return 0;
   if (!SoftI2C_SendByte_ACK(port, memAddr, SI2C_ACK))
     return 0;
@@ -168,7 +168,7 @@ void SoftI2C_Stop(SoftI2C_Port *port)
   SOFTI2C_SCL(port, 1);
   Delay_ticks(port->delayTicks);        // setup time
   SOFTI2C_SDA(port, 1);                 // STOP: when CLK is high,DATA change form LOW to HIGH
-  Delay_ticks(SoftI2C1_delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
+  Delay_ticks(port->delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
   // when the transmition is stopped, the SCL should be high
 }
 

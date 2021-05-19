@@ -10,7 +10,7 @@
 #include "API/inc/vl53l0x_api.h"
 #include "API/inc/vl53l0x_api_core.h"
 #include "API/inc/vl53l0x_platform.h"
-#include "I2C/softi2c2.h"
+#include "I2C/softi2c.h"
 #include "main.h"
 
 uint8_t MyVL53L0X_Init(uint8_t deviceAddr);

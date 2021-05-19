@@ -449,16 +449,6 @@
               <FilePath>..\..\..\Module\I2C\crc8.c</FilePath>
             </File>
             <File>
-              <FileName>softi2c1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\I2C\softi2c1.c</FilePath>
-            </File>
-            <File>
-              <FileName>softi2c2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\I2C\softi2c2.c</FilePath>
-            </File>
-            <File>
               <FileName>oled.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\OLED\oled.c</FilePath>
@@ -467,6 +457,11 @@
               <FileName>util.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
+            <File>
+              <FileName>softi2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\I2C\softi2c.c</FilePath>
             </File>
           </Files>
         </Group>

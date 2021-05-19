@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vl53l0x_def.h"
 #include "vl53l0x_platform_log.h"
+#include "I2C/softi2c.h"
+
+extern SoftI2C_Port VL53L0X_port;
 
 #ifdef __cplusplus
 extern "C"

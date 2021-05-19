@@ -37,7 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../inc/vl53l0x_platform.h"
 #include "../inc/vl53l0x_api.h"
 #include "DELAY/delay.h"
-#include "I2C/softi2c2.h"
+
+SoftI2C_Port VL53L0X_port;
 
 #define LOG_FUNCTION_START(fmt, ...) _LOG_FUNCTION_START(TRACE_MODULE_PLATFORM, fmt, ##__VA_ARGS__)
 #define LOG_FUNCTION_END(status, ...) _LOG_FUNCTION_END(TRACE_MODULE_PLATFORM, status, ##__VA_ARGS__)
@@ -103,7 +104,7 @@ VL53L0X_Error VL53L0X_WriteMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata,
 
   deviceAddress = Dev->I2cDevAddr;
 
-  status_int = SoftI2C2_Write(deviceAddress, SI2C_ADDR_7b, index, pdata, count);
+  status_int = SoftI2C_Write(&VL53L0X_port, deviceAddress, index, pdata, count);
 
   if (!status_int)
     Status = VL53L0X_ERROR_CONTROL_INTERFACE;
@@ -127,7 +128,7 @@ VL53L0X_Error VL53L0X_ReadMulti(VL53L0X_DEV Dev, uint8_t index, uint8_t *pdata, 
 
   deviceAddress = Dev->I2cDevAddr;
 
-  status_int = SoftI2C2_Read(deviceAddress, SI2C_ADDR_7b, index, pdata, count);
+  status_int = SoftI2C_Read(&VL53L0X_port, deviceAddress, index, pdata, count);
 
   if (!status_int)
     Status = VL53L0X_ERROR_CONTROL_INTERFACE;

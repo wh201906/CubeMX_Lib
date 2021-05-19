@@ -3,7 +3,7 @@
 
 #include "main.h"
 #include "DELAY/delay.h"
-#include "I2C/softi2c1.h"
+#include "I2C/softi2c.h"
 #include "UTIL/util.h"
 
 extern uint8_t OLED_cursorX, OLED_cursorY;

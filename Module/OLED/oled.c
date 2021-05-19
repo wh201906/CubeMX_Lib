@@ -6,42 +6,45 @@ uint8_t textSize = TEXTSIZE_SMALL;
 
 uint8_t OLED_cursorX, OLED_cursorY;
 
+SoftI2C_Port OLED_port;
+
 static void WriteCmd(uint8_t command)
 {
-  SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x00, &command, 1);
+  SoftI2C_Write(&OLED_port, OLED_ADDRESS, 0x00, &command, 1);
 }
 
 static void WriteData(uint8_t data)
 {
   if (!isCurrentReverse)
-    SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x40, &data, 1);
+    SoftI2C_Write(&OLED_port, OLED_ADDRESS, 0x40, &data, 1);
   else
   {
     data = ~data;
-    SoftI2C1_Write(OLED_ADDRESS, SI2C_ADDR_7b, 0x40, &data, 1);
+    SoftI2C_Write(&OLED_port, OLED_ADDRESS, 0x40, &data, 1);
   }
 }
 
 static void FastWrite_Start(void)
 {
-  SoftI2C1_Start();
-  SoftI2C1_SendAddr(OLED_ADDRESS, SI2C_ADDR_7b, SI2C_WRITE);
-  SoftI2C1_SendByte_ACK(0x40, SI2C_ACK);
+  SoftI2C_Start(&OLED_port);
+  SoftI2C_SendAddr(&OLED_port, OLED_ADDRESS, SI2C_WRITE);
+  SoftI2C_SendByte_ACK(&OLED_port, 0x40, SI2C_ACK);
 }
 
 static void FastWrite(uint8_t data)
 {
-  SoftI2C1_SendByte_ACK(data, SI2C_ACK);
+  SoftI2C_SendByte_ACK(&OLED_port, data, SI2C_ACK);
 }
 
 static void FastWrite_Stop(void)
 {
-  SoftI2C1_Stop();
+  SoftI2C_Stop(&OLED_port);
 }
 
 void OLED_Init(void)
 {
-  SoftI2C1_Init(400000);
+  SoftI2C_SetPort(&OLED_port, GPIOB, 8, GPIOB, 9);
+  SoftI2C_Init(&OLED_port, 400000, SI2C_ADDR_7b);
   Delay_ms(100); //这里的延时很重要
 
   WriteCmd(0xAE); //display off

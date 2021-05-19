@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "OLED/oled_iic.h"
+#include "OLED/oled.h"
 #include "DELAY/delay.h"
 /* USER CODE END Includes */
 
@@ -90,7 +90,6 @@ int main(void)
   Delay_Init(168);
   OLED_Init();
   OLED_CLS();
-  OLED_Reverse();
   unsigned char testStr[61];
   for(int i=0;i<60;i++)
   {
@@ -99,12 +98,12 @@ int main(void)
   testStr[60]='\0';
   for(int i=0;i<8;i++)
   {
-      OLED_ShowCN(i*16,0,i,REVERSE_ON);
+      OLED_ShowCN(i*16,0,i);
   }
-  OLED_ShowInt(0,3,123456789,TEXTSIZE_SMALL,REVERSE_OFF);
-  OLED_ShowInt(0,4,-1123,TEXTSIZE_SMALL,REVERSE_OFF);
-  OLED_ShowFloat(0,5,123.456789,TEXTSIZE_SMALL,REVERSE_OFF);
-  OLED_ShowFloat(0,6,-11.23,TEXTSIZE_SMALL,REVERSE_OFF);
+  OLED_ShowInt(0,3,123456789);
+  OLED_ShowInt(0,4,-1123);
+  OLED_ShowFloat(0,5,123.456789);
+  OLED_ShowFloat(0,6,-11.23);
   Delay_ms(1000);
   /* USER CODE END 2 */
 
@@ -115,7 +114,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    OLED_ShowStr(0,0,testStr,TEXTSIZE_SMALL,REVERSE_OFF);
+    OLED_ShowStr(0,0,testStr);
     Delay_ms(200);
     for(int i=0;i<60;i++)
     {

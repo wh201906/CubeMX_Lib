@@ -21,7 +21,7 @@
 #define MLX90614_IDREG4 0x1F
 
 #include "main.h"
-#include "I2C/softi2c2.h"
+#include "I2C/softi2c.h"
 #include "DELAY/delay.h"
 #include "I2C/crc8.h"
 
