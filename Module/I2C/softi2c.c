@@ -139,6 +139,51 @@ uint8_t SoftI2C_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, 
   return 1;
 }
 
+uint8_t SoftI2C_16Read(SoftI2C_Port *port, uint16_t deviceAddr, uint16_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
+{
+  uint32_t i;
+
+  SoftI2C_Start(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_WRITE))
+    return 0;
+  if (!SoftI2C_SendByte_ACK(port, memAddr >> 8, SI2C_ACK))
+    return 0;
+  if (!SoftI2C_SendByte_ACK(port, memAddr & 0xFF, SI2C_ACK))
+    return 0;
+  // SoftI2C1_Stop(); // A STOP and START signal is required on some devices.
+  // SoftI2C1_Start();
+
+  SoftI2C_RepStart(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_READ))
+    return 0;
+  for (i = 0; i < dataSize - 1; i++)
+    *(dataBuf + i) = SoftI2C_ReadByte_ACK(port, SI2C_ACK);
+  // The last reading should send NACK to end transfer
+  *(dataBuf + i) = SoftI2C_ReadByte_ACK(port, SI2C_NACK);
+  SoftI2C_Stop(port);
+
+  return 1;
+}
+
+uint8_t SoftI2C_16Write(SoftI2C_Port *port, uint16_t deviceAddr, uint16_t memAddr, uint8_t *dataBuf, uint32_t dataSize)
+{
+  uint32_t i;
+
+  SoftI2C_Start(port);
+  if (!SoftI2C_SendAddr(port, deviceAddr, SI2C_WRITE))
+    return 0;
+  if (!SoftI2C_SendByte_ACK(port, memAddr >> 8, SI2C_ACK))
+    return 0;
+  if (!SoftI2C_SendByte_ACK(port, memAddr & 0xFF, SI2C_ACK))
+    return 0;
+  for (i = 0; i < dataSize; i++)
+    if (!SoftI2C_SendByte_ACK(port, *(dataBuf + i), SI2C_ACK))
+      return 0;
+  SoftI2C_Stop(port);
+
+  return 1;
+}
+
 void SoftI2C_Start(SoftI2C_Port *port)
 {
   SOFTI2C_SCL(port, 1);
@@ -166,8 +211,8 @@ void SoftI2C_Stop(SoftI2C_Port *port)
   SOFTI2C_SDA(port, 0);
   Delay_ticks(port->halfTicks);
   SOFTI2C_SCL(port, 1);
-  Delay_ticks(port->delayTicks);        // setup time
-  SOFTI2C_SDA(port, 1);                 // STOP: when CLK is high,DATA change form LOW to HIGH
+  Delay_ticks(port->delayTicks);     // setup time
+  SOFTI2C_SDA(port, 1);              // STOP: when CLK is high,DATA change form LOW to HIGH
   Delay_ticks(port->delayTicks * 2); // hold time(not necessary in most of the situations) and buff time(necessary)
   // when the transmition is stopped, the SCL should be high
 }

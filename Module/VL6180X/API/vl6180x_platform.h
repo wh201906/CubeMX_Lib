@@ -30,8 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * $Revision: 2441 $
  */
 
-#ifndef VL6180x_PLATFORM
-#define VL6180x_PLATFORM
+#ifndef VL6180x_PLATFORM_H_
+#define VL6180x_PLATFORM_H_
+
+#include "I2C/softi2c.h"
+
+extern SoftI2C_Port VL6180X_port;
 
 /**
  * @file vl6180x_platform.h

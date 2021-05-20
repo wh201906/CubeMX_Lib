@@ -7,6 +7,8 @@
 #define VL53L0X_SENSE_HIGH_ACCURACY 3
 // #define VL53L0X_Sense_config_t ;
 
+#define MYVL53L0X_DEFAULT_ADDR 0x29
+
 #include "API/inc/vl53l0x_api.h"
 #include "API/inc/vl53l0x_api_core.h"
 #include "API/inc/vl53l0x_platform.h"
