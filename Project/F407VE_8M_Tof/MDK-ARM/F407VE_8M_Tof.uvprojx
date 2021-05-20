@@ -623,6 +623,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL6180X\API\vl6180x_platform.c</FilePath>
             </File>
+            <File>
+              <FileName>myvl6180x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\VL6180X\myvl6180x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

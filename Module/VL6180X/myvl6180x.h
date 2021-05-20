@@ -12,6 +12,6 @@
 #define MYVL6180X_DEFAULT_ADDR 0x29
 
 uint8_t MyVL6180X_Init(uint8_t deviceAddr);
-uint16_t MyVL6180X_GetDistance(void);
+int32_t MyVL6180X_GetDistance(void);
 
 #endif

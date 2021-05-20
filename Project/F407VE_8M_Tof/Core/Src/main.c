@@ -27,7 +27,7 @@
 #include "DELAY/delay.h"
 #include "OLED/oled.h"
 #include "VL53L0X/myvl53L0x.h"
-#include "VL6180X/API/vl6180x_api.h"
+#include "VL6180X/myvl6180x.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,6 +95,8 @@ int main(void)
   OLED_Init();
   MyVL53L0X_Init(MYVL53L0X_DEFAULT_ADDR);
   MyVL53L0X_SetSenseMode(VL53L0X_SENSE_DEFAULT);
+  MyVL6180X_Init(MYVL6180X_DEFAULT_ADDR);
+  Delay_ms(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,6 +108,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     Delay_ms(100);
     OLED_ShowInt(0, 0, MyVL53L0X_GetDistance());
+    OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
+    OLED_ShowInt(0, 1, MyVL6180X_GetDistance());
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
   }
   /* USER CODE END 3 */
