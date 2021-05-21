@@ -19,6 +19,9 @@ extern uint8_t OLED_cursorX, OLED_cursorY;
 #define ROTATE_OFF 0
 #define ROTATE_ON 1
 
+#define DIRECTION_LEFT 0x2
+#define DIRECTION_RIGHT 0x1
+
 // Note:
 // the x is from 0~127(128 pixels)
 // the y is from 0~7(8 pages)
@@ -44,5 +47,7 @@ void OLED_SetGlobalReverse(uint8_t state);
 void OLED_SetCurrentReverse(uint8_t state);
 void OLED_SetTextSize(uint8_t size);
 void OLED_Rotate(uint8_t state);
+void OLED_Scroll(uint8_t direction, uint8_t startPage, uint8_t endPage, uint8_t hSpeed, uint8_t vSpeed);
+void OLED_StopScroll(void);
 
 #endif

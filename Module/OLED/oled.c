@@ -3,8 +3,9 @@
 
 uint8_t isCurrentReverse = REVERSE_OFF;
 uint8_t textSize = TEXTSIZE_SMALL;
+uint8_t isScrolling = 0;
 
-uint8_t OLED_cursorX, OLED_cursorY;
+uint8_t OLED_cursorX = 0, OLED_cursorY = 0;
 
 SoftI2C_Port OLED_port;
 
@@ -67,7 +68,7 @@ void OLED_Init(void)
   WriteCmd(0xA4); //0xa4,Output follows RAM content;0xa5,Output ignores RAM content
   WriteCmd(0xD3); //-set display offset
   WriteCmd(0x00); //-not offset
-  
+
   WriteCmd(0xD5); //--set display clock divide ratio/oscillator frequency
   WriteCmd(0xF0); //--set divide ratio
 
@@ -96,6 +97,8 @@ void OLED_SetPos(uint8_t x, uint8_t y)
 void OLED_Fill(uint8_t data)
 {
   uint16_t i;
+  if (isScrolling)
+    OLED_StopScroll();
   WriteCmd(0xB0);
   WriteCmd(0x00);
   WriteCmd(0x10);
@@ -128,6 +131,8 @@ uint8_t OLED_ShowStr(uint8_t x, uint8_t y, uint8_t *str)
 {
   uint8_t c = 0, i = 0, j = 0, pt = 0;
   uint8_t currX = x, currY = y;
+  if (isScrolling)
+    OLED_StopScroll();
   if (textSize == TEXTSIZE_SMALL)
   {
     OLED_SetPos(currX, currY);
@@ -190,6 +195,8 @@ void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index)
 {
   uint8_t i = 0;
   uint32_t adder = 32 * index;
+  if (isScrolling)
+    OLED_StopScroll();
   OLED_SetPos(x, y);
   FastWrite_Start();
   for (i = 0; i < 16; i++)
@@ -213,6 +220,8 @@ void OLED_ShowCN(uint8_t x, uint8_t y, uint8_t index)
 void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t ch)
 {
   uint8_t i = 0;
+  if (isScrolling)
+    OLED_StopScroll();
   if (textSize == TEXTSIZE_SMALL)
   {
     ch -= ' ';
@@ -294,4 +303,33 @@ void OLED_Rotate(uint8_t state)
     WriteCmd(0xC8);
     WriteCmd(0xA1);
   }
+}
+
+void OLED_StopScroll(void)
+{
+  WriteCmd(0x2E);
+  isScrolling = 0;
+}
+
+void OLED_Scroll(uint8_t direction, uint8_t startPage, uint8_t endPage, uint8_t hSpeed, uint8_t vSpeed)
+{
+  static const uint8_t hSpeedReg[8] = {0x3, 0x2, 0x1, 0x6, 0x0, 0x5, 0x4, 0x7}; // framePerT: 256, 128, 64, 25, 5, 4, 3, 2
+  if (startPage > 7)
+    startPage = 7;
+  if (endPage > 7)
+    endPage = 7;
+  if (endPage < startPage)
+    endPage = startPage;
+  hSpeed &= 0x7;  // & 3'b111
+  vSpeed &= 0x3F; // & 6'b111111
+
+  OLED_StopScroll();
+  WriteCmd(0x28 | (direction & 0x03));
+  WriteCmd(0x00);
+  WriteCmd(startPage);
+  WriteCmd(hSpeedReg[hSpeed]);
+  WriteCmd(endPage);
+  WriteCmd(vSpeed);
+  WriteCmd(0x2F); // Start Scroll
+  isScrolling = 1;
 }
