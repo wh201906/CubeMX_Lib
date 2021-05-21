@@ -13,5 +13,6 @@
 
 uint8_t MyVL6180X_Init(uint8_t deviceAddr);
 int32_t MyVL6180X_GetDistance(void);
+int64_t MyVL6180X_GetLux(void);
 
 #endif

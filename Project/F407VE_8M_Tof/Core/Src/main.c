@@ -111,6 +111,8 @@ int main(void)
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
     OLED_ShowInt(0, 1, MyVL6180X_GetDistance());
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
+    OLED_ShowInt(0, 2, MyVL6180X_GetLux());
+    OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
   }
   /* USER CODE END 3 */
 }
