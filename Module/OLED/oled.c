@@ -42,9 +42,9 @@ static void FastWrite_Stop(void)
   SoftI2C_Stop(&OLED_port);
 }
 
-void OLED_Init(void)
+void OLED_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID)
 {
-  SoftI2C_SetPort(&OLED_port, GPIOB, 8, GPIOB, 9);
+  SoftI2C_SetPort(&OLED_port, SCL_GPIO, SCL_PinID, SDA_GPIO, SDA_PinID);
   SoftI2C_Init(&OLED_port, 400000, SI2C_ADDR_7b);
   Delay_ms(100); //这里的延时很重要
 

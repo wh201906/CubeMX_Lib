@@ -26,8 +26,10 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "OLED/oled.h"
-#include "VL53L0X/myvl53L0x.h"
+#include "VL53L0X/myvl53l0x.h"
 #include "VL6180X/myvl6180x.h"
+#include "VL53L1X/myvl53l1x.h"
+#include "VL53L1X/API/VL53L1X_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,11 +94,12 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  OLED_Init();
-  MyVL53L0X_Init(MYVL53L0X_DEFAULT_ADDR);
+  OLED_Init(GPIOB, 8, GPIOB, 9);
+  MyVL53L0X_Init(MYVL53L0X_DEFAULT_ADDR, GPIOB, 6, GPIOB, 7);
   MyVL53L0X_SetSenseMode(VL53L0X_SENSE_DEFAULT);
-  MyVL6180X_Init(MYVL6180X_DEFAULT_ADDR);
-  Delay_ms(1000);
+  MyVL6180X_Init(MYVL6180X_DEFAULT_ADDR, GPIOB, 3, GPIOB, 5);
+  MyVL53L1X_Init(MYVL53L1X_DEFAULT_ADDR, GPIOD, 6, GPIOD, 7);
+  Delay_ms(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,12 +109,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(100);
     OLED_ShowInt(0, 0, MyVL53L0X_GetDistance());
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
     OLED_ShowInt(0, 1, MyVL6180X_GetDistance());
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
     OLED_ShowInt(0, 2, MyVL6180X_GetLux());
+    OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
+    OLED_ShowInt(0, 3, MyVL53L1X_GetDistance());
     OLED_ShowStr(OLED_cursorX, OLED_cursorY, "     ");
   }
   /* USER CODE END 3 */

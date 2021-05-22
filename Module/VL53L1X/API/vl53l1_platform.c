@@ -36,11 +36,11 @@
 #include "vl53l1_platform.h"
 #include "DELAY/delay.h"
 
-SoftI2C_Port VL53l1X_port;
+SoftI2C_Port VL53L1X_port;
 
 VL53L1X_ERROR VL53L1_WriteMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count)
 {
-  if (SoftI2C_Write(&VL53l1X_port, dev, index, pdata, count))
+  if (SoftI2C_16Write(&VL53L1X_port, dev, index, pdata, count))
     return VL53L1X_ERROR_NONE;
   else
     return VL53L1X_ERROR_ERROR;
@@ -48,7 +48,7 @@ VL53L1X_ERROR VL53L1_WriteMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, 
 
 VL53L1X_ERROR VL53L1_ReadMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count)
 {
-  if (SoftI2C_Read(&VL53l1X_port, dev, index, pdata, count))
+  if (SoftI2C_16Read(&VL53L1X_port, dev, index, pdata, count))
     return VL53L1X_ERROR_NONE;
   else
     return VL53L1X_ERROR_ERROR;

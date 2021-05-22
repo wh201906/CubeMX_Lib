@@ -4,7 +4,7 @@ VL53L0X_Dev_t VL53L0X_Inst;
 VL53L0X_DeviceInfo_t VL53L0X_DeviceInfo;
 VL53L0X_Error Status = VL53L0X_ERROR_NONE;
 
-uint8_t MyVL53L0X_Init(uint8_t deviceAddr)
+uint8_t MyVL53L0X_Init(uint8_t deviceAddr, GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID)
 {
   uint32_t refSpadCount;
   uint8_t isApertureSpads;
@@ -14,7 +14,7 @@ uint8_t MyVL53L0X_Init(uint8_t deviceAddr)
   VL53L0X_Inst.I2cDevAddr = deviceAddr;
   VL53L0X_Inst.comms_type = 0;
   VL53L0X_Inst.comms_speed_khz = 400;
-  SoftI2C_SetPort(&VL53L0X_port, GPIOB, 6, GPIOB, 7);
+  SoftI2C_SetPort(&VL53L0X_port, SCL_GPIO, SCL_PinID, SDA_GPIO, SDA_PinID);
   SoftI2C_Init(&VL53L0X_port, VL53L0X_Inst.comms_speed_khz, SI2C_ADDR_7b);
 
   Status = VL53L0X_DataInit(&VL53L0X_Inst);
@@ -92,7 +92,7 @@ uint8_t MyVL53L0X_SingleMeasure(VL53L0X_RangingMeasurementData_t *RangingMeasure
 uint16_t MyVL53L0X_GetDistance(void)
 {
   VL53L0X_RangingMeasurementData_t RangingMeasurementData;
-  if (MyVL53L0X_SingleMeasure(&RangingMeasurementData) && RangingMeasurementData.RangeStatus !=4)
+  if (MyVL53L0X_SingleMeasure(&RangingMeasurementData) && RangingMeasurementData.RangeStatus != 4)
     return RangingMeasurementData.RangeMilliMeter;
   else
     return 0xFFFF;

@@ -549,11 +549,6 @@
           <GroupName>Module/VL53L0X</GroupName>
           <Files>
             <File>
-              <FileName>myvl53L0x.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\VL53L0X\myvl53L0x.c</FilePath>
-            </File>
-            <File>
               <FileName>vl53l0x_api.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL53L0X\API\src\vl53l0x_api.c</FilePath>
@@ -588,6 +583,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL53L0X\API\src\vl53l0x_platform_log.c</FilePath>
             </File>
+            <File>
+              <FileName>myvl53l0x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\VL53L0X\myvl53l0x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -607,6 +607,11 @@
               <FileName>VL53L1X_calibration.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\VL53L1X\API\VL53L1X_calibration.c</FilePath>
+            </File>
+            <File>
+              <FileName>myvl53l1x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\VL53L1X\myvl53l1x.c</FilePath>
             </File>
           </Files>
         </Group>

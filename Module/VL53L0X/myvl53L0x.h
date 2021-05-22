@@ -15,7 +15,7 @@
 #include "I2C/softi2c.h"
 #include "main.h"
 
-uint8_t MyVL53L0X_Init(uint8_t deviceAddr);
+uint8_t MyVL53L0X_Init(uint8_t deviceAddr, GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
 uint8_t MyVL53L0X_SetSenseMode(uint8_t senseMode);
 uint8_t MyVL53L0X_SingleMeasure(VL53L0X_RangingMeasurementData_t *RangingMeasurementData);
 uint16_t MyVL53L0X_GetDistance(void);

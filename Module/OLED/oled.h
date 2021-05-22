@@ -31,7 +31,7 @@ static void WriteData(uint8_t data);
 static void FastWrite_Start(void);
 static void FastWrite(uint8_t data);
 static void FastWrite_Stop(void);
-void OLED_Init(void);
+void OLED_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
 void OLED_SetPos(uint8_t x, uint8_t y);
 void OLED_Fill(uint8_t data);
 void OLED_CLS(void);

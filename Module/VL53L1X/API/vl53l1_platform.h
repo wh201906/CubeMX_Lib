@@ -16,7 +16,7 @@ typedef int8_t VL53L1X_ERROR;
 #define VL53L1X_ERROR_NONE ((VL53L1X_ERROR)0)
 #define VL53L1X_ERROR_ERROR ((VL53L1X_ERROR)-99)
 
-extern SoftI2C_Port VL53l1X_port;
+extern SoftI2C_Port VL53L1X_port;
 
 #ifdef __cplusplus
 extern "C"

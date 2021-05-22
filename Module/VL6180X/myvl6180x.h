@@ -11,7 +11,7 @@
 
 #define MYVL6180X_DEFAULT_ADDR 0x29
 
-uint8_t MyVL6180X_Init(uint8_t deviceAddr);
+uint8_t MyVL6180X_Init(uint8_t deviceAddr, GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
 int32_t MyVL6180X_GetDistance(void);
 int64_t MyVL6180X_GetLux(void);
 
