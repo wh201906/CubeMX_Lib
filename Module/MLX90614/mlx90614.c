@@ -42,10 +42,10 @@ uint8_t MLX90614_ReadROM(uint16_t deviceAddr, uint8_t romAddr, uint16_t *data)
   return MLX90614_ReadReg(deviceAddr, romAddr & 0x1F | 0x20, data);
 }
 
-void MLX90614_Init(void)
+void MLX90614_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID)
 {
   CRC8_Init(0x07); // the polynomial of SMBus is 0x07
-  SoftI2C_SetPort(&MLX90614_port, GPIOB, 6, GPIOB, 7);
+  SoftI2C_SetPort(&MLX90614_port, SCL_GPIO, SCL_PinID, SDA_GPIO, SDA_PinID);
   SoftI2C_Init(&MLX90614_port, 100000, SI2C_ADDR_7b);
   Delay_ms(600);
 }

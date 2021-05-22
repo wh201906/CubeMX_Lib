@@ -91,8 +91,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  OLED_Init();
-  MLX90614_Init();
+  OLED_Init(GPIOB, 8, GPIOB, 9);
+  MLX90614_Init(GPIOB, 6, GPIOB, 7);
   MLX90614_SetI2CAddr(0x5A,0);
   Delay_ms(100);
   OLED_SetTextSize(TEXTSIZE_SMALL);
