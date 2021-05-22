@@ -92,7 +92,7 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  AD9833_Init();
+  AD9833_Init(&hspi2);
   Delay_ms(1500);
   
   AD9833_SetFreq(400,0);

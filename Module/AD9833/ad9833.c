@@ -4,6 +4,8 @@ uint16_t ctrlReg=AD9833_REGADDR_CTRL;
 uint32_t freqReg[2]={AD9833_REGADDR_FREQ0,AD9833_REGADDR_FREQ1};
 uint16_t phaseReg[2]={AD9833_REGADDR_PHASE0,AD9833_REGADDR_PHASE1};
 
+SPI_HandleTypeDef* AD9833_hspi;
+
 void AD9833_SetWaveType(AD9833_WaveType type)
 {
   ctrlReg&=~AD9833_WAVE_MASK;
@@ -118,7 +120,7 @@ void AD9833_SetPhase(double phase, uint8_t regID)
   AD9833_SendRaw(phaseReg[regID]);
 }
 
-void AD9833_Init(void)
+void AD9833_Init(SPI_HandleTypeDef* hspi)
 {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   
@@ -129,6 +131,8 @@ void AD9833_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(AD9833_NSS_GPIO, &GPIO_InitStruct);
   HAL_GPIO_WritePin(AD9833_NSS_GPIO,AD9833_NSS_PIN,1);
+  
+  AD9833_hspi = hspi;
   
   AD9833_SetWaveType(AD9833_Sine);
   AD9833_SelectReg(0,0);

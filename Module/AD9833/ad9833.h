@@ -75,7 +75,7 @@ double AD9833_GetActuralPhase(uint16_t regVal);
 uint16_t AD9833_GetCurrentPhaseReg(uint8_t regID);
 void AD9833_SetPhase(double phase, uint8_t regID);
 
-void AD9833_Init(void);
+void AD9833_Init(SPI_HandleTypeDef* hspi);
 void AD9833_SendRaw(uint16_t data);
 void AD9833_SetResetState(uint8_t isReset);
 
