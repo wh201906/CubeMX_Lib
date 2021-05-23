@@ -37,21 +37,51 @@ uint16_t myitoa(int64_t val, char *str, uint8_t radix)
   return n;
 }
 
-// when the radix is 10, the len will not reach the maximum value of uint8_t.
-uint8_t myftoa(double val, char *str)
+// Fixed decimal digits
+uint8_t myftoa_FD(double val, char *str, uint8_t precision)
 {
-  int64_t part = val;
-  uint8_t len;
+  int64_t part;
+  uint8_t len, i;
+  double round = 0.5;
+
+  // for rounding
+  for (i = 0; i < precision; i++)
+    round /= 10;
+  val = (val < 0 ? val - round : val + round);
+
+  // for integer part
+  part = val;
   len = myitoa(part, str, 10);
+
+  // for decimal part
+  // The multiplication is only operated on the decimal part rather than the orignal val,
+  // which will decrease the precision loss
+  if (precision == 0)
+  {
+    str[len] = '\0';
+    return len;
+  }
   str[len++] = '.';
   val = (val < 0 ? part - val : val - part);
-  for (int i = 0; i < MYUTIL_FLOAT_PRECISION; i++) // print decimal part from left to right
+  for (i = 0; i < precision; i++) // print decimal part from left to right
   {
     val *= 10;
     str[len++] = (uint64_t)val % 10 + '0';
   }
   str[len] = '\0';
-  while (str[--len] == '0' && str[len - 1] != '.') // remove trailing zeros
+
+  return len;
+}
+
+// when the radix is 10, the len will not reach the maximum value of uint8_t.
+uint8_t myftoa(double val, char *str)
+{
+  uint8_t len;
+
+  len = myftoa_FD(val, str, MYUTIL_FLOAT_PRECISION);
+
+  // remove trailing zeros
+  while (str[--len] == '0' && str[len - 1] != '.')
     str[len] = '\0';
   len++;
   return len;
