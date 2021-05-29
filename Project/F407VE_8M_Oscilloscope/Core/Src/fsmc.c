@@ -63,15 +63,15 @@ void MX_FSMC_Init(void)
   Timing.AddressSetupTime = 15;
   Timing.AddressHoldTime = 15;
   Timing.DataSetupTime = 60;
-  Timing.BusTurnAroundDuration = 0;
+  Timing.BusTurnAroundDuration = 15;
   Timing.CLKDivision = 16;
   Timing.DataLatency = 17;
   Timing.AccessMode = FSMC_ACCESS_MODE_A;
   /* ExtTiming */
-  ExtTiming.AddressSetupTime = 9;
+  ExtTiming.AddressSetupTime = 15;
   ExtTiming.AddressHoldTime = 15;
-  ExtTiming.DataSetupTime = 8;
-  ExtTiming.BusTurnAroundDuration = 0;
+  ExtTiming.DataSetupTime = 60;
+  ExtTiming.BusTurnAroundDuration = 15;
   ExtTiming.CLKDivision = 16;
   ExtTiming.DataLatency = 17;
   ExtTiming.AccessMode = FSMC_ACCESS_MODE_A;

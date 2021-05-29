@@ -43,14 +43,17 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define ARRLEN 512
+#define DISPLAYLEN 320
+#define THRESHOLD 2048
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t val[128];
+uint16_t val[ARRLEN];
 uint8_t state=0;
+uint16_t counter=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,10 +105,10 @@ int main(void)
   LCD_Init();
   HAL_TIM_Base_Start(&htim2);
   LCD_Clear(WHITE);
-  HAL_ADC_Start_DMA(&hadc1, val, 128);
+  HAL_ADC_Start_DMA(&hadc1, val, ARRLEN);
   Delay_ms(200);
-  LCD_SetPointColor(BLACK);
-  LCD_SetBkGNDColor(BLUE);
+  LCD_SetPointColor(RED);
+  LCD_SetBkGNDColor(WHITE);
   Delay_ms(200);
   
   /* USER CODE END 2 */
@@ -117,12 +120,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if((state++)&1)
-      LCD_SetPointColor(BLACK);
-    else
-      LCD_SetPointColor(BLUE);
-    Delay_ms(100);
-    LCD_ShowString(30,125,200,12,12,"12x12");
+    Delay_ms(200);
   }
   /* USER CODE END 3 */
 }
@@ -171,18 +169,41 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint16_t ModCalc(int16_t num)
+{
+  return ((2 * ARRLEN + num) % ARRLEN);
+}
+
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
+  uint16_t start, i, rest;
   if(hadc==&hadc1)
   {
-    //__HAL_DMA_DISABLE(&hdma_adc1);
-    if((state++)&1)
-      LCD_SetPointColor(BLACK);
-    else
-      LCD_SetPointColor(BLUE);
-    //LCD_ShowString(30,125,200,12,12,"12x12");
-    Delay_ms(1000);
-    //__HAL_DMA_ENABLE(&hdma_adc1);
+    counter++;
+    counter%=1000;
+    if(counter!=0)
+      return;
+    rest = hadc1.DMA_Handle->Instance->NDTR;
+    if(!state)
+    {
+      __HAL_DMA_DISABLE(&hdma_adc1);
+      state = 1;
+      start = ModCalc(-rest-DISPLAYLEN);
+      hadc1.Instance->HTR = 0xFFF;
+      hadc1.Instance->LTR = THRESHOLD;
+      LCD_Clear(WHITE);
+      for(i=0;i<DISPLAYLEN;i++)
+      {
+        LCD_DrawPoint(val[(start+i)%ARRLEN]/17, i);
+      }
+      __HAL_DMA_ENABLE(&hdma_adc1);
+    }
+    else if(state)
+    {
+      hadc1.Instance->HTR = THRESHOLD;
+      hadc1.Instance->LTR = 0;
+      state = 0;
+    }
   }
 }
 /* USER CODE END 4 */
