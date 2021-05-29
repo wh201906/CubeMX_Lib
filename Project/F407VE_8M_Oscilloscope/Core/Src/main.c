@@ -117,6 +117,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if((state++)&1)
+      LCD_SetPointColor(BLACK);
+    else
+      LCD_SetPointColor(BLUE);
+    Delay_ms(100);
+    LCD_ShowString(30,125,200,12,12,"12x12");
   }
   /* USER CODE END 3 */
 }
@@ -169,14 +175,14 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 {
   if(hadc==&hadc1)
   {
-    __HAL_DMA_DISABLE(&hdma_adc1);
+    //__HAL_DMA_DISABLE(&hdma_adc1);
     if((state++)&1)
       LCD_SetPointColor(BLACK);
     else
       LCD_SetPointColor(BLUE);
-    LCD_ShowString(30,125,200,12,12,"12x12");
+    //LCD_ShowString(30,125,200,12,12,"12x12");
     Delay_ms(1000);
-    __HAL_DMA_ENABLE(&hdma_adc1);
+    //__HAL_DMA_ENABLE(&hdma_adc1);
   }
 }
 /* USER CODE END 4 */
