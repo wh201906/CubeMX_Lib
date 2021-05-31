@@ -6,11 +6,11 @@
 #define AD7190_DOUT() (HAL_GPIO_ReadPin(AD7190_DOUT_GPIO, AD7190_DOUT_PIN))
 #define AD7190_Delay() Delay_us(1)
 
-uint8_t AD7190_Init(void);
-uint8_t AD7190_GetID(void);
-
-uint8_t AD7190_Write(uint32_t data, uint8_t bitLen);
-uint32_t AD7190_Read(uint8_t len);
+uint8_t AD7190_GetID(void)
+{
+  AD7190_Write(0x20, 8);
+  return AD7190_Read(8);
+}
 
 void AD7190_Reset(void)
 {
@@ -59,6 +59,48 @@ uint8_t AD7190_Init(void)
   return AD7190_GetID();
 }
 
-uint32_t AD7190_Read(uint8_t len)
+uint32_t AD7190_Read(uint8_t bitLen)
 {
+  uint32_t result = 0;
+  AD7190_SCK(1);
+  AD7190_Delay();
+  AD7190_CS(1);
+  AD7190_Delay();
+  AD7190_CS(0);
+  AD7190_Delay();
+  while (bitLen--)
+  {
+    AD7190_SCK(0);
+    AD7190_Delay();
+    result |= AD7190_DOUT();
+    result <<= 1;
+    AD7190_SCK(1);
+    AD7190_Delay();
+  }
+  AD7190_CS(1);
+  return result;
+}
+
+uint8_t AD7190_Write(uint32_t data, uint8_t bitLen)
+{
+  AD7190_SCK(1);
+  AD7190_Delay();
+  AD7190_CS(1);
+  AD7190_Delay();
+  AD7190_CS(0);
+  AD7190_Delay();
+  while (bitLen--)
+  {
+    AD7190_SCK(0);
+    uint8_t shiftNum = 32 - bitLen;
+    uint32_t afterShift = data << (32 - bitLen);
+    uint8_t msb = (data << (32 - bitLen)) & 0x80000000;
+    uint8_t currBit = !!((data << (32 - bitLen)) & 0x80000000);
+    AD7190_DIN(!!((data << (32 - bitLen)) & 0x80000000));
+    AD7190_Delay();
+    AD7190_SCK(1);
+    AD7190_Delay();
+  }
+  AD7190_CS(1);
+  return 1;
 }
