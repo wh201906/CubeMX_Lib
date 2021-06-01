@@ -8,8 +8,14 @@
 
 uint8_t AD7190_GetID(void)
 {
-  AD7190_Write(0x20, 8);
+  AD7190_Write(0x60, 8);
   return AD7190_Read(8);
+}
+
+uint32_t AD7190_GetConf(void)
+{
+  AD7190_Write(0x50, 8);
+  return AD7190_Read(24);
 }
 
 void AD7190_Reset(void)
@@ -17,6 +23,11 @@ void AD7190_Reset(void)
   uint8_t i;
   AD7190_DIN(1);
   AD7190_SCK(1);
+  AD7190_Delay();
+  AD7190_CS(1);
+  AD7190_Delay();
+  AD7190_CS(0);
+  AD7190_Delay();
   for (i = 0; i < 42; i++) // at least 40 clk
   {
     AD7190_SCK(0);
@@ -24,6 +35,8 @@ void AD7190_Reset(void)
     AD7190_SCK(1);
     AD7190_Delay();
   }
+  AD7190_CS(1);
+  Delay_us(500);
 }
 
 uint8_t AD7190_Init(void)
@@ -62,19 +75,15 @@ uint8_t AD7190_Init(void)
 uint32_t AD7190_Read(uint8_t bitLen)
 {
   uint32_t result = 0;
-  AD7190_SCK(1);
-  AD7190_Delay();
-  AD7190_CS(1);
-  AD7190_Delay();
   AD7190_CS(0);
   AD7190_Delay();
   while (bitLen--)
   {
     AD7190_SCK(0);
     AD7190_Delay();
-    result |= AD7190_DOUT();
     result <<= 1;
-    AD7190_SCK(1);
+    result |= AD7190_DOUT(); // sample before LSB changed
+    AD7190_SCK(1); // the chip will not hold the LSB after the posedge 
     AD7190_Delay();
   }
   AD7190_CS(1);
@@ -83,23 +92,17 @@ uint32_t AD7190_Read(uint8_t bitLen)
 
 uint8_t AD7190_Write(uint32_t data, uint8_t bitLen)
 {
-  AD7190_SCK(1);
-  AD7190_Delay();
-  AD7190_CS(1);
-  AD7190_Delay();
   AD7190_CS(0);
   AD7190_Delay();
+  data <<= 32 - bitLen; 
   while (bitLen--)
   {
     AD7190_SCK(0);
-    uint8_t shiftNum = 32 - bitLen;
-    uint32_t afterShift = data << (32 - bitLen);
-    uint8_t msb = (data << (32 - bitLen)) & 0x80000000;
-    uint8_t currBit = !!((data << (32 - bitLen)) & 0x80000000);
-    AD7190_DIN(!!((data << (32 - bitLen)) & 0x80000000));
+    AD7190_DIN(!!(data & 0x80000000));
     AD7190_Delay();
     AD7190_SCK(1);
     AD7190_Delay();
+    data <<= 1;
   }
   AD7190_CS(1);
   return 1;

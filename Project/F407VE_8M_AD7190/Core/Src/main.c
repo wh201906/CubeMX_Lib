@@ -66,7 +66,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint8_t ID;
+  uint32_t ID, conf;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,6 +101,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     ID = AD7190_GetID();
+    conf = AD7190_GetConf();
+    Delay_ms(500);
   }
   /* USER CODE END 3 */
 }
