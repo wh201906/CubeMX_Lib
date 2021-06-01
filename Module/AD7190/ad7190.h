@@ -20,9 +20,16 @@
 #define AD7190_DOUT_CLKEN() __HAL_RCC_GPIOC_CLK_ENABLE()
 
 uint8_t AD7190_Init(void);
+uint8_t AD7190_GetState(void);
 uint8_t AD7190_GetID(void);
+uint32_t AD7190_GetMode(void);
+uint8_t AD7190_SetMode(uint32_t mode);
 uint32_t AD7190_GetConf(void);
 uint8_t AD7190_SetConf(uint32_t conf);
+uint32_t AD7190_GetData(void);
+uint32_t AD7190_GetDataWithState(void);
+uint8_t AD7190_GetGPOCON(void);
+uint8_t AD7190_SetGPOCON(uint8_t GPOCON);
 void AD7190_Reset(void);
 
 uint8_t AD7190_Write(uint32_t data, uint8_t bitLen);

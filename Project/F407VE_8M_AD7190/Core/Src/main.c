@@ -68,6 +68,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t ID, conf;
+  uint8_t str[100];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -103,11 +104,23 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    ID = AD7190_GetID();
-    conf = AD7190_GetConf();
-    printf("ID: 0x%x\r\n", ID);
-    printf("Conf: 0x%x\r\n", conf);
-    Delay_ms(500);
+    if(MyUSART1_ReadUntil(str,'>'))
+    {
+      if(str[0]=='0')
+      {
+        AD7190_Reset();
+        printf("Reset sequence sent\r\n");
+      }
+      else if(str[0]=='1')
+        printf("ID: 0x%x\r\n", AD7190_GetID());
+      else if(str[0]=='2')
+        printf("Conf: 0x%x\r\n", AD7190_GetConf());
+      else if(str[0]=='3')
+        printf("State: 0x%x\r\n", AD7190_GetState());
+      else if(str[0]=='4')
+        printf("Mode: 0x%x\r\n", AD7190_GetMode());
+    }
+    Delay_ms(20);
   }
   /* USER CODE END 3 */
 }
