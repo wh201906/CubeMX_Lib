@@ -528,6 +528,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\AD7190\ad7190.c</FilePath>
             </File>
+            <File>
+              <FileName>myusart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>util.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -18,6 +18,13 @@ uint32_t AD7190_GetConf(void)
   return AD7190_Read(24);
 }
 
+uint8_t AD7190_SetConf(uint32_t conf)
+{
+  AD7190_Write(0x10, 8);
+  AD7190_Write(conf, 32);
+  return (AD7190_GetConf() == conf);
+}
+
 void AD7190_Reset(void)
 {
   uint8_t i;

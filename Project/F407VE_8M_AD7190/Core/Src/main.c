@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "AD7190/ad7190.h"
+#include "USART/myusart1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,6 +92,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   AD7190_Init();
+  MyUSART1_Init(&huart1);
+  printf("AD7190 Test\r\n\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,6 +105,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     ID = AD7190_GetID();
     conf = AD7190_GetConf();
+    printf("ID: 0x%x\r\n", ID);
+    printf("Conf: 0x%x\r\n", conf);
     Delay_ms(500);
   }
   /* USER CODE END 3 */

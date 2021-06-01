@@ -22,6 +22,7 @@
 uint8_t AD7190_Init(void);
 uint8_t AD7190_GetID(void);
 uint32_t AD7190_GetConf(void);
+uint8_t AD7190_SetConf(uint32_t conf);
 void AD7190_Reset(void);
 
 uint8_t AD7190_Write(uint32_t data, uint8_t bitLen);
