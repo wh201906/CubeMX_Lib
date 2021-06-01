@@ -57,7 +57,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void demo()
+{
+  AD7190_SetConf(0x000108); // //write configuration register,unipolar operation,gain=1,channel:AIN1 to AIN2
+  AD7190_SetMode(0x0803FF); // write mode register,internal 4.92MHz clock,output data rate=4.7Hz
+}
 /* USER CODE END 0 */
 
 /**
@@ -119,6 +123,13 @@ int main(void)
         printf("State: 0x%x\r\n", AD7190_GetState());
       else if(str[0]=='4')
         printf("Mode: 0x%x\r\n", AD7190_GetMode());
+      else if(str[0]=='5')
+        printf("Data: 0x%x\r\n", AD7190_GetData());
+      else if(str[0]=='6')
+      {
+        demo();
+        printf("Demo\r\n");
+      }
     }
     Delay_ms(20);
   }
