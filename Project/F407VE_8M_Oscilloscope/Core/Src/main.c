@@ -53,6 +53,8 @@
 /* USER CODE BEGIN PV */
 uint16_t val[ARRLEN];
 uint16_t waveBuf[DISPLAYLEN];
+double scaler = 0.07;
+uint8_t displayMode = 0; // 0: dot, 1: vector
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -179,7 +181,7 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
   if (hadc == &hadc1)
   {
     __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
-    Delay_ms(50);
+    Delay_ms(100);
     rest = hadc1.DMA_Handle->Instance->NDTR;
     if (hadc1.Instance->HTR == THRESHOLD)
     {
@@ -187,14 +189,33 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
       hadc1.Instance->LTR = THRESHOLD;
       __HAL_DMA_DISABLE(&hdma_adc1);
       start = ModCalc(-rest - DISPLAYLEN);
-      LCD_SetPointColor(WHITE);
-      for (i = 1; i < DISPLAYLEN; i++)
-        LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
-      for (i = 0; i < DISPLAYLEN; i++)
-        waveBuf[i] = val[(start + i) % ARRLEN] / 17;
-      LCD_SetPointColor(RED);
-      for (i = 1; i < DISPLAYLEN; i++)
-        LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
+      if(displayMode == 0)
+      {
+        LCD_SetPointColor(WHITE);
+        for (i = 0; i < DISPLAYLEN; i++)
+        {
+          LCD_DrawPoint(waveBuf[i], i);
+        }
+        for (i = 0; i < DISPLAYLEN; i++)
+          waveBuf[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
+        LCD_SetPointColor(RED);
+        for (i = 1; i < DISPLAYLEN; i++)
+        {
+          LCD_DrawPoint(waveBuf[i], i);
+        }
+      }
+      else
+      {
+        LCD_SetPointColor(WHITE);
+        for (i = 1; i < DISPLAYLEN; i++)
+          LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
+        for (i = 0; i < DISPLAYLEN; i++)
+          waveBuf[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
+        LCD_SetPointColor(RED);
+        for (i = 1; i < DISPLAYLEN; i++)
+          LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
+      }
+
       __HAL_DMA_ENABLE(&hdma_adc1);
     }
     else
