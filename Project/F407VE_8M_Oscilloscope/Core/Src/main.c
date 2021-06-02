@@ -52,8 +52,7 @@
 
 /* USER CODE BEGIN PV */
 uint16_t val[ARRLEN];
-uint8_t state=0;
-uint16_t counter=0;
+uint16_t waveBuf[DISPLAYLEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,7 +109,7 @@ int main(void)
   LCD_SetPointColor(RED);
   LCD_SetBkGNDColor(WHITE);
   Delay_ms(200);
-  
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -174,36 +173,36 @@ uint16_t ModCalc(int16_t num)
   return ((2 * ARRLEN + num) % ARRLEN);
 }
 
-void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
 {
   uint16_t start, i, rest;
-  if(hadc==&hadc1)
+  if (hadc == &hadc1)
   {
-    counter++;
-    counter%=1000;
-    if(counter!=0)
-      return;
+    __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
+    Delay_ms(50);
     rest = hadc1.DMA_Handle->Instance->NDTR;
-    if(!state)
+    if (hadc1.Instance->HTR == THRESHOLD)
     {
-      __HAL_DMA_DISABLE(&hdma_adc1);
-      state = 1;
-      start = ModCalc(-rest-DISPLAYLEN);
       hadc1.Instance->HTR = 0xFFF;
       hadc1.Instance->LTR = THRESHOLD;
-      LCD_Clear(WHITE);
-      for(i=0;i<DISPLAYLEN;i++)
-      {
-        LCD_DrawPoint(val[(start+i)%ARRLEN]/17, i);
-      }
+      __HAL_DMA_DISABLE(&hdma_adc1);
+      start = ModCalc(-rest - DISPLAYLEN);
+      LCD_SetPointColor(WHITE);
+      for (i = 1; i < DISPLAYLEN; i++)
+        LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
+      for (i = 0; i < DISPLAYLEN; i++)
+        waveBuf[i] = val[(start + i) % ARRLEN] / 17;
+      LCD_SetPointColor(RED);
+      for (i = 1; i < DISPLAYLEN; i++)
+        LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
       __HAL_DMA_ENABLE(&hdma_adc1);
     }
-    else if(state)
+    else
     {
       hadc1.Instance->HTR = THRESHOLD;
       hadc1.Instance->LTR = 0;
-      state = 0;
     }
+    __HAL_ADC_ENABLE_IT(hadc, ADC_IT_AWD);
   }
 }
 /* USER CODE END 4 */
