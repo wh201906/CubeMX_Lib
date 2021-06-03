@@ -67,13 +67,15 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void Wave_DrawLine(int16_t* buf, uint16_t len)
+void Wave_DrawLine(int16_t* lastBuf, int16_t* currBuf, uint16_t len, uint32_t backColor, uint32_t color)
 {
   uint16_t i, j;
   for(i = 0; i<len;i++)
   {
-    for(j = buf[2*i]; j<=buf[2*i+1]; j++)
-      LCD_DrawPoint(j, i);
+    for(j = lastBuf[2*i]; j<=lastBuf[2*i+1]; j++)
+      LCD_Fast_DrawPoint(j, i, backColor);
+    for(j = currBuf[2*i]; j<=currBuf[2*i+1]; j++)
+      LCD_Fast_DrawPoint(j, i, color);
   }
 }
 
@@ -265,16 +267,12 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
       {
         LCD_SetPointColor(WHITE);
         for (i = 0; i < DISPLAYLEN; i++)
-        {
           LCD_DrawPoint(lastWave[i], i);
-        }
         for (i = 0; i < DISPLAYLEN; i++)
           currWave[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
         LCD_SetPointColor(RED);
         for (i = 1; i < DISPLAYLEN; i++)
-        {
           LCD_DrawPoint(currWave[i], i);
-        }
       }
       else
       {
@@ -286,10 +284,8 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
           Wave_CalcLine(currVal, i, lastVal, i - 1, currWave);
           lastVal=currVal;
         }
-        LCD_SetPointColor(WHITE);
-        Wave_DrawLine(lastWave, DISPLAYLEN);
         LCD_SetPointColor(RED);
-        Wave_DrawLine(currWave, DISPLAYLEN);
+        Wave_DrawLine(lastWave, currWave, DISPLAYLEN, WHITE, RED);
       }
       __HAL_DMA_ENABLE(&hdma_adc1);
     }
