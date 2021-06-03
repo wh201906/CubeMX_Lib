@@ -19,18 +19,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
-#include "dma.h"
-#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "fsmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
-#include "LCD/lcd.h"
-#include <string.h>
+#include "USART/myusart1.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,19 +40,14 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define ARRLEN 512
-#define DISPLAYLEN 320
-#define THRESHOLD 2048
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t val[ARRLEN];
-int16_t waveBuf1[DISPLAYLEN * 2], waveBuf2[DISPLAYLEN * 2];
-uint8_t waveState = 0;
-double scaler = 0.07;
-uint8_t displayMode = 1; // 0: dot, 1: vector
+uint8_t counter = 0;
+uint8_t tick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,70 +58,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void Wave_DrawLine(int16_t *lastBuf, int16_t *currBuf, uint16_t len, uint32_t backColor, uint32_t color)
-{
-  uint16_t i, j;
-  for (i = 0; i < len; i++)
-  {
-    for (j = lastBuf[2 * i]; j <= lastBuf[2 * i + 1]; j++)
-      LCD_Fast_DrawPoint(j, i, backColor);
-    for (j = currBuf[2 * i]; j <= currBuf[2 * i + 1]; j++)
-      LCD_Fast_DrawPoint(j, i, color);
-  }
-}
 
-void Wave_CalcLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, int16_t *buf)
-{
-  uint16_t t;
-  int xerr = 0, yerr = 0, delta_x, delta_y, distance;
-  int incx, incy, uRow, uCol;
-  delta_x = x2 - x1;
-  delta_y = y2 - y1;
-  uRow = x1;
-  uCol = y1;
-  if (delta_x > 0)
-    incx = 1;
-  else if (delta_x == 0)
-    incx = 0;
-  else
-  {
-    incx = -1;
-    delta_x = -delta_x;
-  }
-  if (delta_y > 0)
-    incy = 1;
-  else if (delta_y == 0)
-    incy = 0;
-  else
-  {
-    incy = -1;
-    delta_y = -delta_y;
-  }
-  distance = (delta_x > delta_y) ? delta_x : delta_y;
-  for (t = 0; t <= distance + 1; t++)
-  {
-
-    if (buf[uCol * 2] == -1 && buf[uCol * 2 + 1] == -1)
-      buf[uCol * 2] = buf[uCol * 2 + 1] = uRow;
-    else if (uRow < buf[uCol * 2])
-      buf[uCol * 2] = uRow;
-    else if (uRow > buf[uCol * 2 + 1])
-      buf[uCol * 2 + 1] = uRow;
-
-    xerr += delta_x;
-    yerr += delta_y;
-    if (xerr > distance)
-    {
-      xerr -= distance;
-      uRow += incx;
-    }
-    if (yerr > distance)
-    {
-      yerr -= distance;
-      uCol += incy;
-    }
-  }
-}
 /* USER CODE END 0 */
 
 /**
@@ -161,22 +89,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
-  MX_ADC1_Init();
-  MX_TIM2_Init();
-  MX_FSMC_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  LCD_Init();
-  HAL_TIM_Base_Start(&htim2);
-  LCD_Clear(WHITE);
-  HAL_ADC_Start_DMA(&hadc1, val, ARRLEN);
-  Delay_ms(200);
-  LCD_SetPointColor(RED);
-  LCD_SetBkGNDColor(WHITE);
-  Delay_ms(200);
-
+  MyUSART1_Init(&huart1);
+  printf("EC11 Encoder test\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -186,7 +103,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(200);
   }
   /* USER CODE END 3 */
 }
@@ -221,7 +137,8 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -234,68 +151,26 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint16_t ModCalc(int16_t num)
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  return ((2 * ARRLEN + num) % ARRLEN);
-}
-
-void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
-{
-  uint16_t start, rest, i, j, lastVal, currVal;
-  int16_t *currWave, *lastWave;
-  if (hadc == &hadc1)
+  // KEY: two ports, connect to PB7 and GND
+  // A/B phase: connect to PB8/PB9
+  // GND(between A/B phase): connect to GND
+  GPIO_PinState state;
+  if(GPIO_Pin == GPIO_PIN_7)
   {
-    __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
-    Delay_ms(50);
-    
-    // make level trigger into edge trigger
-    if (hadc1.Instance->HTR == THRESHOLD)
-    {
-      hadc1.Instance->HTR = 0xFFF;
-      hadc1.Instance->LTR = THRESHOLD;
-
-      // switch display buffer
-      lastWave = waveState ? waveBuf2 : waveBuf1;
-      currWave = waveState ? waveBuf1 : waveBuf2;
-      waveState = !waveState;
-
-      __HAL_DMA_DISABLE(&hdma_adc1);
-      rest = hadc1.DMA_Handle->Instance->NDTR;
-      start = ModCalc(-rest - DISPLAYLEN);
-      // dot mode
-      if (displayMode == 0)
-      {
-        LCD_SetPointColor(WHITE);
-        for (i = 0; i < DISPLAYLEN; i++)
-          LCD_DrawPoint(lastWave[i], i);
-        for (i = 0; i < DISPLAYLEN; i++)
-          currWave[i] = val[(start + i) % ARRLEN] * scaler;
-        LCD_SetPointColor(RED);
-        for (i = 1; i < DISPLAYLEN; i++)
-          LCD_DrawPoint(currWave[i], i);
-      }
-      // vector mode
-      else
-      {
-        // calculate first, then display all points
-        memset(currWave, -1, sizeof(waveBuf1));
-        lastVal = val[(start + 0) % ARRLEN] * scaler;
-        for (i = 1; i < DISPLAYLEN; i++)
-        {
-          currVal = val[(start + i) % ARRLEN] * scaler;
-          Wave_CalcLine(currVal, i, lastVal, i - 1, currWave);
-          lastVal = currVal;
-        }
-        Wave_DrawLine(lastWave, currWave, DISPLAYLEN, WHITE, RED);
-      }
-      __HAL_DMA_ENABLE(&hdma_adc1);
-    }
-    else
-    {
-      hadc1.Instance->HTR = THRESHOLD;
-      hadc1.Instance->LTR = 0;
-    }
-    __HAL_ADC_ENABLE_IT(hadc, ADC_IT_AWD);
+    Delay_ms(10);
+    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_RESET)
+      printf("Pressed %d\r\n", ++tick);
+  }
+  else if(GPIO_Pin == GPIO_PIN_8)
+  {
+    state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9);
+    Delay_ms(1);
+    if(state == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) && state == GPIO_PIN_SET)
+      printf("Left Rotate %d\r\n", --counter);
+    else if(state == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) && state == GPIO_PIN_RESET)
+      printf("Right Rotate %d\r\n", ++counter);
   }
 }
 /* USER CODE END 4 */
@@ -315,7 +190,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
