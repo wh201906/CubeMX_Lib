@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "LCD/lcd.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,9 +53,10 @@
 
 /* USER CODE BEGIN PV */
 uint16_t val[ARRLEN];
-uint16_t waveBuf[DISPLAYLEN];
+uint16_t waveBuf1[DISPLAYLEN * 2], waveBuf2[DISPLAYLEN * 2];
+uint8_t waveState = 0;
 double scaler = 0.07;
-uint8_t displayMode = 0; // 0: dot, 1: vector
+uint8_t displayMode = 1; // 0: dot, 1: vector
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +67,71 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void Wave_DrawLine(int16_t* buf, uint16_t len)
+{
+  uint16_t i, j;
+  for(i = 0; i<len;i++)
+  {
+    for(j = buf[2*i]; j<=buf[2*i+1]; j++)
+      LCD_DrawPoint(j, i);
+  }
+}
 
+void Wave_CalcLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, int16_t* buf)
+{
+  uint16_t t;
+  int xerr = 0, yerr = 0, delta_x, delta_y, distance;
+  int incx, incy, uRow, uCol;
+  delta_x = x2 - x1; //计算坐标增量
+  delta_y = y2 - y1;
+  uRow = x1;
+  uCol = y1;
+  if (delta_x > 0)
+    incx = 1; //设置单步方向
+  else if (delta_x == 0)
+    incx = 0; //垂直线
+  else
+  {
+    incx = -1;
+    delta_x = -delta_x;
+  }
+  if (delta_y > 0)
+    incy = 1;
+  else if (delta_y == 0)
+    incy = 0; //水平线
+  else
+  {
+    incy = -1;
+    delta_y = -delta_y;
+  }
+  if (delta_x > delta_y)
+    distance = delta_x; //选取基本增量坐标轴
+  else
+    distance = delta_y;
+  for (t = 0; t <= distance + 1; t++) //画线输出
+  {
+    
+    if(buf[uCol*2]==-1 && buf[uCol*2+1]==-1)
+      buf[uCol*2]=buf[uCol*2+1]=uRow;
+    else if(uRow<buf[uCol*2])
+      buf[uCol*2]=uRow;
+    else if(uRow>buf[uCol*2+1])
+      buf[uCol*2+1]=uRow;
+    
+    xerr += delta_x;
+    yerr += delta_y;
+    if (xerr > distance)
+    {
+      xerr -= distance;
+      uRow += incx;
+    }
+    if (yerr > distance)
+    {
+      yerr -= distance;
+      uCol += incy;
+    }
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -177,45 +243,54 @@ uint16_t ModCalc(int16_t num)
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
 {
-  uint16_t start, i, rest;
+  uint16_t start, rest, i, j, lastVal, currVal;
+  int16_t *currWave, *lastWave;
   if (hadc == &hadc1)
   {
     __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
-    Delay_ms(100);
+    Delay_ms(50);
     rest = hadc1.DMA_Handle->Instance->NDTR;
     if (hadc1.Instance->HTR == THRESHOLD)
     {
       hadc1.Instance->HTR = 0xFFF;
       hadc1.Instance->LTR = THRESHOLD;
+
+      lastWave = waveState ? waveBuf2 : waveBuf1;
+      currWave = waveState ? waveBuf1 : waveBuf2;
+      waveState = !waveState;
+
       __HAL_DMA_DISABLE(&hdma_adc1);
       start = ModCalc(-rest - DISPLAYLEN);
-      if(displayMode == 0)
+      if (displayMode == 0)
       {
         LCD_SetPointColor(WHITE);
         for (i = 0; i < DISPLAYLEN; i++)
         {
-          LCD_DrawPoint(waveBuf[i], i);
+          LCD_DrawPoint(lastWave[i], i);
         }
         for (i = 0; i < DISPLAYLEN; i++)
-          waveBuf[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
+          currWave[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
         LCD_SetPointColor(RED);
         for (i = 1; i < DISPLAYLEN; i++)
         {
-          LCD_DrawPoint(waveBuf[i], i);
+          LCD_DrawPoint(currWave[i], i);
         }
       }
       else
       {
+        memset(currWave, -1, sizeof(waveBuf1));
+        lastVal = val[(start + 0) % ARRLEN] * scaler;
+        for (i = 1; i < DISPLAYLEN; i++)
+        {
+          currVal = val[(start + i) % ARRLEN] * scaler;
+          Wave_CalcLine(currVal, i, lastVal, i - 1, currWave);
+          lastVal=currVal;
+        }
         LCD_SetPointColor(WHITE);
-        for (i = 1; i < DISPLAYLEN; i++)
-          LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
-        for (i = 0; i < DISPLAYLEN; i++)
-          waveBuf[i] = (uint16_t)(val[(start + i) % ARRLEN] * scaler);
+        Wave_DrawLine(lastWave, DISPLAYLEN);
         LCD_SetPointColor(RED);
-        for (i = 1; i < DISPLAYLEN; i++)
-          LCD_DrawLine(waveBuf[i], i, waveBuf[i - 1], i - 1);
+        Wave_DrawLine(currWave, DISPLAYLEN);
       }
-
       __HAL_DMA_ENABLE(&hdma_adc1);
     }
     else
