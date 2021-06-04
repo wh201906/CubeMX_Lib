@@ -7,6 +7,7 @@
 
 #define AD9834_NSS_PIN GPIO_PIN_14
 #define AD9834_NSS_GPIO GPIOB
+#define AD9834_NSS_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 
 #ifndef POW2_28
 #define POW2_28 268435456u
@@ -41,7 +42,12 @@
 // freq/phase Register selection, available in AD9834_ctrlReg
 #define AD9834_REGSEL_MASK 0x0C00u
 #define AD9834_REGSEL_F1 0x0800u
+#define AD9834_REGSEL_F0 0x0000u
 #define AD9834_REGSEL_P1 0x0400u
+#define AD9834_REGSEL_P0 0x0000u
+
+// Register selection source, from hardware/software
+#define AD9834_REGSEL_HW 0x0200u // hardware: DB9 = 1, software: DB9 = 0
 
 // should be set before configuration, to disable output, available in AD9834_ctrlReg
 #define AD9834_RESET 0x0100u
@@ -77,7 +83,7 @@ double AD9834_GetActuralFreq(uint32_t regVal);
 uint32_t AD9834_GetCurrentFreqReg(uint8_t regID);
 void AD9834_SetFreq(double freq, uint8_t regID);
 void AD9834_SetFreqMSB(double freq, uint8_t regID); // should be set to MSB mode First
-void AD9834_SetFreqLSB(double freq, uint8_t regID); // should be set to lSB mode First
+void AD9834_SetFreqLSB(double freq, uint8_t regID); // should be set to LSB mode First
 
 uint16_t AD9834_Phase2Reg(double phase, uint8_t regID);
 double AD9834_GetActuralPhase(uint16_t regVal);
@@ -87,5 +93,6 @@ void AD9834_SetPhase(double phase, uint8_t regID);
 void AD9834_Init(SPI_HandleTypeDef *hspi);
 void AD9834_SendRaw(uint16_t data);
 void AD9834_SetResetState(uint8_t isReset);
+void AD9834_SetRegSelSrc(uint8_t isHw); // 1: Hardware 0: Software
 
 #endif

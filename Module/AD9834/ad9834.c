@@ -134,7 +134,7 @@ void AD9834_SetPhase(double phase, uint8_t regID)
 
 void AD9834_Init(SPI_HandleTypeDef *hspi)
 {
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+  AD9834_NSS_CLKEN();
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Pin = AD9834_NSS_PIN;
@@ -174,5 +174,14 @@ void AD9834_SetResetState(uint8_t isReset)
     AD9834_ctrlReg |= AD9834_RESET;
   else
     AD9834_ctrlReg &= ~AD9834_RESET;
+  AD9834_SendRaw(AD9834_ctrlReg);
+}
+
+void AD9834_SetRegSelSrc(uint8_t isHw)
+{
+  if (isHw)
+    AD9834_ctrlReg |= AD9834_REGSEL_HW;
+  else
+    AD9834_ctrlReg &= ~AD9834_REGSEL_HW;
   AD9834_SendRaw(AD9834_ctrlReg);
 }

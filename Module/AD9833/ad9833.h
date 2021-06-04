@@ -7,6 +7,7 @@
 
 #define AD9833_NSS_PIN GPIO_PIN_14
 #define AD9833_NSS_GPIO GPIOB
+#define AD9833_NSS_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 
 #ifndef POW2_28
 #define POW2_28 268435456u
@@ -39,7 +40,9 @@
 // freq/phase Register selection, available in AD9833_ctrlReg
 #define AD9833_REGSEL_MASK 0x0C00u
 #define AD9833_REGSEL_F1 0x0800u
+#define AD9833_REGSEL_F0 0x0000u
 #define AD9833_REGSEL_P1 0x0400u
+#define AD9833_REGSEL_P0 0x0000u
 
 // should be set before configuration, to disable output, available in AD9833_ctrlReg
 #define AD9833_RESET 0x0100u
@@ -69,7 +72,7 @@ double AD9833_GetActuralFreq(uint32_t regVal);
 uint32_t AD9833_GetCurrentFreqReg(uint8_t regID);
 void AD9833_SetFreq(double freq, uint8_t regID);
 void AD9833_SetFreqMSB(double freq, uint8_t regID); // should be set to MSB mode First
-void AD9833_SetFreqLSB(double freq, uint8_t regID); // should be set to lSB mode First
+void AD9833_SetFreqLSB(double freq, uint8_t regID); // should be set to LSB mode First
 
 uint16_t AD9833_Phase2Reg(double phase, uint8_t regID);
 double AD9833_GetActuralPhase(uint16_t regVal);
