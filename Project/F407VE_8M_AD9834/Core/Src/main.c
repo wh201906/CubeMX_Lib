@@ -72,6 +72,7 @@ int main(void)
   char str[50];
   uint8_t type = 11;
   uint32_t freq = 1000000;
+  uint32_t len;
   double cusFreq;
   /* USER CODE END 1 */
 
@@ -114,9 +115,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (MyUSART1_ReadUntil(str, '>'))
+    if ((len = MyUSART1_ReadUntil(str, '>'))) // use len as the condition
     {
       AD9834_SetRegSelSrc(0);
+      //str[len - 1] = '\0';
       if (str[0] == '0') // Change Iout type
       {
         type++;

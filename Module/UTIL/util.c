@@ -118,7 +118,7 @@ double myatof(char *str)
 
   val = myatoi(str); // get int part
 
-  while (str[len] != '\0') // get string length
+  while ((str[len] >= '0' && str[len] <= '9') || str[len] == '.' || str[len] == '-') // get float string length
     len++;
   for (; dotPos < len; dotPos++) // get dot position
     if (str[dotPos] == '.')
