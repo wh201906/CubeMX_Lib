@@ -54,14 +54,14 @@
 
 typedef enum _AD9834_IoutWaveType
 {
-  AD9834_Off = 0,
+  AD9834_IOff = 0,
   AD9834_Sine,
   AD9834_Tri,
 } AD9834_IoutWaveType;
 
 typedef enum _AD9834_SoutWaveType
 {
-  AD9834_Off = 0,
+  AD9834_SOff = 0,
   AD9834_Square,
   AD9834_Square2,
   AD9834_Square_Comp,

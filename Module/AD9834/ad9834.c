@@ -1,4 +1,4 @@
-#include "ad9833.h"
+#include "ad9834.h"
 
 uint16_t AD9834_ctrlReg = AD9834_REGADDR_CTRL;
 uint32_t AD9834_freqReg[2] = {AD9834_REGADDR_FREQ0, AD9834_REGADDR_FREQ1};
@@ -17,7 +17,7 @@ void AD9834_SetWaveType(AD9834_IoutWaveType IoutType, AD9834_SoutWaveType SoutTy
   }
   else
   {
-    if (SoutType == AD9834_Off)
+    if (SoutType == AD9834_SOff)
       AD9834_ctrlReg |= AD9834_WAVE_SQOFF;
     else if (SoutType == AD9834_Square)
       AD9834_ctrlReg |= AD9834_WAVE_SQUARE;
@@ -26,7 +26,7 @@ void AD9834_SetWaveType(AD9834_IoutWaveType IoutType, AD9834_SoutWaveType SoutTy
     else if (SoutType == AD9834_Square_Comp)
       AD9834_ctrlReg |= AD9834_WAVE_SQUARE_COMP;
 
-    if (IoutType == AD9834_Off)
+    if (IoutType == AD9834_IOff)
       AD9834_ctrlReg |= AD9834_WAVE_DACOFF;
     else if (IoutType == AD9834_Sine)
       AD9834_ctrlReg |= AD9834_WAVE_SINE;
@@ -146,7 +146,8 @@ void AD9834_Init(SPI_HandleTypeDef *hspi)
 
   AD9834_hspi = hspi;
 
-  AD9834_SetWaveType(AD9834_Sine);
+  AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
+  AD9834_SetRegSelSrc(0);
   AD9834_SelectReg(0, 0);
   AD9834_SetFreqConfMode(AD9834_Full);
 }
