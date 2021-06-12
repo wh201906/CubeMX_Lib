@@ -19,18 +19,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
-#include "dma.h"
-#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
-#include "SIGNAL/sigpara.h"
 #include "USART/myusart1.h"
-#include "UTIL/util.h"
+#include "ADS1115/ads1115.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,7 +37,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DATA_LEN 10
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,8 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t rawData[DATA_LEN];
-float32_t rawData_f[DATA_LEN];
 
 /* USER CODE END PV */
 
@@ -64,13 +58,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-float32_t RMS_Process()
-{
-  uint32_t i;
-  for(i=0;i<DATA_LEN;i++)
-    rawData_f[i]=rawData[i];
-  return SigPara_RMS(rawData_f,DATA_LEN);
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -80,7 +68,7 @@ float32_t RMS_Process()
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char str[20];
+  uint16_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,18 +89,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
-  MX_ADC1_Init();
-  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  //SigPara_Freq_LF_Init();
   MyUSART1_Init(&huart1);
-  //HAL_TIM_Base_Start(&htim2);
-  
-  SigPara_Freq_HF_Init();
-  
+  ADS1115_Init(GPIOC, 0, GPIOC, 1);
+  printf("ADS1115 Test\r\n");
+  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadReg(ADS1115_CONF ,&val), val);
+  printf("WriteConf: %d\r\n", ADS1115_WriteReg(ADS1115_CONF ,0x8582));
+  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadReg(ADS1115_CONF ,&val), val);
+  Delay_us(val);
+  Delay_ms(1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,31 +109,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
-    //HAL_ADC_Start_DMA(&hadc1,(uint32_t*)rawData,DATA_LEN);
-    //Delay_ms(500);
-    
-    // DMAContinuousRequests should be DISABLED, otherwise the data in buffer
-    // is not all valid(might be overwrite)
-    
-    // if DMAContinuousRequests is DISABLED, the ADC will not send new
-    // DMA requests if any data is not write to DMA.(this will happen when
-    // the DMA is full)
-    // However, in this case, the ADC_CR2_DMA is still HIGH
-    // So I need to reset ADC_CR2_DMA to restart transfer from ADC to DMA
-    
-    // set ADC_CR2_DMA to 0 then to 1
-    
-    //hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-    //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
-    //MyUSART1_WriteLine(str);
-    
-    Delay_ms(200);
-    myftoa(SigPara_Freq_HF(62400), str); // 62400 contains 7 and 3, which can counteract the prime factor in 84MHz
-    //myftoa(SigPara_Freq_LF(),str);
-    
-    MyUSART1_WriteLine(str);
-    
   }
   /* USER CODE END 3 */
 }

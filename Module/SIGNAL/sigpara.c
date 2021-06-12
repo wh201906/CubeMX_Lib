@@ -101,7 +101,7 @@ double SigPara_Freq_LF(void)
   __HAL_TIM_DISABLE_DMA(&myhtim1, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
 
-  return (SIGPARA_HTIM1_CLK / (buf[1] + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1) - buf[0]));
+  return (SIGPARA_HTIM1_CLK / (buf[1] + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1) - buf[0]) / (myhtim1.Instance->PSC + 1));
   ;
 }
 
@@ -189,12 +189,12 @@ void SigPara_Freq_HF_Init(void)
   SigPara_Freq_HF_GPIO_Init();
 }
 
-double SigPara_Freq_HF(uint32_t countTimes)
+double SigPara_Freq_HF(uint32_t countTimes) // The width of countTimes depends on the width of arr of myhtim2, 16 is the default width
 {
   uint32_t edgeNum;
   __HAL_TIM_SET_COUNTER(&myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&myhtim2, 0);
-  __HAL_TIM_SET_AUTORELOAD(&myhtim2, countTimes);
+  __HAL_TIM_SET_AUTORELOAD(&myhtim2, countTimes - 1);
 
   ovrTimes = 0;
   __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
