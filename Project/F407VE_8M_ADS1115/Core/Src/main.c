@@ -95,9 +95,9 @@ int main(void)
   MyUSART1_Init(&huart1);
   ADS1115_Init(GPIOC, 0, GPIOC, 1);
   printf("ADS1115 Test\r\n");
-  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadReg(ADS1115_CONF ,&val), val);
-  printf("WriteConf: %d\r\n", ADS1115_WriteReg(ADS1115_CONF ,0x8582));
-  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadReg(ADS1115_CONF ,&val), val);
+  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadConf(&val), val);
+  printf("WriteConf: %d\r\n", ADS1115_WriteConf(0x7582));
+  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadConf(&val), val);
   Delay_us(val);
   Delay_ms(1);
   /* USER CODE END 2 */

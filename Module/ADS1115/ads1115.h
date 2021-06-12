@@ -60,6 +60,17 @@
 #define ADS1115_CONF_COMPQUEUE_4 0x0002   // Assert after four conversions
 #define ADS1115_CONF_COMPQUEUE_OFF 0x0003 // Disable Comparator and set ALERT/RDY pin to high-Z (default)
 
+#define ADS1115_ReadConf(__CONF__) ADS1115_ReadReg((ADS1115_CONF), (__CONF__))
+#define ADS1115_WriteConf(__CONF__) ADS1115_WriteReg((ADS1115_CONF), (__CONF__))
+
+#define ADS1115_ReadVal(__VAL__) ADS1115_ReadReg((ADS1115_CONV), (__VAL__))
+
+#define ADS1115_ReadThresholdH(__VAL__) ADS1115_ReadReg((ADS1115_THRE_HI), (__VAL__))
+#define ADS1115_WriteThresholdH(__VAL__) ADS1115_WriteReg((ADS1115_THRE_HI), (__VAL__))
+
+#define ADS1115_ReadThresholdL(__VAL__) ADS1115_ReadReg((ADS1115_THRE_LO), (__VAL__))
+#define ADS1115_WriteThresholdL(__VAL__) ADS1115_WriteReg((ADS1115_THRE_LO), (__VAL__))
+
 void ADS1115_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
 uint8_t ADS1115_ReadReg(uint8_t reg, uint16_t *data);
 uint8_t ADS1115_WriteReg(uint8_t reg, uint16_t data);
