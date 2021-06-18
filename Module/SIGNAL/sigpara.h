@@ -18,6 +18,6 @@ static void SigPara_Freq_HF_TimerTIM_Init(void);
 static void SigPara_Freq_HF_CounterTIM_Init(void);
 static void SigPara_Freq_HF_GPIO_Init(void);
 void SigPara_Freq_HF_Init(void);
-double SigPara_Freq_HF(uint32_t countTimes);
+double SigPara_Freq_HF(uint32_t countTimes, uint16_t P);
 
 #endif

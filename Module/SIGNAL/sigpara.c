@@ -21,7 +21,7 @@ static void SigPara_Freq_LF_TIM_Init(void)
   myhtim1.Instance = TIM2;
   myhtim1.Init.Prescaler = 0;
   myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim1.Init.Period = 65535;
+  myhtim1.Init.Period = 0xFFFFFFFF;
   myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   HAL_TIM_IC_Init(&myhtim1);
@@ -147,7 +147,7 @@ static void SigPara_Freq_HF_CounterTIM_Init(void)
   myhtim1.Instance = TIM2;
   myhtim1.Init.Prescaler = 0;
   myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim1.Init.Period = 65535;
+  myhtim1.Init.Period = 0xFFFFFFFF;
   myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   HAL_TIM_Base_Init(&myhtim1);
@@ -189,12 +189,13 @@ void SigPara_Freq_HF_Init(void)
   SigPara_Freq_HF_GPIO_Init();
 }
 
-double SigPara_Freq_HF(uint32_t countTimes) // The width of countTimes depends on the width of arr of myhtim2, 16 is the default width
+double SigPara_Freq_HF(uint32_t countTimes, uint16_t P) // The width of countTimes depends on the width of arr of myhtim2, 16 is the default width
 {
   uint32_t edgeNum;
   __HAL_TIM_SET_COUNTER(&myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&myhtim2, 0);
   __HAL_TIM_SET_AUTORELOAD(&myhtim2, countTimes - 1);
+  __HAL_TIM_SET_PRESCALER(&myhtim2,  P - 1);
 
   ovrTimes = 0;
   __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
@@ -205,7 +206,7 @@ double SigPara_Freq_HF(uint32_t countTimes) // The width of countTimes depends o
   while (myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
     ;
   edgeNum = __HAL_TIM_GET_COUNTER(&myhtim1) + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1);
-  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum);
+  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum / (myhtim2.Instance->PSC + 1));
 }
 /*
 void TIM4_IRQHandler(void)
