@@ -1,9 +1,11 @@
 #include "sigpara.h"
 
-DMA_HandleTypeDef myhdma;  // used to copy CCR1 as fast as possible in Freq_LF
-TIM_HandleTypeDef myhtim1; // used as conuter in Freq_LF and in Freq_HF
-TIM_HandleTypeDef myhtim2; // used as timer in Freq_HF
-uint32_t ovrTimes;
+DMA_HandleTypeDef SigPara_myhdma;  // used to copy CCR1 as fast as possible in Freq_LF
+TIM_HandleTypeDef SigPara_myhtim1; // used as conuter in Freq_LF and in Freq_HF
+TIM_HandleTypeDef SigPara_myhtim2; // used as timer in Freq_HF
+uint32_t SigPara_ovrTimes;
+uint32_t SigPara_thresholdT, SigPara_thresholdC, SigPara_thresholdP;
+double SigPara_thresholdF;
 
 float32_t SigPara_RMS(const float32_t *data, uint32_t len)
 {
@@ -18,17 +20,17 @@ static void SigPara_Freq_LF_TIM_Init(void)
   TIM_IC_InitTypeDef sConfigIC = {0};
 
   __HAL_RCC_TIM2_CLK_ENABLE();
-  myhtim1.Instance = TIM2;
-  myhtim1.Init.Prescaler = 0;
-  myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim1.Init.Period = 0xFFFFFFFF;
-  myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  HAL_TIM_IC_Init(&myhtim1);
+  SigPara_myhtim1.Instance = TIM2;
+  SigPara_myhtim1.Init.Prescaler = 0;
+  SigPara_myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  SigPara_myhtim1.Init.Period = 0xFFFFFFFF;
+  SigPara_myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  HAL_TIM_IC_Init(&SigPara_myhtim1);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&myhtim1, &sMasterConfig);
+  HAL_TIMEx_MasterConfigSynchronization(&SigPara_myhtim1, &sMasterConfig);
 
   sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
@@ -36,8 +38,9 @@ static void SigPara_Freq_LF_TIM_Init(void)
   // Change this for different freq range
   // If the freq is high, use lower filter value.
   // If the freq is low, use higher filter value.
+  // This can reduce the precision
   sConfigIC.ICFilter = 0x5;
-  HAL_TIM_IC_ConfigChannel(&myhtim1, &sConfigIC, TIM_CHANNEL_1);
+  HAL_TIM_IC_ConfigChannel(&SigPara_myhtim1, &sConfigIC, TIM_CHANNEL_1);
 }
 
 static void SigPara_Freq_LF_GPIO_Init(void)
@@ -56,18 +59,18 @@ static void SigPara_Freq_LF_GPIO_Init(void)
 static void SigPara_Freq_LF_DMA_Init(void)
 {
   __HAL_RCC_DMA1_CLK_ENABLE();
-  myhdma.Instance = DMA1_Stream5;
-  myhdma.Init.Channel = DMA_CHANNEL_3;
-  myhdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
-  myhdma.Init.PeriphInc = DMA_PINC_DISABLE;
-  myhdma.Init.MemInc = DMA_MINC_ENABLE;
-  myhdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-  myhdma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-  myhdma.Init.Mode = DMA_NORMAL;
-  myhdma.Init.Priority = DMA_PRIORITY_LOW;
-  myhdma.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-  HAL_DMA_Init(&myhdma);
-  __HAL_LINKDMA(&myhtim1, hdma[TIM_DMA_ID_CC1], myhdma);
+  SigPara_myhdma.Instance = DMA1_Stream5;
+  SigPara_myhdma.Init.Channel = DMA_CHANNEL_3;
+  SigPara_myhdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
+  SigPara_myhdma.Init.PeriphInc = DMA_PINC_DISABLE;
+  SigPara_myhdma.Init.MemInc = DMA_MINC_ENABLE;
+  SigPara_myhdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  SigPara_myhdma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+  SigPara_myhdma.Init.Mode = DMA_NORMAL;
+  SigPara_myhdma.Init.Priority = DMA_PRIORITY_LOW;
+  SigPara_myhdma.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+  HAL_DMA_Init(&SigPara_myhdma);
+  __HAL_LINKDMA(&SigPara_myhtim1, hdma[TIM_DMA_ID_CC1], SigPara_myhdma);
 }
 
 void SigPara_Freq_LF_Init(void)
@@ -82,27 +85,26 @@ void SigPara_Freq_LF_Init(void)
 double SigPara_Freq_LF(uint32_t timeout) // timeout in ms
 {
   uint32_t buf[2];
-  HAL_DMA_Init(&myhdma);              // to reset the DMA, otherwise the DMA will work only once.
-  __HAL_TIM_SET_COUNTER(&myhtim1, 0); // reset counter to 0 to reduce interrupt
+  HAL_DMA_Init(&SigPara_myhdma);              // to reset the DMA, otherwise the DMA will work only once.
+  __HAL_TIM_SET_COUNTER(&SigPara_myhtim1, 0); // reset counter to 0 to reduce interrupt
 
-  HAL_DMA_Start(&myhdma, (uint32_t)&myhtim1.Instance->CCR1, (uint32_t)buf, 2);
+  HAL_DMA_Start(&SigPara_myhdma, (uint32_t)&SigPara_myhtim1.Instance->CCR1, (uint32_t)buf, 2);
 
-  ovrTimes = 0;
-  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
-  __HAL_TIM_ENABLE_IT(&myhtim1, TIM_IT_UPDATE);
+  SigPara_ovrTimes = 0;
+  __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
 
-  __HAL_TIM_ENABLE(&myhtim1);
-  __HAL_TIM_ENABLE_DMA(&myhtim1, TIM_DMA_CC1);
-  TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
-  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF1_5) && timeout--)
+  __HAL_TIM_ENABLE(&SigPara_myhtim1);
+  __HAL_TIM_ENABLE_DMA(&SigPara_myhtim1, TIM_DMA_CC1);
+  TIM_CCxChannelCmd(SigPara_myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
+  while (!__HAL_DMA_GET_FLAG(&SigPara_myhdma, DMA_FLAG_TCIF1_5) && timeout--)
     Delay_ms(1);
-  __HAL_TIM_DISABLE_IT(&myhtim1, TIM_IT_UPDATE);
-  __HAL_TIM_DISABLE(&myhtim1);
-  __HAL_TIM_DISABLE_DMA(&myhtim1, TIM_DMA_CC1);
-  TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
+  __HAL_TIM_DISABLE_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_DISABLE(&SigPara_myhtim1);
+  __HAL_TIM_DISABLE_DMA(&SigPara_myhtim1, TIM_DMA_CC1);
+  TIM_CCxChannelCmd(SigPara_myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_DISABLE);
 
-  return (SIGPARA_HTIM1_CLK / (buf[1] + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1) - buf[0]) / (myhtim1.Instance->PSC + 1));
-  ;
+  return (SIGPARA_HTIM1_CLK / (buf[1] + SigPara_ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&SigPara_myhtim1) + 1) - buf[0]) / (SigPara_myhtim1.Instance->PSC + 1));
 }
 
 static void SigPara_Freq_HF_TimerTIM_Init(void)
@@ -112,29 +114,29 @@ static void SigPara_Freq_HF_TimerTIM_Init(void)
   TIM_OC_InitTypeDef sConfigOC = {0};
 
   __HAL_RCC_TIM3_CLK_ENABLE();
-  myhtim2.Instance = TIM3;
-  myhtim2.Init.Prescaler = 0;
-  myhtim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim2.Init.Period = 65535;
-  myhtim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  myhtim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  HAL_TIM_Base_Init(&myhtim2);
+  SigPara_myhtim2.Instance = TIM3;
+  SigPara_myhtim2.Init.Prescaler = 0;
+  SigPara_myhtim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  SigPara_myhtim2.Init.Period = 65535;
+  SigPara_myhtim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  SigPara_myhtim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  HAL_TIM_Base_Init(&SigPara_myhtim2);
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  HAL_TIM_ConfigClockSource(&myhtim2, &sClockSourceConfig);
+  HAL_TIM_ConfigClockSource(&SigPara_myhtim2, &sClockSourceConfig);
 
-  HAL_TIM_PWM_Init(&myhtim2);
-  HAL_TIM_OnePulse_Init(&myhtim2, TIM_OPMODE_SINGLE);
+  HAL_TIM_PWM_Init(&SigPara_myhtim2);
+  HAL_TIM_OnePulse_Init(&SigPara_myhtim2, TIM_OPMODE_SINGLE);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_OC1REF;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&myhtim2, &sMasterConfig);
+  HAL_TIMEx_MasterConfigSynchronization(&SigPara_myhtim2, &sMasterConfig);
 
   sConfigOC.OCMode = TIM_OCMODE_PWM2;
   sConfigOC.Pulse = 1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  HAL_TIM_PWM_ConfigChannel(&myhtim2, &sConfigOC, TIM_CHANNEL_1);
+  HAL_TIM_PWM_ConfigChannel(&SigPara_myhtim2, &sConfigOC, TIM_CHANNEL_1);
 }
 
 static void SigPara_Freq_HF_CounterTIM_Init(void)
@@ -144,27 +146,27 @@ static void SigPara_Freq_HF_CounterTIM_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
   __HAL_RCC_TIM2_CLK_ENABLE();
-  myhtim1.Instance = TIM2;
-  myhtim1.Init.Prescaler = 0;
-  myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  myhtim1.Init.Period = 0xFFFFFFFF;
-  myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  HAL_TIM_Base_Init(&myhtim1);
+  SigPara_myhtim1.Instance = TIM2;
+  SigPara_myhtim1.Init.Prescaler = 0;
+  SigPara_myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  SigPara_myhtim1.Init.Period = 0xFFFFFFFF;
+  SigPara_myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  HAL_TIM_Base_Init(&SigPara_myhtim1);
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
   sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
   sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
   sClockSourceConfig.ClockFilter = 0;
-  HAL_TIM_ConfigClockSource(&myhtim1, &sClockSourceConfig);
+  HAL_TIM_ConfigClockSource(&SigPara_myhtim1, &sClockSourceConfig);
 
   sSlaveConfig.SlaveMode = TIM_SLAVEMODE_GATED;
   sSlaveConfig.InputTrigger = TIM_TS_ITR2;
-  HAL_TIM_SlaveConfigSynchro(&myhtim1, &sSlaveConfig);
+  HAL_TIM_SlaveConfigSynchro(&SigPara_myhtim1, &sSlaveConfig);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&myhtim1, &sMasterConfig);
+  HAL_TIMEx_MasterConfigSynchronization(&SigPara_myhtim1, &sMasterConfig);
 }
 
 static void SigPara_Freq_HF_GPIO_Init(void)
@@ -189,40 +191,95 @@ void SigPara_Freq_HF_Init(void)
   SigPara_Freq_HF_GPIO_Init();
 }
 
-double SigPara_Freq_HF(uint32_t countTimes, uint16_t P) // The width of countTimes depends on the width of arr of myhtim2, 16 is the default width
+double SigPara_Freq_HF(uint32_t countTimes, uint16_t P) // The width of countTimes depends on the width of arr of SigPara_myhtim2, 16 is the default width
 {
   uint32_t edgeNum;
-  __HAL_TIM_SET_COUNTER(&myhtim1, 0);
-  __HAL_TIM_SET_COUNTER(&myhtim2, 0);
-  __HAL_TIM_SET_AUTORELOAD(&myhtim2, countTimes - 1);
-  __HAL_TIM_SET_PRESCALER(&myhtim2,  P - 1);
+  __HAL_TIM_SET_COUNTER(&SigPara_myhtim1, 0);
+  __HAL_TIM_SET_COUNTER(&SigPara_myhtim2, 0);
+  __HAL_TIM_SET_AUTORELOAD(&SigPara_myhtim2, countTimes - 1);
+  __HAL_TIM_SET_PRESCALER(&SigPara_myhtim2, P - 1);
 
-  ovrTimes = 0;
-  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
-  __HAL_TIM_ENABLE_IT(&myhtim1, TIM_IT_UPDATE);
+  SigPara_ovrTimes = 0;
+  __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
 
-  __HAL_TIM_ENABLE(&myhtim1);
-  __HAL_TIM_ENABLE(&myhtim2);                 // start timer after the counter is enabled for better precision
-  while (myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
+  __HAL_TIM_ENABLE(&SigPara_myhtim1);
+  __HAL_TIM_ENABLE(&SigPara_myhtim2);                 // start timer after the counter is enabled for better precision
+  while (SigPara_myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
     ;
-  edgeNum = __HAL_TIM_GET_COUNTER(&myhtim1) + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1);
-  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum / (myhtim2.Instance->PSC + 1));
+  edgeNum = __HAL_TIM_GET_COUNTER(&SigPara_myhtim1) + SigPara_ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&SigPara_myhtim1) + 1);
+  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum / (SigPara_myhtim2.Instance->PSC + 1));
 }
+
+void SigPara_Freq_Auto_SetMinPresicion(double permillage)
+{
+  double targetFreq = SIGPARA_HTIM1_CLK / 100000 * permillage;
+}
+
+void SigPara_Freq_Auto_SetMaxTimeout(uint32_t ms)
+{
+  SigPara_thresholdT = ms;
+}
+
+
+double SigPara_Freq_Auto(void) // Frequency measurement with auto range
+{
+  // Prec(%)
+  // ^
+  // |
+  // |     .            .
+  // |      .          .
+  // |       .        .
+  // |       .        .
+  // |        .      .
+  // |         .    .
+  // |          .  .
+  // |           ..
+  // |
+  // -------------------------------> Freq
+  //
+  // The F, C, P is determined by precision_min
+  // The T is determined by timeout_max
+  // In the worst case(lowest precision), the timeout is T + HTIM2_CLK / (C*P)
+  double freq;
+
+  // Stage 1
+  // Frequency higher than 1.5M cannot be measured by Freq_LF()
+  SigPara_Freq_HF_Init();
+  freq = SigPara_Freq_HF((SIGPARA_HTIM2_CLK / 1500000 + 1), 1);
+  if (freq >= 1500000)
+    return SigPara_Freq_HF(SigPara_thresholdC, SigPara_thresholdP);
+
+  // Stage 2
+  // Measure with Freq_LF()
+  // If the frequency is lower than thresholdF, the result is precise enough.
+  // If not, measure with Freq_HF()
+  SigPara_Freq_LF_Init();
+  freq = SigPara_Freq_LF(SigPara_thresholdT);
+  if (freq < SigPara_thresholdF)
+    return freq;
+
+  // Stage 3
+  // The frequency is between thresholdF and 1.5M, measure with Freq_HF()
+  SigPara_Freq_HF_Init();
+  return SigPara_Freq_HF(SigPara_thresholdC, SigPara_thresholdP);
+}
+
 /*
 void TIM4_IRQHandler(void)
 {
-  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
   if ((DMA1->LISR & DMA_FLAG_HTIF0_4) && !(DMA1->LISR & DMA_FLAG_TCIF0_4)) // capturing the second edge
-    ovrTimes++;
-  else if (myhtim2.Instance->CR1 & TIM_CR1_CEN)
-    ovrTimes++;
+    SigPara_ovrTimes++;
+  else if (SigPara_myhtim2.Instance->CR1 & TIM_CR1_CEN)
+    SigPara_ovrTimes++;
 }
 */
 void TIM2_IRQHandler(void)
 {
-  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
   if ((DMA1->HISR & DMA_FLAG_HTIF1_5) && !(DMA1->HISR & DMA_FLAG_TCIF1_5)) // capturing the second edge
-    ovrTimes++;
-  else if (myhtim2.Instance->CR1 & TIM_CR1_CEN)
-    ovrTimes++;
+    SigPara_ovrTimes++;
+  else if (SigPara_myhtim2.Instance->CR1 & TIM_CR1_CEN)
+    SigPara_ovrTimes++;
 }
