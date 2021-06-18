@@ -1,11 +1,11 @@
 #include "sigpara.h"
 
 DMA_HandleTypeDef SigPara_myhdma;  // used to copy CCR1 as fast as possible in Freq_LF
-TIM_HandleTypeDef SigPara_myhtim1; // used as conuter in Freq_LF and in Freq_HF
+TIM_HandleTypeDef SigPara_myhtim1; // used as counter in Freq_LF and in Freq_HF
 TIM_HandleTypeDef SigPara_myhtim2; // used as timer in Freq_HF
 uint32_t SigPara_ovrTimes;
-uint32_t SigPara_thresholdT, SigPara_thresholdC, SigPara_thresholdP;
-double SigPara_thresholdF;
+uint32_t SigPara_thre_Tout, SigPara_thre_Ticks, SigPara_thre_P;
+double SigPara_thre_F;
 
 float32_t SigPara_RMS(const float32_t *data, uint32_t len)
 {
@@ -191,12 +191,12 @@ void SigPara_Freq_HF_Init(void)
   SigPara_Freq_HF_GPIO_Init();
 }
 
-double SigPara_Freq_HF(uint32_t countTimes, uint16_t P) // The width of countTimes depends on the width of arr of SigPara_myhtim2, 16 is the default width
+double SigPara_Freq_HF(uint32_t Ticks, uint16_t P) // The width of Ticks depends on the width of arr of SigPara_myhtim2, 16 is the default width
 {
   uint32_t edgeNum;
   __HAL_TIM_SET_COUNTER(&SigPara_myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&SigPara_myhtim2, 0);
-  __HAL_TIM_SET_AUTORELOAD(&SigPara_myhtim2, countTimes - 1);
+  __HAL_TIM_SET_AUTORELOAD(&SigPara_myhtim2, Ticks - 1);
   __HAL_TIM_SET_PRESCALER(&SigPara_myhtim2, P - 1);
 
   SigPara_ovrTimes = 0;
@@ -208,39 +208,48 @@ double SigPara_Freq_HF(uint32_t countTimes, uint16_t P) // The width of countTim
   while (SigPara_myhtim2.Instance->CR1 & TIM_CR1_CEN) // still counting
     ;
   edgeNum = __HAL_TIM_GET_COUNTER(&SigPara_myhtim1) + SigPara_ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&SigPara_myhtim1) + 1);
-  return (SIGPARA_HTIM2_CLK / countTimes * edgeNum / (SigPara_myhtim2.Instance->PSC + 1));
+  return (SIGPARA_HTIM2_CLK / Ticks * edgeNum / (SigPara_myhtim2.Instance->PSC + 1));
 }
 
-void SigPara_Freq_Auto_SetMinPresicion(double permillage)
+uint64_t SigPara_Freq_Auto_SetMinPresicion(double permillage)
 {
-  double targetFreq = SIGPARA_HTIM1_CLK / 100000 * permillage;
+  uint64_t extraTicks;
+  SigPara_thre_F = SIGPARA_HTIM1_CLK / 1000 * permillage;
+  extraTicks = SIGPARA_HTIM2_CLK / SigPara_thre_F / permillage * 1000;
+  SigPara_thre_P = SIGPARA_HTIM2_CLK / 100000; // P*100kHz=HTIM2_CLK, P contains factors in HTIM2_CLK
+  SigPara_thre_Ticks = (extraTicks / SigPara_thre_P) + 1;
+  return extraTicks;
 }
 
 void SigPara_Freq_Auto_SetMaxTimeout(uint32_t ms)
 {
-  SigPara_thresholdT = ms;
+  SigPara_thre_Tout = ms;
 }
-
 
 double SigPara_Freq_Auto(void) // Frequency measurement with auto range
 {
   // Prec(%)
   // ^
   // |
-  // |     .            .
-  // |      .          .
-  // |       .        .
-  // |       .        .
-  // |        .      .
-  // |         .    .
-  // |          .  .
-  // |           ..
-  // |
-  // -------------------------------> Freq
-  //
-  // The F, C, P is determined by precision_min
-  // The T is determined by timeout_max
-  // In the worst case(lowest precision), the timeout is T + HTIM2_CLK / (C*P)
+  // |     .             .
+  // |      .           .
+  // |       .         .
+  // |       .         .
+  // |        .       .
+  // |         .     .
+  // |          .   .
+  // |           ...
+  // |            ^
+  // |         Lowest
+  // -------------|-----------------> Freq
+  //    Freq_LF()       Freq_HF()
+  // The F, Ticks, P is determined by precision_min
+  // The Tout is determined by timeout_max
+  // Freq >= 1.5MHz : Tmeas = (Ticks * P + 1) / HTIM2_CLK + 1/1500000
+  // F <= Freq < 1.5MHz : Tmeas = (Ticks * P + 1) / HTIM2_CLK + 1/1500000 + 1/Freq
+  //     Worst case there:
+  //     F = Freq : Tmeas = (2 * Ticks * P + 1) / HTIM2_CLK + 1/1500000
+  // Freq < F : Tmeas = 1/HTIM2_CLK + 1/1500000 + Tout
   double freq;
 
   // Stage 1
@@ -248,21 +257,21 @@ double SigPara_Freq_Auto(void) // Frequency measurement with auto range
   SigPara_Freq_HF_Init();
   freq = SigPara_Freq_HF((SIGPARA_HTIM2_CLK / 1500000 + 1), 1);
   if (freq >= 1500000)
-    return SigPara_Freq_HF(SigPara_thresholdC, SigPara_thresholdP);
+    return SigPara_Freq_HF(SigPara_thre_Ticks, SigPara_thre_P);
 
   // Stage 2
   // Measure with Freq_LF()
   // If the frequency is lower than thresholdF, the result is precise enough.
   // If not, measure with Freq_HF()
   SigPara_Freq_LF_Init();
-  freq = SigPara_Freq_LF(SigPara_thresholdT);
-  if (freq < SigPara_thresholdF)
+  freq = SigPara_Freq_LF(SigPara_thre_Tout);
+  if (freq < SigPara_thre_F)
     return freq;
 
   // Stage 3
   // The frequency is between thresholdF and 1.5M, measure with Freq_HF()
   SigPara_Freq_HF_Init();
-  return SigPara_Freq_HF(SigPara_thresholdC, SigPara_thresholdP);
+  return SigPara_Freq_HF(SigPara_thre_Ticks, SigPara_thre_P);
 }
 
 /*
