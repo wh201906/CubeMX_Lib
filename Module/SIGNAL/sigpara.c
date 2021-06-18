@@ -61,8 +61,8 @@ static void SigPara_Freq_LF_DMA_Init(void)
   myhdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
   myhdma.Init.PeriphInc = DMA_PINC_DISABLE;
   myhdma.Init.MemInc = DMA_MINC_ENABLE;
-  myhdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-  myhdma.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+  myhdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+  myhdma.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
   myhdma.Init.Mode = DMA_NORMAL;
   myhdma.Init.Priority = DMA_PRIORITY_LOW;
   myhdma.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
@@ -79,9 +79,9 @@ void SigPara_Freq_LF_Init(void)
   SigPara_Freq_LF_DMA_Init();
 }
 
-double SigPara_Freq_LF(void)
+double SigPara_Freq_LF(uint32_t timeout) // timeout in ms
 {
-  uint16_t buf[2];
+  uint32_t buf[2];
   HAL_DMA_Init(&myhdma);              // to reset the DMA, otherwise the DMA will work only once.
   __HAL_TIM_SET_COUNTER(&myhtim1, 0); // reset counter to 0 to reduce interrupt
 
@@ -94,8 +94,8 @@ double SigPara_Freq_LF(void)
   __HAL_TIM_ENABLE(&myhtim1);
   __HAL_TIM_ENABLE_DMA(&myhtim1, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
-  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF1_5))
-    ;
+  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF1_5) && timeout--)
+    Delay_ms(1);
   __HAL_TIM_DISABLE_IT(&myhtim1, TIM_IT_UPDATE);
   __HAL_TIM_DISABLE(&myhtim1);
   __HAL_TIM_DISABLE_DMA(&myhtim1, TIM_DMA_CC1);

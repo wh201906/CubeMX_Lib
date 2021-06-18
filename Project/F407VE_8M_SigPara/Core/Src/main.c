@@ -111,8 +111,8 @@ int main(void)
   MyUSART1_Init(&huart1);
   //HAL_TIM_Base_Start(&htim2);
   
-  SigPara_Freq_HF_Init();
-  //SigPara_Freq_LF_Init();
+  //SigPara_Freq_HF_Init();
+  SigPara_Freq_LF_Init();
   
   /* USER CODE END 2 */
 
@@ -146,8 +146,8 @@ int main(void)
     // 42000 contains 7 and 3, which can counteract the prime factor in 84MHz
     // 42000*20 = 840000, ~10ms per measurement
     // deltaF = 100Hz, E = 100Hz / f_actural
-    myftoa(SigPara_Freq_HF(42000, 20), str);
-    //myftoa(SigPara_Freq_LF(),str);
+    //myftoa(SigPara_Freq_HF(42000, 20), str);
+    myftoa(SigPara_Freq_LF(500), str);
     
     MyUSART1_WriteLine(str);
     
