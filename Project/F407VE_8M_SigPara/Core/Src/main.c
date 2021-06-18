@@ -112,6 +112,7 @@ int main(void)
   //HAL_TIM_Base_Start(&htim2);
   
   SigPara_Freq_HF_Init();
+  //SigPara_Freq_LF_Init();
   
   /* USER CODE END 2 */
 

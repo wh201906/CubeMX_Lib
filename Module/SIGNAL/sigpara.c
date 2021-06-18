@@ -17,8 +17,8 @@ static void SigPara_Freq_LF_TIM_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
 
-  __HAL_RCC_TIM4_CLK_ENABLE();
-  myhtim1.Instance = TIM4;
+  __HAL_RCC_TIM2_CLK_ENABLE();
+  myhtim1.Instance = TIM2;
   myhtim1.Init.Prescaler = 0;
   myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   myhtim1.Init.Period = 65535;
@@ -44,20 +44,20 @@ static void SigPara_Freq_LF_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 static void SigPara_Freq_LF_DMA_Init(void)
 {
   __HAL_RCC_DMA1_CLK_ENABLE();
-  myhdma.Instance = DMA1_Stream0;
-  myhdma.Init.Channel = DMA_CHANNEL_2;
+  myhdma.Instance = DMA1_Stream5;
+  myhdma.Init.Channel = DMA_CHANNEL_3;
   myhdma.Init.Direction = DMA_PERIPH_TO_MEMORY;
   myhdma.Init.PeriphInc = DMA_PINC_DISABLE;
   myhdma.Init.MemInc = DMA_MINC_ENABLE;
@@ -73,8 +73,8 @@ static void SigPara_Freq_LF_DMA_Init(void)
 void SigPara_Freq_LF_Init(void)
 {
   SigPara_Freq_LF_TIM_Init();
-  HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(TIM4_IRQn);
+  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM2_IRQn);
   SigPara_Freq_LF_GPIO_Init();
   SigPara_Freq_LF_DMA_Init();
 }
@@ -94,7 +94,7 @@ double SigPara_Freq_LF(void)
   __HAL_TIM_ENABLE(&myhtim1);
   __HAL_TIM_ENABLE_DMA(&myhtim1, TIM_DMA_CC1);
   TIM_CCxChannelCmd(myhtim1.Instance, TIM_CHANNEL_1, TIM_CCx_ENABLE); // the first DMA request will be sent after DMA and TIM is ready
-  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF0_4))
+  while (!__HAL_DMA_GET_FLAG(&myhdma, DMA_FLAG_TCIF1_5))
     ;
   __HAL_TIM_DISABLE_IT(&myhtim1, TIM_IT_UPDATE);
   __HAL_TIM_DISABLE(&myhtim1);
@@ -143,8 +143,8 @@ static void SigPara_Freq_HF_CounterTIM_Init(void)
   TIM_SlaveConfigTypeDef sSlaveConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  __HAL_RCC_TIM4_CLK_ENABLE();
-  myhtim1.Instance = TIM4;
+  __HAL_RCC_TIM2_CLK_ENABLE();
+  myhtim1.Instance = TIM2;
   myhtim1.Init.Prescaler = 0;
   myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   myhtim1.Init.Period = 65535;
@@ -171,21 +171,21 @@ static void SigPara_Freq_HF_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 void SigPara_Freq_HF_Init(void)
 {
   SigPara_Freq_HF_TimerTIM_Init();
   SigPara_Freq_HF_CounterTIM_Init();
-  HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(TIM4_IRQn);
+  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM2_IRQn);
   SigPara_Freq_HF_GPIO_Init();
 }
 
@@ -207,11 +207,20 @@ double SigPara_Freq_HF(uint32_t countTimes) // The width of countTimes depends o
   edgeNum = __HAL_TIM_GET_COUNTER(&myhtim1) + ovrTimes * (__HAL_TIM_GET_AUTORELOAD(&myhtim1) + 1);
   return (SIGPARA_HTIM2_CLK / countTimes * edgeNum);
 }
-
+/*
 void TIM4_IRQHandler(void)
 {
   __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
   if ((DMA1->LISR & DMA_FLAG_HTIF0_4) && !(DMA1->LISR & DMA_FLAG_TCIF0_4)) // capturing the second edge
+    ovrTimes++;
+  else if (myhtim2.Instance->CR1 & TIM_CR1_CEN)
+    ovrTimes++;
+}
+*/
+void TIM2_IRQHandler(void)
+{
+  __HAL_TIM_CLEAR_IT(&myhtim1, TIM_IT_UPDATE);
+  if ((DMA1->HISR & DMA_FLAG_HTIF1_5) && !(DMA1->HISR & DMA_FLAG_TCIF1_5)) // capturing the second edge
     ovrTimes++;
   else if (myhtim2.Instance->CR1 & TIM_CR1_CEN)
     ovrTimes++;
