@@ -1994,7 +1994,7 @@ uint8_t LCD_ShowNum(uint16_t x, uint16_t y, uint32_t num, uint8_t size)
 {
   uint8_t str[22], len;
   len = myitoa(num, str, 10);
-  LCD_ShowString(x, y, 0xFFFF, 0xFFFF, size, str);
+  LCD_ShowString(x, y, 0xFFFE - x, 0xFFFE - y, size, str);
   return len;
 }
 

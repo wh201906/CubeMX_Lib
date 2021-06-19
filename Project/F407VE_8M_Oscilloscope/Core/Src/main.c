@@ -46,6 +46,7 @@
 /* USER CODE BEGIN PM */
 #define ARRLEN 512
 #define DISPLAYLEN 320
+#define DISPLAYHEIGHT 240
 #define THRESHOLD 2048
 /* USER CODE END PM */
 
@@ -56,7 +57,7 @@ uint16_t val[ARRLEN];
 int16_t waveBuf1[DISPLAYLEN * 2], waveBuf2[DISPLAYLEN * 2];
 uint8_t waveState = 0;
 double scaler = 0.07;
-uint8_t displayMode = 1; // 0: dot, 1: vector
+uint8_t displayMode = 0; // 0: dot, 1: vector
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,9 +74,9 @@ void Wave_DrawLine(int16_t *lastBuf, int16_t *currBuf, uint16_t len, uint32_t ba
   for (i = 0; i < len; i++)
   {
     for (j = lastBuf[2 * i]; j <= lastBuf[2 * i + 1]; j++)
-      LCD_Fast_DrawPoint(j, i, backColor);
+      LCD_Fast_DrawPoint(i,DISPLAYHEIGHT - j, backColor);
     for (j = currBuf[2 * i]; j <= currBuf[2 * i + 1]; j++)
-      LCD_Fast_DrawPoint(j, i, color);
+      LCD_Fast_DrawPoint(i, DISPLAYHEIGHT - j, color);
   }
 }
 
@@ -169,6 +170,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   LCD_Init();
+  LCD_Display_Dir(1);
   HAL_TIM_Base_Start(&htim2);
   LCD_Clear(WHITE);
   HAL_ADC_Start_DMA(&hadc1, val, ARRLEN);
@@ -241,8 +243,9 @@ uint16_t ModCalc(int16_t num)
 
 void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
 {
-  uint16_t start, rest, i, j, lastVal, currVal;
+  uint16_t start, rest, i, tmp, lastVal, currVal;
   int16_t *currWave, *lastWave;
+  uint16_t minVal = 0xFFFF, maxVal=0;
   if (hadc == &hadc1)
   {
     __HAL_ADC_DISABLE_IT(hadc, ADC_IT_AWD);
@@ -262,17 +265,30 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
       __HAL_DMA_DISABLE(&hdma_adc1);
       rest = hadc1.DMA_Handle->Instance->NDTR;
       start = ModCalc(-rest - DISPLAYLEN);
+      
+      minVal = 0xFFFF;
+      maxVal = 0;
+      for (i = 1; i < DISPLAYLEN; i++)
+      {
+        tmp = (start + i) % ARRLEN;
+        if(val[tmp] < minVal)
+          minVal = val[tmp];
+        if(val[tmp] > maxVal)
+          maxVal = val[tmp];
+      }
+      LCD_ShowNum(2, 2, maxVal-minVal, 24);
+      
       // dot mode
       if (displayMode == 0)
       {
         LCD_SetPointColor(WHITE);
         for (i = 0; i < DISPLAYLEN; i++)
-          LCD_DrawPoint(lastWave[i], i);
+          LCD_DrawPoint(i, DISPLAYHEIGHT - lastWave[i]);
         for (i = 0; i < DISPLAYLEN; i++)
           currWave[i] = val[(start + i) % ARRLEN] * scaler;
         LCD_SetPointColor(RED);
         for (i = 1; i < DISPLAYLEN; i++)
-          LCD_DrawPoint(currWave[i], i);
+          LCD_DrawPoint(i, DISPLAYHEIGHT - currWave[i]);
       }
       // vector mode
       else
