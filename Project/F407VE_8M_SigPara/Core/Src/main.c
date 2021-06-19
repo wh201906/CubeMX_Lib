@@ -116,7 +116,7 @@ int main(void)
   //SigPara_Freq_HF_Init();
   //SigPara_Freq_LF_Init();
   
-  SigPara_Freq_Auto_SetMinPrecision(0.1);
+  SigPara_Freq_Auto_SetMinPrecision(1);
   SigPara_Freq_Auto_SetMaxTimeout(5000);
   
   /* USER CODE END 2 */

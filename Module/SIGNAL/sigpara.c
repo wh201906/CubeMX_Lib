@@ -225,16 +225,17 @@ double SigPara_Freq_HF(uint32_t Ticks, uint16_t P) // The width of Ticks depends
 
 uint64_t SigPara_Freq_Auto_SetMinPrecision(double permillage)
 {
+  // Tested with LF_ICFilter = 0x5
   uint64_t extraTicks;
-  //SigPara_thre_F = SIGPARA_HTIM1_CLK / 1000 * permillage;
-  SigPara_thre_F = 10000;
+  SigPara_thre_F = SIGPARA_HTIM1_CLK / 1000 * permillage / 2;
+  //SigPara_thre_F = 10000;
   extraTicks = SIGPARA_HTIM2_CLK / SigPara_thre_F / permillage * 1000;
   SigPara_thre_P = SIGPARA_HTIM2_CLK / 100000; // P*100kHz=HTIM2_CLK, P contains factors in HTIM2_CLK
-  SigPara_thre_Ticks = extraTicks / SigPara_thre_P;
-  if(SigPara_thre_Ticks > 65535)
+  SigPara_thre_Ticks = extraTicks / SigPara_thre_P + 1;
+  if (SigPara_thre_Ticks > 65535)
   {
     SigPara_thre_P = SIGPARA_HTIM2_CLK / 10000; // P*10kHz=HTIM2_CLK, P contains factors in HTIM2_CLK
-    SigPara_thre_Ticks = extraTicks / SigPara_thre_P;
+    SigPara_thre_Ticks = extraTicks / SigPara_thre_P + 1;
   }
   return extraTicks;
 }
