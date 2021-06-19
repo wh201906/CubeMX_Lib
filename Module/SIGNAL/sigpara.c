@@ -18,6 +18,8 @@ static void SigPara_Freq_LF_TIM_Init(void)
 {
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
 
   __HAL_RCC_TIM2_CLK_ENABLE();
   SigPara_myhtim1.Instance = TIM2;
@@ -27,6 +29,12 @@ static void SigPara_Freq_LF_TIM_Init(void)
   SigPara_myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   HAL_TIM_IC_Init(&SigPara_myhtim1);
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  HAL_TIM_ConfigClockSource(&SigPara_myhtim1, &sClockSourceConfig);
+
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
+  HAL_TIM_SlaveConfigSynchro(&SigPara_myhtim1, &sSlaveConfig);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
@@ -151,7 +159,7 @@ static void SigPara_Freq_HF_CounterTIM_Init(void)
   SigPara_myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   SigPara_myhtim1.Init.Period = 0xFFFFFFFF;
   SigPara_myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   HAL_TIM_Base_Init(&SigPara_myhtim1);
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
@@ -194,10 +202,19 @@ void SigPara_Freq_HF_Init(void)
 double SigPara_Freq_HF(uint32_t Ticks, uint16_t P) // The width of Ticks depends on the width of arr of SigPara_myhtim2, 16 is the default width
 {
   uint32_t edgeNum;
+  __HAL_TIM_DISABLE(&SigPara_myhtim1);
+  __HAL_TIM_DISABLE(&SigPara_myhtim2); 
   __HAL_TIM_SET_COUNTER(&SigPara_myhtim1, 0);
   __HAL_TIM_SET_COUNTER(&SigPara_myhtim2, 0);
-  __HAL_TIM_SET_AUTORELOAD(&SigPara_myhtim2, Ticks - 1);
-  __HAL_TIM_SET_PRESCALER(&SigPara_myhtim2, P - 1);
+  //__HAL_TIM_SET_AUTORELOAD(&SigPara_myhtim2, Ticks - 1);
+  //__HAL_TIM_SET_PRESCALER(&SigPara_myhtim2, P - 1);
+  SigPara_myhtim2.Instance->ARR = Ticks - 1;
+  SigPara_myhtim2.Instance->PSC = P - 1;
+  SigPara_myhtim2.Init.Period = Ticks - 1;
+  SigPara_myhtim2.Init.Prescaler = P - 1;
+  TIM3->ARR = Ticks - 1;
+  TIM3->PSC = P - 1;
+  Delay_ms(10);
 
   SigPara_ovrTimes = 0;
   __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);
@@ -211,7 +228,7 @@ double SigPara_Freq_HF(uint32_t Ticks, uint16_t P) // The width of Ticks depends
   return (SIGPARA_HTIM2_CLK / Ticks * edgeNum / (SigPara_myhtim2.Instance->PSC + 1));
 }
 
-uint64_t SigPara_Freq_Auto_SetMinPresicion(double permillage)
+uint64_t SigPara_Freq_Auto_SetMinPrecision(double permillage)
 {
   uint64_t extraTicks;
   SigPara_thre_F = SIGPARA_HTIM1_CLK / 1000 * permillage;
@@ -254,10 +271,10 @@ double SigPara_Freq_Auto(void) // Frequency measurement with auto range
 
   // Stage 1
   // Frequency higher than 1.5M cannot be measured by Freq_LF()
-  SigPara_Freq_HF_Init();
-  freq = SigPara_Freq_HF((SIGPARA_HTIM2_CLK / 1500000 + 1), 1);
-  if (freq >= 1500000)
-    return SigPara_Freq_HF(SigPara_thre_Ticks, SigPara_thre_P);
+  //SigPara_Freq_HF_Init();
+  //freq = SigPara_Freq_HF((SIGPARA_HTIM2_CLK / 1500000 + 1), 1);
+  //if (freq >= 1500000)
+    //return SigPara_Freq_HF(SigPara_thre_Ticks, SigPara_thre_P);
 
   // Stage 2
   // Measure with Freq_LF()
@@ -271,7 +288,7 @@ double SigPara_Freq_Auto(void) // Frequency measurement with auto range
   // Stage 3
   // The frequency is between thresholdF and 1.5M, measure with Freq_HF()
   SigPara_Freq_HF_Init();
-  return SigPara_Freq_HF(SigPara_thre_Ticks, SigPara_thre_P);
+  return SigPara_Freq_HF(65535, 2);
 }
 
 /*

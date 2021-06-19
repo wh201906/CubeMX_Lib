@@ -23,7 +23,7 @@ static void SigPara_Freq_HF_GPIO_Init(void);
 void SigPara_Freq_HF_Init(void);
 double SigPara_Freq_HF(uint32_t countTimes, uint16_t P);
 
-uint64_t SigPara_Freq_Auto_SetMinPresicion(double permillage);
+uint64_t SigPara_Freq_Auto_SetMinPrecision(double permillage);
 void SigPara_Freq_Auto_SetMaxTimeout(uint32_t ms);
 double SigPara_Freq_Auto(void); // Frequency measurement with auto range
 
