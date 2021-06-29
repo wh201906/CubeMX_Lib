@@ -70,7 +70,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint8_t str[50];
-  uint8_t val;
+  uint8_t val, i;
+  uint16_t port[130], num;
+  SoftI2C_Port testPort;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,9 +97,24 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init(&huart1);
-  TPL0401_Init(GPIOE, 4, GPIOE, 5, 'A');
   printf("TPL0401 Test\r\n");
+  
+  // Search
+  SoftI2C_SetPort(&testPort, GPIOE, 4, GPIOE, 5);
+  SoftI2C_Init(&testPort, 100000, SI2C_ADDR_7b);
+  num=SoftI2C_SearchAddr(&testPort, 0x0000, 0xFFFF, port);
+  printf("Available address:\r\n");
+  for(i = 0; i < num; i++)
+  {
+    printf("0x%x, ", port[i]);
+  }
+  printf("\r\n");
+  
   Delay_ms(100);
+  TPL0401_Init(GPIOE, 4, GPIOE, 5, 'A');
+  Delay_ms(100);
+  val = TPL0401_ReadVal();
+  printf("Read: %d, 0x%x\r\n", val, val);
 
   /* USER CODE END 2 */
 
@@ -119,7 +136,7 @@ int main(void)
       else if(str[0] == 'w') // dec
       {
         val = myatoi(str + 1);
-        printf("Write: %d, 0x%x\r\n", val, val);
+        printf("Write: %d, 0x%x, %d\r\n", val, val, TPL0401_WriteVal(val));
         val = TPL0401_ReadVal();
         printf("Read: %d, 0x%x\r\n", val, val);
       }
