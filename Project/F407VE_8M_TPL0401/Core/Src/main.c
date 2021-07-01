@@ -101,7 +101,7 @@ int main(void)
   
   // Search
   SoftI2C_SetPort(&testPort, GPIOE, 4, GPIOE, 5);
-  SoftI2C_Init(&testPort, 100000, SI2C_ADDR_7b);
+  SoftI2C_Init(&testPort, 400000, SI2C_ADDR_7b);
   num=SoftI2C_SearchAddr(&testPort, 0x0000, 0xFFFF, port);
   printf("Available address:\r\n");
   for(i = 0; i < num; i++)

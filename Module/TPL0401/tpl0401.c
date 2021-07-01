@@ -8,7 +8,7 @@ SoftI2C_Port TPL0401_port;
 void TPL0401_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID, char type)
 {
   SoftI2C_SetPort(&TPL0401_port, SCL_GPIO, SCL_PinID, SDA_GPIO, SDA_PinID);
-  SoftI2C_Init(&TPL0401_port, 100000, SI2C_ADDR_7b);
+  SoftI2C_Init(&TPL0401_port, 400000, SI2C_ADDR_7b);
 
   if (type == 'B' || type == 'b') // TPL0401B
     TPL0401_addr = TPL0401_ADDR_B;
