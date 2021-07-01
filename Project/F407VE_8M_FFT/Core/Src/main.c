@@ -147,7 +147,10 @@ int main(void)
       j=0;
       
       // Write command
+      MyUSART2_Write("ref_stop\xFF\xFF\xFF",11);
+      Delay_ms(5);
       MyUSART2_Write("cle 1,0\xFF\xFF\xFF",10);
+      Delay_ms(5);
       MyUSART2_Write("addt 1,0,480\xFF\xFF\xFF",15);
       
        // Wait for response in 30ms
@@ -164,9 +167,11 @@ int main(void)
       // Write data
       for(i=0;i<480;i++)
       {
-        outVal=fftData[479-i]*tmp;
+        outVal=fftData[i]*tmp;
         MyUSART2_WriteChar(outVal);
       }
+      Delay_ms(5);
+      MyUSART2_Write("ref_star\xFF\xFF\xFF",11);
       Delay_ms(5);
       MyUSART2_ClearBuffer();
       // DMA DOES take the bandwidth, so I start it after UART transmition.
