@@ -15,7 +15,7 @@ uint8_t ADS1115_UpdateConf(void)
   uint16_t conf;
   if(!ADS1115_ReadConf(&conf))
     return 0;
-  ADS1115_currConf = conf & 0x7FFF;
+  ADS1115_currConf = conf & ~ADS1115_CONF_OS;
   return 1;
 }
 
@@ -106,5 +106,5 @@ uint8_t ADS1115_SetMode(uint16_t mode)
 
 void ADS1115_Start(void)
 {
-  ADS1115_WriteConf(ADS1115_currConf | 0x8000);
+  ADS1115_WriteConf(ADS1115_currConf | ADS1115_CONF_OS);
 }
