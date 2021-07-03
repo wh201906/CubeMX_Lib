@@ -68,7 +68,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t val;
+  uint16_t val, conf = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,8 +96,11 @@ int main(void)
   ADS1115_Init(GPIOC, 0, GPIOC, 1);
   printf("ADS1115 Test\r\n");
   printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadConf(&val), val);
-  printf("WriteConf: %d\r\n", ADS1115_WriteConf(0x7582));
-  printf("ReadConf: %d, 0x%x\r\n", ADS1115_ReadConf(&val), val);
+  ADS1115_SetMode(ADS1115_CONF_MODE_CONTINUOUS);
+  ADS1115_SetDataRate(ADS1115_CONF_DR_64);
+  ADS1115_SetPGA(ADS1115_CONF_PGA_6144);
+  ADS1115_SetMux(ADS1115_CONF_MUX_3G);
+  ADS1115_Start();
   Delay_us(val);
   Delay_ms(1);
   /* USER CODE END 2 */
@@ -109,6 +112,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(500);
+    ADS1115_ReadVal(&val);
+    printf("%d, %lf\r\n", val, val*(6.144*2.0/65536));
   }
   /* USER CODE END 3 */
 }
