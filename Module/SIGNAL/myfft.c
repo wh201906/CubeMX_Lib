@@ -19,7 +19,7 @@ void MyFFT_Init(double sampleRate)
 
 #if MYFFT_USE_HANNING
   // see https://www.mathworks.com/help/signal/ref/hann.html
-  // hann(MYFFT_LENGTH, 'peroidic')
+  // hann(MYFFT_LENGTH, 'periodic')
   hanningWindow[0] = 0;
   for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
   {

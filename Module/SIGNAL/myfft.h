@@ -8,7 +8,7 @@
 #define MYFFT_LENGTH 1024
 
 // use hanning window
-#define MYFFT_USE_HANNING 0
+#define MYFFT_USE_HANNING 1
 
 // init before use
 void MyFFT_Init(double sampleRate);
