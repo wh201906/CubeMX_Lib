@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -27,10 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "DELAY/delay.h"
-#include "USART/myusart1.h"
-#include "USART/myusart2.h"
-#include "SIGNAL/myfft.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,8 +39,7 @@
 /* USER CODE BEGIN PD */
 #define FFT_LENGTH 1024
 
-uint32_t sampleRate=2000000;
-void printAll(float32_t* addr,uint16_t len);
+uint32_t sampleRate=200000;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,7 +52,6 @@ void printAll(float32_t* addr,uint16_t len);
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +62,17 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void printAll(float32_t* addr,uint16_t len)
+{
+  char buf[20];
+  uint16_t i;
+  for(i=0;i<len;i++)
+  {
+    sprintf(buf,"%d:%f",i,*(addr+i));
+    MyUSART1_WriteLine(buf);
+    Delay_ms(2);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -77,12 +82,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char str[20];
-  uint16_t i,j;
-  uint8_t outVal;
-  float32_t tmp;
-  volatile uint8_t st[12];
-  char hexTable[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+  uint16_t i;
+  double thd;
+  char str[64];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -107,20 +109,15 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
-  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(120);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
   MyUSART1_Init(&huart1);
-  MyUSART2_Init(&huart2);
-  Delay_ms(500);
-  HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   MyFFT_Init(sampleRate);
-  HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
+  printf("THD Test\r\n");
   Delay_ms(200);
-  //printAll(rfftInAndFreq,FFT_LENGTH/2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -133,71 +130,17 @@ int main(void)
     if(__HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR))
     {
       hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
       for(i=0;i<FFT_LENGTH;i++)
         fftData[i]=val[i];
-      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
       MyFFT_CalcInPlace(fftData);
-      HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4); 
-      //printAll(fftData,sizeof(fftData)/sizeof(fftData[0]));
-      
-      // Init transfer
-      MyUSART2_ClearBuffer();
-      str[0]=0x00;
-      j=0;
-      
-      // Write command
-      MyUSART2_Write("ref_stop\xFF\xFF\xFF",11);
-      Delay_ms(5);
-      MyUSART2_Write("cle 1,0\xFF\xFF\xFF",10);
-      Delay_ms(5);
-      MyUSART2_Write("addt 1,0,480\xFF\xFF\xFF",15);
-      
-       // Wait for response in 30ms
-      for(i=0;i<15;i++)
-      {
-        if(str[0]==0xFE)
-          break;
-        Delay_ms(2);
-        j=MyUSART2_Read(str+j,4);
-      }
-      arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
-      tmp=256/tmp;
-      
-      // Write data
-      for(i=0;i<480;i++)
-      {
-        outVal=fftData[i]*tmp;
-        MyUSART2_WriteChar(outVal);
-      }
-      Delay_ms(5);
-      MyUSART2_Write("ref_star\xFF\xFF\xFF",11);
-      Delay_ms(5);
-      MyUSART2_ClearBuffer();
+      if(MyUSART1_ReadUntil(str, '>'))
+        printAll(fftData,sizeof(fftData)/sizeof(fftData[0])/2);
+      Delay_ms(500);
+      thd = MyFFT_THD(fftData, FFT_LENGTH/2);
+      printf("THD: %lf\r\n", thd);
       // DMA DOES take the bandwidth, so I start it after UART transmition.
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
-    for(i=0;i<10;i++)
-    {
-      Delay_ms(30);
-      j=MyUSART2_Read(str,3);
-      if(j==3)
-      {
-        sampleRate = str[0]&0xFF;
-        sampleRate |= (uint32_t)(str[1]<<8);
-        sampleRate |= (uint32_t)(str[2]<<16);
-        // for a 32-bit ARR register, 
-        // the prescaler can be set to 0, 
-        // and the lowest freq is 168M / (2^32-1) = 0.04Hz
-        // or in this program: 60M / (2^32-1) = 0.014Hz
-        
-        // PRESCALER has been set to 0
-        __HAL_TIM_SET_AUTORELOAD(&htim2,(60000000.0/2.0/sampleRate+0.5)-1);
-        
-      }
-    }
-    
-    MyUSART2_ClearBuffer();
   }
   /* USER CODE END 3 */
 }
@@ -247,18 +190,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void printAll(float32_t* addr,uint16_t len)
-{
-  char buf[20];
-  uint16_t i;
-  for(i=0;i<len;i++)
-  {
-    sprintf(buf,"%d:%f",i,*(addr+i));
-    MyUSART1_WriteLine(buf);
-    Delay_ms(2);
-  }
-}
-
 /* USER CODE END 4 */
 
 /**
@@ -269,7 +200,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+  __disable_irq();
+  while (1)
+  {
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 
@@ -285,7 +219,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

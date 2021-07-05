@@ -2,7 +2,7 @@
 
 float32_t fftOutput[MYFFT_LENGTH];
 arm_rfft_fast_instance_f32 fftInst;
-double sampRate;
+double MyFFT_sampRate;
 #if MYFFT_USE_HANNING
 float32_t hanningWindow[MYFFT_LENGTH];
 float32_t fftPreProcess[MYFFT_LENGTH];
@@ -32,7 +32,7 @@ void MyFFT_Init(double sampleRate)
 
 void MyFFT_SetSampleRate(double sampleRate)
 {
-  sampRate = sampleRate;
+  MyFFT_sampRate = sampleRate;
 }
 
 void MyFFT_CalcInPlace(float32_t *data)
@@ -49,7 +49,7 @@ void MyFFT_Calc(float32_t *input, float32_t *output)
   arm_rfft_fast_f32(&fftInst, input, fftOutput, 0);
 #endif
   arm_cmplx_mag_f32(fftOutput, output, MYFFT_LENGTH / 2);
-  output[0] /= 2; // amplitude correction
+  output[0] /= 2;                                                            // amplitude correction
   arm_scale_f32(output, (double)2 / MYFFT_LENGTH, output, MYFFT_LENGTH / 2); // amplitude correction
 }
 
@@ -58,7 +58,26 @@ double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)
   uint32_t i;
   float32_t val;
   arm_max_f32(data, len, &val, &i);
-  return (double)i * sampRate / MYFFT_LENGTH;
+  return (double)i * MyFFT_sampRate / MYFFT_LENGTH;
+}
+
+double MyFFT_THD(float32_t *data, uint16_t len)
+{
+  uint8_t i;
+  uint32_t baseI;
+  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.1;
+  arm_min_f32(data + 1, len - 1, &noiseV, &baseI); // baseI will be overrided
+  arm_max_f32(data + 1, len - 1, &baseV, &baseI);
+  threshold *= (baseV - noiseV);
+  threshold += noiseV;
+  baseI++;
+  for (i = 2; i <= 5; i++)
+  {
+    if (data[baseI * i] >= threshold)
+      harmonyV += data[baseI * i] * data[baseI * i];
+  }
+  arm_sqrt_f32(harmonyV, &harmonyV);
+  return (double)harmonyV / baseV;
 }
 
 void MyFFT_GenerateArray(float32_t *data, double sampleRate, double *freqArray, double *ampArray, uint32_t arrayLen)
