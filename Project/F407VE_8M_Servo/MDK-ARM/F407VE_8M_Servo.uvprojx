@@ -538,6 +538,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
             </File>
+            <File>
+              <FileName>servo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\Servo\servo.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

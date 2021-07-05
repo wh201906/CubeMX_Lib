@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "Servo/servo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,7 +66,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t currVal, newVal;
+  uint16_t val;
+  ServoHandle servo;
   char str[64];
   /* USER CODE END 1 */
 
@@ -93,8 +94,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init(&huart1);
+  Servo_Init(&servo, &htim10, TIM_CHANNEL_1, 1500);
   printf("Servo Test\r\n");
-  HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
+  Servo_Start(&servo);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,24 +109,8 @@ int main(void)
     Delay_ms(100);
     if(MyUSART1_ReadUntil(str, '>'))
     {
-      currVal = __HAL_TIM_GET_COMPARE(&htim10, TIM_CHANNEL_1);
-      newVal = myatoi(str);
-      if(currVal < newVal)
-      {
-        for(; currVal <= newVal; currVal++)
-        {
-          Delay_us(1000);
-          __HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, currVal);
-        }
-      }
-      else
-      {
-        for(; currVal >= newVal; currVal--)
-        {
-          Delay_us(1000);
-          __HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, currVal);
-        }
-      }
+      val = myatoi(str);
+      Servo_Go(&servo, val);
     }
   }
   /* USER CODE END 3 */
