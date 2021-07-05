@@ -4,16 +4,17 @@ void Servo_Init(ServoHandle *handle, TIM_HandleTypeDef *htim, uint32_t Channel, 
 {
   handle->htim = htim;
   handle->Channel = Channel;
-  handle->delay = 1000;
+  handle->delay = 10000;
   handle->htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   handle->htim->Instance->CR1 |= TIM_CR1_ARPE;
-  __HAL_TIM_SET_AUTORELOAD(handle->htim, 50000); // 50ms, 20Hz
+  __HAL_TIM_SET_AUTORELOAD(handle->htim, 5000); // 50ms, 20Hz
   __HAL_TIM_SET_COMPARE(handle->htim, handle->Channel, initPos);
+  handle->htim->Instance->CR1 |= TIM_CR1_OPM;
 }
 
 void Servo_Start(ServoHandle *handle)
 {
-  HAL_TIM_PWM_Start(handle->htim, handle->Channel);
+  HAL_TIM_OnePulse_Start(handle->htim, handle->Channel);
   Delay_ms(3000);
   __HAL_TIM_SET_AUTORELOAD(handle->htim, 20000); // 20ms, 50Hz
 }

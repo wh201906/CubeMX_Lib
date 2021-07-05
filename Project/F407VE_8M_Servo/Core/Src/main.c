@@ -91,12 +91,18 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM10_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUSART1_Init(&huart1);
-  Servo_Init(&servo, &htim10, TIM_CHANNEL_1, 1500);
+  Delay_ms(2000);
+  HAL_TIM_OnePulse_Start(&htim10, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
+  //HAL_TIM_Base_Start(&htim9);
+  //HAL_TIM_PWM_Start(&htim9, TIM_CHANNEL_1);
+  //Servo_Init(&servo, &htim10, TIM_CHANNEL_1, 500);
   printf("Servo Test\r\n");
-  Servo_Start(&servo);
+  //Servo_Start(&servo);
   /* USER CODE END 2 */
 
   /* Infinite loop */
