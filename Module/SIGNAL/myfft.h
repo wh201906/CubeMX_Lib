@@ -14,7 +14,10 @@
 
 void MyFFT_NoWindow(void);
 void MyFFT_HannWindow(void);
+void MyFFT_HammingWindow(void);
 void MyFFT_FlattopWindow(void);
+void MyFFT_BlackmanWindow(void);
+void MyFFT_TriangWindow(void);
 
 #endif
 
@@ -29,7 +32,7 @@ void MyFFT_CalcInPlace(float32_t *data);
 // get raw FFT result
 // input length: MYFFT_LENGTH
 // output length: MYFFT_LENGTH / 2 (without symmetric part)
-void MyFFT_Calc(float32_t *input, float32_t *output); 
+void MyFFT_Calc(float32_t *input, float32_t *output);
 
 // get the freq which has the highest amplitude, based on the given sampleRate
 // the len should be half of the FFT_LENGTH

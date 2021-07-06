@@ -14,6 +14,9 @@ float MyFFT_Flat_a1 = 0.41663158f;
 float MyFFT_Flat_a2 = 0.277263158f;
 float MyFFT_Flat_a3 = 0.083578947f;
 float MyFFT_Flat_a4 = 0.006947368f;
+float MyFFT_Black_a0 = 0.42f;
+float MyFFT_Black_a1 = 0.5f;
+float MyFFT_Black_a2 = 0.08f;
 
 void MyFFT_NoWindow(void)
 {
@@ -30,6 +33,20 @@ void MyFFT_HannWindow(void)
   for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
   {
     windowCoef[i] = 0.5 * (1 - arm_cos_f32(2 * PI * i / MYFFT_LENGTH));
+    windowCoef[i] = 0.54 - 0.46 * arm_cos_f32(2 * PI * i / MYFFT_LENGTH);
+    windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
+  }
+  MyFFT_isUsingWindow = 1;
+}
+
+void MyFFT_HammingWindow(void)
+{
+  // hamming(MYFFT_LENGTH, 'periodic')
+  uint16_t i;
+  windowCoef[0] = 0.08;
+  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
+  {
+    windowCoef[i] = 0.5 * (1 - arm_cos_f32(2 * PI * i / MYFFT_LENGTH));
     windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
   }
   MyFFT_isUsingWindow = 1;
@@ -43,11 +60,39 @@ void MyFFT_FlattopWindow(void)
   for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
   {
     windowCoef[i] = MyFFT_Flat_a0;
-    windowCoef[i] -= MyFFT_Flat_a1 * cosf(2 * PI * i / MYFFT_LENGTH);
-    windowCoef[i] += MyFFT_Flat_a2 * cosf(4 * PI * i / MYFFT_LENGTH);
-    windowCoef[i] -= MyFFT_Flat_a3 * cosf(6 * PI * i / MYFFT_LENGTH);
-    windowCoef[i] += MyFFT_Flat_a4 * cosf(8 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] -= MyFFT_Flat_a1 * arm_cos_f32(2 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] += MyFFT_Flat_a2 * arm_cos_f32(4 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] -= MyFFT_Flat_a3 * arm_cos_f32(6 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] += MyFFT_Flat_a4 * arm_cos_f32(8 * PI * i / MYFFT_LENGTH);
     windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
+  }
+  MyFFT_isUsingWindow = 1;
+}
+
+void MyFFT_BlackmanWindow(void)
+{
+  // blackman(L, 'periodic')
+  uint16_t i;
+  windowCoef[0] = MyFFT_Black_a0 - MyFFT_Black_a1 + MyFFT_Black_a2;
+  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
+  {
+    windowCoef[i] = MyFFT_Black_a0;
+    windowCoef[i] -= MyFFT_Black_a1 * arm_cos_f32(2 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] += MyFFT_Black_a2 * arm_cos_f32(4 * PI * i / MYFFT_LENGTH);
+    windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
+  }
+  MyFFT_isUsingWindow = 1;
+}
+
+void MyFFT_TriangWindow(void)
+{
+  // the L is always even
+  // triang(L)
+  uint16_t i;
+  for (i = 0; i < MYFFT_LENGTH / 2; i++)
+  {
+    windowCoef[i] = (2.0 * i + 1) / MYFFT_LENGTH;
+    windowCoef[MYFFT_LENGTH - 1 - i] = windowCoef[i];
   }
   MyFFT_isUsingWindow = 1;
 }

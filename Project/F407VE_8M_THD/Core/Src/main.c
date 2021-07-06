@@ -145,12 +145,27 @@ int main(void)
         else if(str[0] == '3')
         {
           MyFFT_HannWindow();
-          printf("Using Hann Window(None)\r\n");
+          printf("Using Hann Window\r\n");
         }
         else if(str[0] == '4')
         {
           MyFFT_FlattopWindow();
-          printf("Using Flattop Window(None)\r\n");
+          printf("Using Flattop Window\r\n");
+        }
+        else if(str[0] == '5')
+        {
+          MyFFT_HammingWindow();
+          printf("Using Hamming Window\r\n");
+        }
+        else if(str[0] == '6')
+        {
+          MyFFT_BlackmanWindow();
+          printf("Using Blackman Window\r\n");
+        }
+        else if(str[0] == '7')
+        {
+          MyFFT_TriangWindow();
+          printf("Using Triang Window\r\n");
         }
       }
       Delay_ms(500);
