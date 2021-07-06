@@ -3,30 +3,66 @@
 float32_t fftOutput[MYFFT_LENGTH];
 arm_rfft_fast_instance_f32 fftInst;
 double MyFFT_sampRate;
-#if MYFFT_USE_HANNING
-float32_t hanningWindow[MYFFT_LENGTH];
+
+#if MYFFT_USE_WINDOW
+float32_t windowCoef[MYFFT_LENGTH];
 float32_t fftPreProcess[MYFFT_LENGTH];
+uint8_t MyFFT_isUsingWindow = 0; // speed up if no window is used
+
+float MyFFT_Flat_a0 = 0.21557895f;
+float MyFFT_Flat_a1 = 0.41663158f;
+float MyFFT_Flat_a2 = 0.277263158f;
+float MyFFT_Flat_a3 = 0.083578947f;
+float MyFFT_Flat_a4 = 0.006947368f;
+
+void MyFFT_NoWindow(void)
+{
+  // arm_fill_f32(1, windowCoef, MYFFT_LENGTH);
+  MyFFT_isUsingWindow = 0;
+}
+
+void MyFFT_HannWindow(void)
+{
+  // see https://www.mathworks.com/help/signal/ref/hann.html
+  // hann(MYFFT_LENGTH, 'periodic')
+  uint16_t i;
+  windowCoef[0] = 0;
+  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
+  {
+    windowCoef[i] = 0.5 * (1 - arm_cos_f32(2 * PI * i / MYFFT_LENGTH));
+    windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
+  }
+  MyFFT_isUsingWindow = 1;
+}
+
+void MyFFT_FlattopWindow(void)
+{
+  // flattopwin(MYFFT_LENGTH, 'periodic')
+  uint16_t i;
+  windowCoef[0] = MyFFT_Flat_a0 - MyFFT_Flat_a1 + MyFFT_Flat_a2 - MyFFT_Flat_a3 + MyFFT_Flat_a4;
+  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
+  {
+    windowCoef[i] = MyFFT_Flat_a0;
+    windowCoef[i] -= MyFFT_Flat_a1 * cosf(2 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] += MyFFT_Flat_a2 * cosf(4 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] -= MyFFT_Flat_a3 * cosf(6 * PI * i / MYFFT_LENGTH);
+    windowCoef[i] += MyFFT_Flat_a4 * cosf(8 * PI * i / MYFFT_LENGTH);
+    windowCoef[MYFFT_LENGTH - i] = windowCoef[i];
+  }
+  MyFFT_isUsingWindow = 1;
+}
+
 #endif
 
 void MyFFT_Init(double sampleRate)
 {
-  uint16_t i;
   arm_rfft_fast_init_f32(&fftInst, MYFFT_LENGTH);
 
   // this value doesn't affect FFT transform
   // set sampleRate to any value if you don't use MyFFT_GetPeakFreq()
   MyFFT_SetSampleRate(sampleRate);
-
-#if MYFFT_USE_HANNING
-  // see https://www.mathworks.com/help/signal/ref/hann.html
-  // hann(MYFFT_LENGTH, 'periodic')
-  hanningWindow[0] = 0;
-  for (i = 1; i < MYFFT_LENGTH / 2 + 1; i++)
-  {
-    hanningWindow[i] = 0.5 * (1 - arm_cos_f32(2 * PI * i / MYFFT_LENGTH));
-    hanningWindow[MYFFT_LENGTH - i] = hanningWindow[i];
-  }
-
+#if MYFFT_USE_WINDOW
+  MyFFT_NoWindow();
 #endif
 }
 
@@ -42,9 +78,14 @@ void MyFFT_CalcInPlace(float32_t *data)
 
 void MyFFT_Calc(float32_t *input, float32_t *output)
 {
-#if MYFFT_USE_HANNING
-  arm_mult_f32(input, hanningWindow, fftPreProcess, MYFFT_LENGTH);
-  arm_rfft_fast_f32(&fftInst, fftPreProcess, fftOutput, 0);
+#if MYFFT_USE_WINDOW
+  if (MyFFT_isUsingWindow)
+  {
+    arm_mult_f32(input, windowCoef, fftPreProcess, MYFFT_LENGTH);
+    arm_rfft_fast_f32(&fftInst, fftPreProcess, fftOutput, 0);
+  }
+  else
+    arm_rfft_fast_f32(&fftInst, input, fftOutput, 0);
 #else
   arm_rfft_fast_f32(&fftInst, input, fftOutput, 0);
 #endif
@@ -65,7 +106,7 @@ double MyFFT_THD(float32_t *data, uint16_t len)
 {
   uint8_t i;
   uint32_t baseI;
-  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.1;
+  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.05;
   arm_min_f32(data + 1, len - 1, &noiseV, &baseI); // baseI will be overrided
   arm_max_f32(data + 1, len - 1, &baseV, &baseI);
   threshold *= (baseV - noiseV);

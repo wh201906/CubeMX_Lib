@@ -134,7 +134,25 @@ int main(void)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
       if(MyUSART1_ReadUntil(str, '>'))
-        printAll(fftData,sizeof(fftData)/sizeof(fftData[0])/2);
+      {
+        if(str[0] == '1') // print fft result
+          printAll(fftData,sizeof(fftData)/sizeof(fftData[0])/2);
+        else if(str[0] == '2')
+        {
+          MyFFT_NoWindow();
+          printf("Using Rect Window(None)\r\n");
+        }
+        else if(str[0] == '3')
+        {
+          MyFFT_HannWindow();
+          printf("Using Hann Window(None)\r\n");
+        }
+        else if(str[0] == '4')
+        {
+          MyFFT_FlattopWindow();
+          printf("Using Flattop Window(None)\r\n");
+        }
+      }
       Delay_ms(500);
       thd = MyFFT_THD(fftData, FFT_LENGTH/2);
       printf("THD: %lf\r\n", thd);

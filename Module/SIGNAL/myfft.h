@@ -7,8 +7,16 @@
 // bigger -> more precise -> takes longer time
 #define MYFFT_LENGTH 1024
 
-// use hanning window
-#define MYFFT_USE_HANNING 1
+// use window, slower, more memory cost
+#define MYFFT_USE_WINDOW 1
+
+#if MYFFT_USE_WINDOW
+
+void MyFFT_NoWindow(void);
+void MyFFT_HannWindow(void);
+void MyFFT_FlattopWindow(void);
+
+#endif
 
 // init before use
 void MyFFT_Init(double sampleRate);
