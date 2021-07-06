@@ -169,7 +169,7 @@ int main(void)
         }
       }
       Delay_ms(500);
-      thd = MyFFT_THD(fftData, FFT_LENGTH/2);
+      thd = MyFFT_THD(fftData, FFT_LENGTH/2, 5, 5); // skip DC related
       printf("THD: %lf\r\n", thd);
       // DMA DOES take the bandwidth, so I start it after UART transmition.
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);

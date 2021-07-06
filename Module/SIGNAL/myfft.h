@@ -40,7 +40,11 @@ double MyFFT_GetPeakFreq(float32_t *data, uint16_t len);
 
 // get THD
 // the len should be half of the FFT_LENGTH
-double MyFFT_THD(float32_t *data, uint16_t len);
+// MyFFT_THD(data, len, 1) to skip DC
+// For windows which have wider lobe, set offset bigger than 1
+// offset: skip first n data
+// nThre: maximum harmony
+double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre);
 
 void MyFFT_SetSampleRate(double sampleRate);
 

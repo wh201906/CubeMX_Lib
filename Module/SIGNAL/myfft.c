@@ -147,20 +147,28 @@ double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)
   return (double)i * MyFFT_sampRate / MYFFT_LENGTH;
 }
 
-double MyFFT_THD(float32_t *data, uint16_t len)
+double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
 {
-  uint8_t i;
+  uint8_t i, tmp;
   uint32_t baseI;
   float32_t baseV, harmonyV = 0, noiseV, threshold = 0.05;
-  arm_min_f32(data + 1, len - 1, &noiseV, &baseI); // baseI will be overrided
-  arm_max_f32(data + 1, len - 1, &baseV, &baseI);
+  float32_t currHarmony;
+  uint16_t range = 1;
+  arm_min_f32(data + offset, len - offset, &noiseV, &baseI); //no arm_min_no_idx_f32() now, baseI will be overrided
+  arm_max_f32(data + offset, len - offset, &baseV, &baseI);
+  baseI += offset;
   threshold *= (baseV - noiseV);
   threshold += noiseV;
-  baseI++;
-  for (i = 2; i <= 5; i++)
+  for (i = 2; i <= nThre; i++)
   {
-    if (data[baseI * i] >= threshold)
-      harmonyV += data[baseI * i] * data[baseI * i];
+    if (i & 1u)
+      range++;
+    tmp = baseI * i - range;
+    if (tmp < offset)
+      tmp = offset;
+    arm_max_no_idx_f32(data + tmp, 2 * range, &currHarmony);
+    if (currHarmony >= threshold)
+      harmonyV += currHarmony * currHarmony;
   }
   arm_sqrt_f32(harmonyV, &harmonyV);
   return (double)harmonyV / baseV;
