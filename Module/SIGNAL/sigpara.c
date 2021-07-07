@@ -303,6 +303,78 @@ void TIM4_IRQHandler(void)
     SigPara_ovrTimes++;
 }
 */
+
+static void SigPara_PWM_TIM_Init(void)
+{
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  __HAL_RCC_TIM2_CLK_ENABLE();
+  SigPara_myhtim1.Instance = TIM2;
+  SigPara_myhtim1.Init.Prescaler = 0;
+  SigPara_myhtim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  SigPara_myhtim1.Init.Period = 0xFFFFFFFF;
+  SigPara_myhtim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  SigPara_myhtim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  HAL_TIM_Base_Init(&SigPara_myhtim1);
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  HAL_TIM_ConfigClockSource(&SigPara_myhtim1, &sClockSourceConfig);
+
+  HAL_TIM_IC_Init(&SigPara_myhtim1);
+
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
+  sSlaveConfig.InputTrigger = TIM_TS_TI1FP1;
+  sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sSlaveConfig.TriggerFilter = 0;
+  HAL_TIM_SlaveConfigSynchro(&SigPara_myhtim1, &sSlaveConfig);
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  HAL_TIMEx_MasterConfigSynchronization(&SigPara_myhtim1, &sMasterConfig);
+
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  HAL_TIM_IC_ConfigChannel(&SigPara_myhtim1, &sConfigIC, TIM_CHANNEL_1);
+
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  HAL_TIM_IC_ConfigChannel(&SigPara_myhtim1, &sConfigIC, TIM_CHANNEL_2);
+}
+
+static void SigPara_PWM_GPIO_Init(void)
+{
+  SigPara_Freq_LF_GPIO_Init();
+}
+
+void SigPara_PWM_Init(void)
+{
+  SigPara_PWM_TIM_Init();
+  SigPara_PWM_GPIO_Init();
+}
+
+double SigPara_PWM(uint32_t timeout, double *freqPtr)
+{
+  uint32_t T, width;
+  HAL_TIM_IC_Start(&SigPara_myhtim1, TIM_CHANNEL_1);
+  HAL_TIM_IC_Start(&SigPara_myhtim1, TIM_CHANNEL_2);
+
+  while (__HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_1) == 0 && timeout--)
+    Delay_ms(1);
+
+  __HAL_TIM_DISABLE(&SigPara_myhtim1);
+  width = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2);
+  T = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_1);
+
+  if (freqPtr != NULL)
+    *freqPtr = SIGPARA_HTIM1_CLK / T / (SigPara_myhtim1.Instance->PSC + 1);
+  return (double)width / T;
+}
+
 void TIM2_IRQHandler(void)
 {
   __HAL_TIM_CLEAR_IT(&SigPara_myhtim1, TIM_IT_UPDATE);

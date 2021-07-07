@@ -27,4 +27,9 @@ uint64_t SigPara_Freq_Auto_SetMinPrecision(double permillage);
 void SigPara_Freq_Auto_SetMaxTimeout(uint32_t ms);
 double SigPara_Freq_Auto(void); // Frequency measurement with auto range
 
+static void SigPara_PWM_TIM_Init(void);
+static void SigPara_PWM_GPIO_Init(void);
+void SigPara_PWM_Init(void);
+double SigPara_PWM(uint32_t timeout, double *freqPtr);
+
 #endif

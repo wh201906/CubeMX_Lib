@@ -81,6 +81,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char str[20];
+  double freq, duty;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,6 +110,8 @@ int main(void)
   Delay_Init(168);
   //SigPara_Freq_LF_Init();
   MyUSART1_Init(&huart1);
+  SigPara_PWM_Init();
+  
   //HAL_TIM_Base_Start(&htim2);
   
   //SigPara_Freq_Auto();
@@ -116,8 +119,8 @@ int main(void)
   //SigPara_Freq_HF_Init();
   //SigPara_Freq_LF_Init();
   
-  SigPara_Freq_Auto_SetMinPrecision(1);
-  SigPara_Freq_Auto_SetMaxTimeout(10000);
+  //SigPara_Freq_Auto_SetMinPrecision(1);
+  //SigPara_Freq_Auto_SetMaxTimeout(10000);
   
   /* USER CODE END 2 */
 
@@ -147,7 +150,7 @@ int main(void)
     //sprintf(str,"val: %f",RMS_Process()*3.3/4096);
     //MyUSART1_WriteLine(str);
     
-    Delay_ms(200);
+    Delay_ms(500);
     // 42000 contains 7 and 3, which can counteract the prime factor in 84MHz
     // 42000*20 = 840000, ~10ms per measurement
     // deltaF = 100Hz, E = 100Hz / f_actural
@@ -155,8 +158,10 @@ int main(void)
     //myftoa(SigPara_Freq_LF(500), str);
     //MyUSART1_WriteLine(str);
     
-    myftoa(SigPara_Freq_Auto(), str);
-    MyUSART1_WriteLine(str);
+    //myftoa(SigPara_Freq_Auto(), str);
+    //MyUSART1_WriteLine(str);
+    duty = SigPara_PWM(500, &freq);
+    printf("freq: %f, duty cycle: %f\r\n", freq, duty);
   }
   /* USER CODE END 3 */
 }
