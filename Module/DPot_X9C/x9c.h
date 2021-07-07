@@ -18,6 +18,7 @@
 
 void DPotX9C_Init(void);
 void DPotX9C_Change(int8_t delta);
-void DPotX9C_Store();
+void DPotX9C_Store(void);
+void DPotX9C_Return(void);
 
 #endif

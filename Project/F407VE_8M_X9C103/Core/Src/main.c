@@ -129,6 +129,11 @@ int main(void)
         DPotX9C_Store();
         printf("s\r\n");
       }
+      else if(str[0] == 'r') // restore
+      {
+        DPotX9C_Return();
+        printf("r\r\n");
+      }
     }
   }
   /* USER CODE END 3 */
