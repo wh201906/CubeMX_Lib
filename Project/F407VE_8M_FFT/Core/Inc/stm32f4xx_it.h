@@ -28,8 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "USART\myusart1.h" 
-#include "USART\myusart2.h" 
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
