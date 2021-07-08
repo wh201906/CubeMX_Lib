@@ -45,7 +45,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t buf[100];
+uint8_t buf[20];
 MyUARTHandle handle;
 /* USER CODE END PV */
 
@@ -67,7 +67,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t tmp[3];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,8 +92,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  Delay_ms(3000);
-  MyUART_Init(&handle, USART1, buf, 100);
+  MyUART_Init(&handle, USART1, buf, 18);
   printf("hello");
   MyUART_WriteStr(&handle, "this");
   MyUART_Write(&handle, "issss", 2);
@@ -109,6 +108,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(1000);
+
+    // MyUART_WriteChar(&handle, MyUART_ReadChar(&handle));
+    MyUART_Read(&handle, tmp, 3);
+    MyUART_Write(&handle, tmp, 3);
   }
   /* USER CODE END 3 */
 }

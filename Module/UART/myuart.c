@@ -9,7 +9,8 @@ void MyUART_Init(MyUARTHandle *handle, USART_TypeDef *USARTx, uint8_t *buffer, u
   handle->USARTx = USARTx;
   handle->buffer = buffer;
   handle->bufferLen = bufferLen;
-  handle->bufferPos = 0;
+  handle->headPos = 0;
+  handle->tailPos = 0;
   handle->isOverflow = 0;
   LL_USART_EnableIT_RXNE(USARTx);
 }
@@ -81,14 +82,130 @@ uint32_t MyUART_WriteLine(MyUARTHandle *handle, uint8_t *str)
   return (len + 2);
 }
 
+uint8_t MyUART_ReadChar(MyUARTHandle *handle)
+{
+  uint8_t ch;
+  if (handle->headPos == handle->tailPos)
+    return 0;
+  else
+  {
+    ch = handle->buffer[handle->headPos++];
+    handle->headPos %= handle->bufferLen;
+    return ch;
+  }
+}
+
+uint8_t MyUART_PeekChar(MyUARTHandle *handle)
+{
+  if (handle->headPos == handle->tailPos)
+    return 0;
+  else
+    return handle->buffer[handle->headPos];
+}
+
+uint32_t MyUART_Read(MyUARTHandle *handle, uint8_t *str, uint32_t maxLen)
+{
+  uint32_t i;
+  for (i = 0; i < maxLen && handle->headPos != handle->tailPos; i++)
+  {
+    str[i] = handle->buffer[handle->headPos++];
+    handle->headPos %= handle->bufferLen;
+  }
+  return i;
+}
+
+// return: position of \r + 1 (0~len-1 -> 1~len, nonzero) or 0
+uint8_t MyUART_CanReadLine(MyUARTHandle *handle)
+{
+  uint32_t i;
+  if (handle->buffer[handle->headPos] == '\r' && handle->buffer[(handle->headPos + 1) % handle->bufferLen] == '\n')
+    return 1;
+  for (; i != handle->tailPos; i++)
+  {
+    i %= handle->bufferLen;
+    if (handle->buffer[i] == '\n' && (i == 0 && handle->buffer[handle->bufferLen - 1] == '\r'))
+      return 1;
+    if (handle->buffer[i] == '\n' && handle->buffer[i - 1] == '\r')
+      return 1;
+  }
+  return 0;
+}
+
+// return: position of endChar + 1 (0~len-1 -> 1~len, nonzero) or 0
+uint8_t MyUART_CanReadUntil(MyUARTHandle *handle, uint16_t endChar)
+{
+  uint32_t i;
+  for (i = handle->headPos; i != handle->tailPos; i++)
+  {
+    i %= handle->bufferLen;
+    if (handle->buffer[i] == endChar)
+      return 1;
+  }
+  return 0;
+}
+
+uint8_t MyUART_CanReadStr(MyUARTHandle *handle)
+{
+  return MyUART_CanReadUntil(handle, '\0');
+}
+
+uint32_t MyUART_ReadStr(MyUARTHandle *handle, uint8_t *str)
+{
+  return MyUART_ReadUntil(handle, str, '\0');
+}
+
+uint32_t MyUART_ReadAll(MyUARTHandle *handle, uint8_t *str)
+{
+  return MyUART_Read(handle, str, 0xFFFFFFFF);
+}
+
+uint32_t MyUART_ReadUntil(MyUARTHandle *handle, uint8_t *str, uint16_t endChar)
+{
+  uint32_t i;
+  if (!MyUART_CanReadUntil(handle, endChar))
+    return 0;
+  for (i = 0; handle->headPos != handle->tailPos; i++)
+  {
+    if (handle->buffer[handle->headPos] == endChar)
+      break;
+    str[i] = handle->buffer[handle->headPos++];
+    handle->headPos %= handle->bufferLen;
+  }
+  return i;
+}
+
+uint32_t MyUART_ReadLine(MyUARTHandle *handle, uint8_t *str)
+{
+  uint32_t i;
+  if (!MyUART_CanReadLine(handle))
+    return 0;
+  for (i = 0; handle->headPos != handle->tailPos; i++)
+  {
+    if (handle->buffer[handle->headPos] == '\r' && handle->buffer[(handle->headPos + 1) % handle->bufferLen] == '\n')
+      break;
+    str[i] = handle->buffer[handle->headPos++];
+    handle->headPos %= handle->bufferLen;
+  }
+  return i;
+}
+
+void MyUART_ClearBuffer(MyUARTHandle *handle)
+{
+  handle->tailPos = 0;
+  handle->headPos = 0;
+}
+
 void MyUART_IRQHandler(MyUARTHandle *handle)
 {
+  uint32_t newTail;
   LL_USART_ClearFlag_RXNE(handle->USARTx);
-  if (handle->bufferPos >= handle->bufferLen)
+  newTail = handle->tailPos + 1;
+  newTail %= handle->bufferLen;
+  if (newTail == handle->headPos)
   {
-    handle->bufferPos = 0;
     handle->isOverflow = 1;
     return;
   }
-  handle->buffer[handle->bufferPos++] = LL_USART_ReceiveData8(handle->USARTx);
+  handle->buffer[handle->tailPos] = LL_USART_ReceiveData8(handle->USARTx);
+  handle->tailPos = newTail;
 }

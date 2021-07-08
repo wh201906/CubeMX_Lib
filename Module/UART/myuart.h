@@ -10,8 +10,9 @@ typedef struct _MyUARTHandle
   USART_TypeDef *USARTx;
   uint8_t *buffer;
   uint32_t bufferLen;
-  uint32_t bufferPos;
+  uint32_t headPos, tailPos;
   uint8_t isOverflow;
+  int32_t CRLFPos, zeroPos, endCharPos; // for faster implementation of CanReadxx(), unfinished
 } MyUARTHandle;
 
 void MyUART_SetOStream(USART_TypeDef *USARTx); // for printf()
@@ -27,8 +28,7 @@ uint32_t MyUART_WriteLine(MyUARTHandle *handle, uint8_t *str); // the \0 of the 
 
 uint8_t MyUART_ReadChar(MyUARTHandle *handle);
 uint8_t MyUART_PeekChar(MyUARTHandle *handle);
-uint32_t MyUART_Read(MyUARTHandle *handle, uint8_t *str, uint16_t maxLen);
-
+uint32_t MyUART_Read(MyUARTHandle *handle, uint8_t *str, uint32_t maxLen);
 uint8_t MyUART_CanReadLine(MyUARTHandle *handle);
 uint8_t MyUART_CanReadUntil(MyUARTHandle *handle, uint16_t endChar);
 uint8_t MyUART_CanReadStr(MyUARTHandle *handle);
@@ -38,8 +38,7 @@ uint32_t MyUART_ReadStr(MyUARTHandle *handle, uint8_t *str);
 uint32_t MyUART_ReadUntil(MyUARTHandle *handle, uint8_t *str, uint16_t endChar);
 uint32_t MyUART_ReadLine(MyUARTHandle *handle, uint8_t *str);
 uint32_t MyUART_ReadAll(MyUARTHandle *handle, uint8_t *str);
-void __MyUART_Shift(MyUARTHandle *handle, uint32_t len);
-void __MyUART_DumpAll(MyUARTHandle *handle);
+
 void MyUART_ClearBuffer(MyUARTHandle *handle);
 void MyUART_IRQHandler(MyUARTHandle *handle);
 #endif
