@@ -85,7 +85,7 @@ uint32_t MyUART_WriteLine(MyUARTHandle *handle, uint8_t *str)
 uint8_t MyUART_ReadChar(MyUARTHandle *handle)
 {
   uint8_t ch;
-  if (handle->headPos == handle->tailPos)
+  if (MyUART_IsEmpty(handle))
     return 0;
   else
   {
@@ -97,7 +97,7 @@ uint8_t MyUART_ReadChar(MyUARTHandle *handle)
 
 uint8_t MyUART_PeekChar(MyUARTHandle *handle)
 {
-  if (handle->headPos == handle->tailPos)
+  if (MyUART_IsEmpty(handle))
     return 0;
   else
     return handle->buffer[handle->headPos];
@@ -106,7 +106,7 @@ uint8_t MyUART_PeekChar(MyUARTHandle *handle)
 uint32_t MyUART_Read(MyUARTHandle *handle, uint8_t *str, uint32_t maxLen)
 {
   uint32_t i;
-  for (i = 0; i < maxLen && handle->headPos != handle->tailPos; i++)
+  for (i = 0; i < maxLen && !MyUART_IsEmpty(handle); i++)
   {
     str[i] = handle->buffer[handle->headPos++];
     handle->headPos %= handle->bufferLen;
@@ -118,12 +118,13 @@ uint32_t MyUART_Read(MyUARTHandle *handle, uint8_t *str, uint32_t maxLen)
 uint8_t MyUART_CanReadLine(MyUARTHandle *handle)
 {
   uint32_t i;
-  if (handle->buffer[handle->headPos] == '\r' && handle->buffer[(handle->headPos + 1) % handle->bufferLen] == '\n')
+  if (handle->buffer[handle->headPos] == '\r' && handle->buffer[MyUART_HeadNext(handle)] == '\n')
     return 1;
+  // handle '\n' first to make sure both '\r' and '\n' are valid
   for (; i != handle->tailPos; i++)
   {
     i %= handle->bufferLen;
-    if (handle->buffer[i] == '\n' && (i == 0 && handle->buffer[handle->bufferLen - 1] == '\r'))
+    if (handle->buffer[i] == '\n' && (i == 0 && handle->buffer[handle->bufferLen - 1] == '\r')) // \nXXX...XX\r
       return 1;
     if (handle->buffer[i] == '\n' && handle->buffer[i - 1] == '\r')
       return 1;
@@ -164,10 +165,14 @@ uint32_t MyUART_ReadUntil(MyUARTHandle *handle, uint8_t *str, uint16_t endChar)
   uint32_t i;
   if (!MyUART_CanReadUntil(handle, endChar))
     return 0;
-  for (i = 0; handle->headPos != handle->tailPos; i++)
+  for (i = 0; !MyUART_IsEmpty(handle); i++)
   {
     if (handle->buffer[handle->headPos] == endChar)
+    {
+      handle->headPos++;
+      handle->headPos %= handle->bufferLen;
       break;
+    }
     str[i] = handle->buffer[handle->headPos++];
     handle->headPos %= handle->bufferLen;
   }
@@ -179,10 +184,15 @@ uint32_t MyUART_ReadLine(MyUARTHandle *handle, uint8_t *str)
   uint32_t i;
   if (!MyUART_CanReadLine(handle))
     return 0;
-  for (i = 0; handle->headPos != handle->tailPos; i++)
+  for (i = 0; !MyUART_IsEmpty(handle); i++)
   {
-    if (handle->buffer[handle->headPos] == '\r' && handle->buffer[(handle->headPos + 1) % handle->bufferLen] == '\n')
+    // if CanReadLine returns 1, the '\n' is a valid char
+    if (handle->buffer[handle->headPos] == '\r' && handle->buffer[MyUART_HeadNext(handle)] == '\n')
+    {
+      handle->headPos += 2;
+      handle->headPos %= handle->bufferLen;
       break;
+    }
     str[i] = handle->buffer[handle->headPos++];
     handle->headPos %= handle->bufferLen;
   }
@@ -199,8 +209,7 @@ void MyUART_IRQHandler(MyUARTHandle *handle)
 {
   uint32_t newTail;
   LL_USART_ClearFlag_RXNE(handle->USARTx);
-  newTail = handle->tailPos + 1;
-  newTail %= handle->bufferLen;
+  newTail = MyUART_TailNext(handle);
   if (newTail == handle->headPos)
   {
     handle->isOverflow = 1;

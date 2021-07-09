@@ -39,6 +39,26 @@ uint32_t MyUART_ReadUntil(MyUARTHandle *handle, uint8_t *str, uint16_t endChar);
 uint32_t MyUART_ReadLine(MyUARTHandle *handle, uint8_t *str);
 uint32_t MyUART_ReadAll(MyUARTHandle *handle, uint8_t *str);
 
+__STATIC_INLINE uint32_t MyUART_HeadNext(MyUARTHandle *handle)
+{
+  return ((handle->headPos + 1) % handle->bufferLen);
+}
+
+__STATIC_INLINE uint32_t MyUART_TailNext(MyUARTHandle *handle)
+{
+  return ((handle->tailPos + 1) % handle->bufferLen);
+}
+
+__STATIC_INLINE uint8_t MyUART_IsFull(MyUARTHandle *handle)
+{
+  return (MyUART_TailNext(handle) == handle->headPos);
+}
+
+__STATIC_INLINE uint8_t MyUART_IsEmpty(MyUARTHandle *handle)
+{
+  return (handle->headPos == handle->tailPos);
+}
+
 void MyUART_ClearBuffer(MyUARTHandle *handle);
 void MyUART_IRQHandler(MyUARTHandle *handle);
 #endif

@@ -52,6 +52,8 @@ uint32_t sampleRate=200000;
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
+MyUARTHandle uartHandle1, uartHandle2;
+uint8_t uartBuf1[15], uartBuf2[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,7 +71,7 @@ void printAll(float32_t* addr,uint16_t len)
   for(i=0;i<len;i++)
   {
     sprintf(buf,"%d:%f",i,*(addr+i));
-    MyUSART1_WriteLine(buf);
+    MyUART_WriteLine(&uartHandle1,buf);
     Delay_ms(2);
   }
 }
@@ -109,12 +111,14 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(120);
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
-  MyUSART1_Init(&huart1);
+  MyUART_Init(&uartHandle1, USART1, uartBuf1, 15);
+  MyUART_Init(&uartHandle2, USART2, uartBuf2, 100);
   MyFFT_Init(sampleRate);
   printf("THD Test\r\n");
   Delay_ms(200);
@@ -133,7 +137,7 @@ int main(void)
       for(i=0;i<FFT_LENGTH;i++)
         fftData[i]=val[i];
       MyFFT_CalcInPlace(fftData);
-      if(MyUSART1_ReadUntil(str, '>'))
+      if(MyUART_ReadUntil(&uartHandle1, str, '>'))
       {
         if(str[0] == '1') // print fft result
           printAll(fftData,sizeof(fftData)/sizeof(fftData[0])/2);

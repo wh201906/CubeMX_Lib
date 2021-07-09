@@ -118,6 +118,7 @@ int main(void)
   Delay_ms(500);
   HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   MyFFT_Init(sampleRate);
+  MyFFT_FlattopWindow();
   HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   Delay_ms(200);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
