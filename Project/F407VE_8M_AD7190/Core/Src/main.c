@@ -26,7 +26,6 @@
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
 #include "AD7190/ad7190.h"
-#include "USART/myusart1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+MyUARTHandle uartHandle;
+uint8_t uartBuf[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +97,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   AD7190_Init();
-  MyUSART1_Init(&huart1);
+  MyUART_Init(&uartHandle, USART1, uartBuf, 100);
   printf("AD7190 Test\r\n\r\n");
   /* USER CODE END 2 */
 
@@ -108,7 +108,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(MyUSART1_ReadUntil(str,'>'))
+    if(MyUART_ReadUntil(&uartHandle, str, '>'))
     {
       if(str[0]=='0')
       {
