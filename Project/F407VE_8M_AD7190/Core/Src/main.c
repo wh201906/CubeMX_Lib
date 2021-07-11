@@ -59,7 +59,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 void demo()
 {
-  AD7190_SetConf(0x000108); // //write configuration register,unipolar operation,gain=1,channel:AIN1 to AIN2
+  AD7190_SetConf(0x000100); // //write configuration register,bipolar operation,gain=1,channel:AIN1 to AIN2
   AD7190_SetMode(0x0803FF); // write mode register,internal 4.92MHz clock,output data rate=4.7Hz
 }
 /* USER CODE END 0 */
@@ -73,6 +73,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t ID, conf;
   uint8_t str[100];
+  uint32_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,7 +97,7 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  AD7190_Init();
+  AD7190_Init(3.0);
   MyUART_Init(&uartHandle, USART1, uartBuf, 100);
   printf("AD7190 Test\r\n\r\n");
   /* USER CODE END 2 */
@@ -108,24 +109,44 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(MyUART_ReadUntil(&uartHandle, str, '>'))
+    val=MyUART_ReadUntil(&uartHandle, str, '>');
+    if(val)
     {
-      if(str[0]=='0')
+      str[val]='\0';
+      if(str[0]=='r')
       {
         AD7190_Reset();
         printf("Reset sequence sent\r\n");
       }
-      else if(str[0]=='1')
+      else if(str[0]=='i')
         printf("ID: 0x%x\r\n", AD7190_GetID());
-      else if(str[0]=='2')
-        printf("Conf: 0x%x\r\n", AD7190_GetConf());
-      else if(str[0]=='3')
+      else if(str[0]=='c')
+      {
+        if(str[1]=='\0' || str[1]=='>')
+          printf("Conf: 0x%x\r\n", AD7190_GetConf());
+        else
+        {
+          AD7190_SetConf(myatoi_hex(str+1));
+          printf("SetConf: 0x%x\r\n", AD7190_GetConf());
+        }
+      }
+      else if(str[0]=='s')
         printf("State: 0x%x\r\n", AD7190_GetState());
-      else if(str[0]=='4')
-        printf("Mode: 0x%x\r\n", AD7190_GetMode());
-      else if(str[0]=='5')
+      else if(str[0]=='m')
+      {
+        if(str[1]=='\0' || str[1]=='>')
+          printf("Mode: 0x%x\r\n", AD7190_GetMode());
+        else
+        {
+          AD7190_SetMode(myatoi_hex(str+1));
+          printf("SetMode: 0x%x\r\n", AD7190_GetMode());
+        }
+      }
+      else if(str[0]=='d')
         printf("Data: 0x%x\r\n", AD7190_GetData());
-      else if(str[0]=='6')
+      else if(str[0]=='v')
+        printf("Voltage: %f\r\n", AD7190_GetVoltage());
+      else if(str[0]=='t')
       {
         demo();
         printf("Demo\r\n");

@@ -6,6 +6,32 @@
 #define AD7190_DOUT() (HAL_GPIO_ReadPin(AD7190_DOUT_GPIO, AD7190_DOUT_PIN))
 #define AD7190_Delay() Delay_us(1)
 
+double AD7190_refV;
+int16_t AD7190_gain = 128;
+uint8_t AD7190_isUnipolar = 0;
+
+void AD7190_UpdateConf(uint32_t conf)
+{
+  uint32_t tmp;
+
+  tmp = conf & AD7190_GAIN_MASK;
+  if (tmp == AD7190_GAIN_1)
+    AD7190_gain = 1;
+  else if (tmp == AD7190_GAIN_8)
+    AD7190_gain = 8;
+  else if (tmp == AD7190_GAIN_16)
+    AD7190_gain = 16;
+  else if (tmp == AD7190_GAIN_32)
+    AD7190_gain = 32;
+  else if (tmp == AD7190_GAIN_64)
+    AD7190_gain = 64;
+  else if (tmp == AD7190_GAIN_128)
+    AD7190_gain = 128;
+
+  tmp = conf & AD7190_POLAR_MASK;
+  AD7190_isUnipolar = (tmp == AD7190_POLAR_UNIPOLAR);
+}
+
 uint8_t AD7190_GetState(void)
 {
   AD7190_Write(0x40, 8);
@@ -33,14 +59,19 @@ uint8_t AD7190_SetMode(uint32_t mode)
 
 uint32_t AD7190_GetConf(void)
 {
+  uint32_t conf;
   AD7190_Write(0x50, 8);
-  return AD7190_Read(24);
+  conf = AD7190_Read(24);
+  AD7190_UpdateConf(conf);
+  return conf;
 }
 
 uint8_t AD7190_SetConf(uint32_t conf)
 {
   AD7190_Write(0x10, 8);
   AD7190_Write(conf, 24);
+  if (AD7190_GetConf() == conf)
+    AD7190_UpdateConf(conf);
   return (AD7190_GetConf() == conf);
 }
 
@@ -90,7 +121,7 @@ void AD7190_Reset(void)
   Delay_us(500);
 }
 
-uint8_t AD7190_Init(void)
+uint8_t AD7190_Init(double refV)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -119,8 +150,44 @@ uint8_t AD7190_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(AD7190_DOUT_GPIO, &GPIO_InitStruct);
 
+  AD7190_refV = refV;
+
   AD7190_Reset();
   return AD7190_GetID();
+}
+
+double AD7190_GetVoltage(void)
+{
+  uint32_t raw = AD7190_GetData();
+  double val;
+  if (AD7190_isUnipolar)
+  {
+    val = AD7190_refV * raw / 0x1000000 / AD7190_gain;
+  }
+  else
+  {
+    if (raw >= 0x800000)
+      val = AD7190_refV * (raw - 0x800000) / 0x800000 / AD7190_gain;
+    else
+      val = -AD7190_refV * (0x800000 - raw) / 0x800000 / AD7190_gain;
+  }
+  return val;
+}
+
+void AD7190_SetPolar(uint8_t polar)
+{
+  uint32_t conf = AD7190_GetConf();
+  conf &= ~AD7190_POLAR_MASK;
+  conf |= polar;
+  AD7190_SetConf(conf);
+}
+
+void AD7190_SetGain(uint8_t gain)
+{
+  uint32_t conf = AD7190_GetConf();
+  conf &= ~AD7190_GAIN_MASK;
+  conf |= gain;
+  AD7190_SetConf(conf);
 }
 
 uint32_t AD7190_Read(uint8_t bitLen)
