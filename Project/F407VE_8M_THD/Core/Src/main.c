@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "hmi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,7 +37,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define FFT_LENGTH 1024
 
 uint32_t sampleRate=200000;
 /* USER CODE END PD */
@@ -53,7 +52,7 @@ uint32_t sampleRate=200000;
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
 MyUARTHandle uartHandle1, uartHandle2;
-uint8_t uartBuf1[15], uartBuf2[100];
+uint8_t uartBuf1[100], uartBuf2[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,17 +63,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void printAll(float32_t* addr,uint16_t len)
-{
-  char buf[20];
-  uint16_t i;
-  for(i=0;i<len;i++)
-  {
-    sprintf(buf,"%d:%f",i,*(addr+i));
-    MyUART_WriteLine(&uartHandle1,buf);
-    Delay_ms(2);
-  }
-}
 /* USER CODE END 0 */
 
 /**
@@ -84,9 +72,6 @@ void printAll(float32_t* addr,uint16_t len)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t i;
-  double thd;
-  char str[64];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -114,12 +99,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(120);
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
-  HAL_TIM_Base_Start(&htim2);
-  HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
-  MyUART_Init(&uartHandle1, USART1, uartBuf1, 15);
+  MyUART_Init(&uartHandle1, USART1, uartBuf1, 100);
   MyUART_Init(&uartHandle2, USART2, uartBuf2, 100);
-  MyFFT_Init(sampleRate);
   printf("THD Test\r\n");
   Delay_ms(200);
   /* USER CODE END 2 */
@@ -131,53 +112,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(__HAL_ADC_GET_FLAG(&hadc1,ADC_FLAG_OVR))
-    {
-      hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-      for(i=0;i<FFT_LENGTH;i++)
-        fftData[i]=val[i];
-      MyFFT_CalcInPlace(fftData);
-      if(MyUART_ReadUntil(&uartHandle1, str, '>'))
-      {
-        if(str[0] == '1') // print fft result
-          printAll(fftData,sizeof(fftData)/sizeof(fftData[0])/2);
-        else if(str[0] == '2')
-        {
-          MyFFT_NoWindow();
-          printf("Using Rect Window(None)\r\n");
-        }
-        else if(str[0] == '3')
-        {
-          MyFFT_HannWindow();
-          printf("Using Hann Window\r\n");
-        }
-        else if(str[0] == '4')
-        {
-          MyFFT_FlattopWindow();
-          printf("Using Flattop Window\r\n");
-        }
-        else if(str[0] == '5')
-        {
-          MyFFT_HammingWindow();
-          printf("Using Hamming Window\r\n");
-        }
-        else if(str[0] == '6')
-        {
-          MyFFT_BlackmanWindow();
-          printf("Using Blackman Window\r\n");
-        }
-        else if(str[0] == '7')
-        {
-          MyFFT_TriangWindow();
-          printf("Using Triang Window\r\n");
-        }
-      }
-      Delay_ms(500);
-      thd = MyFFT_THD(fftData, FFT_LENGTH/2, 5, 5); // skip DC related
-      printf("THD: %lf\r\n", thd);
-      // DMA DOES take the bandwidth, so I start it after UART transmition.
-      HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
-    }
+    Delay_ms(10);
+    HMI_Process();
   }
   /* USER CODE END 3 */
 }

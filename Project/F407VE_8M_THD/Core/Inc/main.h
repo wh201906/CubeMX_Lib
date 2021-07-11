@@ -63,7 +63,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define FFT_LENGTH 1024
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
