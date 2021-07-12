@@ -14,6 +14,9 @@ uint8_t HMI_CurrentChannel = 0;
 uint8_t HMI_THD_harmony = 5;
 uint8_t HMI_THD_Counter = 0;
 uint8_t HMI_THD_AutoMode = 0;
+// used for moving average
+double HMI_THD_Vals[10];
+uint8_t HMI_THD_idx = 0;
 
 uint16_t HMI_Spectrum_windowType = 0;
 uint16_t HMI_Spectrum_offsetX = 0;
@@ -40,13 +43,17 @@ void HMI_Process()
   if (!tmp)
     return;
   HMI_Buf[tmp] = '>';
+  if (HMI_Buf[0] != 'p' && HMI_Buf[0] != 't' && HMI_Buf[0] != 's' && HMI_Buf[0] != 'w')
+    return;
   if (HMI_Buf[0] == 'p')
   {
+    MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
     HMI_CurrentPage = HMI_Buf[1];
     HMI_PageInit();
   }
   else if (HMI_Buf[0] != HMI_CurrentPage)
   {
+    MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
     HMI_CurrentPage = HMI_Buf[0];
     HMI_PageInit();
   }
@@ -98,14 +105,14 @@ void HMI_THDPage()
 {
   double THD;
   int32_t i;
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
-  while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
-    ;
-  hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-  for (i = 0; i < FFT_LENGTH; i++)
-    fftData[i] = val[i];
-  MyFFT_CalcInPlace(fftData);
-  THD = MyFFT_THD(fftData, FFT_LENGTH / 2, 5, HMI_THD_harmony);
+  THD = 0;
+  for (i = 0; i < 3; i++)
+  {
+    HMI_DoFFT();
+    THD += MyFFT_THD(fftData, FFT_LENGTH / 2, 5, HMI_THD_harmony); // maybe replace 5 with 20 since 1024->4096?
+  }
+  THD /= 3;
+  THD = HMI_THD_GetMovingAverage(THD);
   myftoa(THD * 100, HMI_Buf);
   MyUART_WriteStr(&uartHandle2, "thdtext.txt=\"");
   MyUART_WriteStr(&uartHandle2, HMI_Buf);
@@ -122,7 +129,7 @@ void HMI_THDPage()
       HMI_THD_UpdateLabel();
     }
   }
-  Delay_ms(200);
+  Delay_ms(100);
 }
 
 void HMI_WavePage()
@@ -133,16 +140,9 @@ void HMI_SpectrumPage()
 {
   uint8_t rxBuf[10];
   uint8_t displayBuf[400];
-  double THD;
   int32_t i;
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
-  while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
-    ;
-  hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-  for (i = 0; i < FFT_LENGTH; i++)
-    fftData[i] = val[i];
-  MyFFT_CalcInPlace(fftData);
 
+  HMI_DoFFT();
   HMI_Scale(fftData, displayBuf, HMI_Spectrum_offsetX, HMI_Spectrum_rangeX, HMI_Spectrum_offsetY, HMI_Spectrum_rangeY);
   MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
   MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
@@ -205,6 +205,16 @@ void HMI_THD_SetChannel(uint8_t channel)
 {
   if (channel >= 0 && channel <= 4)
     GPIOD->ODR = channel;
+}
+
+double HMI_THD_GetMovingAverage(double input)
+{
+  double result = 0;
+  HMI_THD_Vals[HMI_THD_idx++] = input;
+  HMI_THD_idx %= 10;
+  for (HMI_Buf[0] = 0; HMI_Buf[0] < 10; HMI_Buf[0]++)
+    result += HMI_THD_Vals[HMI_Buf[0]];
+  return result / 10.0;
 }
 
 // Scale from xLen*yLen to xRange*yRange
@@ -309,4 +319,16 @@ uint8_t HMI_WaitResponse(uint8_t ch, uint16_t timeout)
     MyUART_Read(&uartHandle2, rxBuf, 4);
   }
   return 0;
+}
+
+void HMI_DoFFT()
+{
+  int32_t i;
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
+  while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
+    ;
+  hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+  for (i = 0; i < FFT_LENGTH; i++)
+    fftData[i] = val[i];
+  MyFFT_CalcInPlace(fftData);
 }
