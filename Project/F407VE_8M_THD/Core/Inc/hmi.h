@@ -14,4 +14,7 @@ void HMI_THDInst();
 void HMI_WaveInst();
 void HMI_SpectrumInst();
 
+void HMI_THD_SetChannel(uint8_t channel);
+void HMI_THD_UpdateLabel();
+
 #endif
