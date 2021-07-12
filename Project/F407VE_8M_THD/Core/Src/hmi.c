@@ -90,6 +90,7 @@ void HMI_SpectrumInit()
   htim2.Instance->EGR = TIM_EGR_UG;
   HAL_TIM_Base_Start(&htim2);
   MyFFT_Init(1);
+  HMI_Spectrum_UpdateWindow();
   HMI_Spectrum_SetWindow();
 }
 
@@ -143,20 +144,12 @@ void HMI_SpectrumPage()
   MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
   MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
   MyUART_WriteStr(&uartHandle2, "addt 1,0,400\xFF\xFF\xFF");
-
-  // Wait for response in 30ms
-  rxBuf[0] = 0x00;
-  for (i = 0; i < 15; i++)
-  {
-    if (rxBuf[0] == 0xFE)
-      break;
-    Delay_ms(2);
-    MyUART_Read(&uartHandle2, rxBuf, 4);
-  }
+  HMI_WaitResponse(0xFE, 30);
 
   for (i = 0; i < 400; i++)
     MyUART_WriteChar(&uartHandle2, displayBuf[i]);
-  Delay_ms(5);
+  HMI_WaitResponse(0xFD, 30);
+
   MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
   Delay_ms(200);
 }
@@ -297,4 +290,18 @@ void HMI_Spectrum_SetWindow()
     MyFFT_HammingWindow();
   else if (HMI_Spectrum_windowType == 3)
     MyFFT_FlattopWindow();
+}
+
+uint8_t HMI_WaitResponse(uint8_t ch, uint16_t timeout)
+{
+  uint8_t rxBuf[15];
+  rxBuf[0] = 0x00;
+  while (timeout--)
+  {
+    if (rxBuf[0] == ch)
+      return 1;
+    Delay_ms(1);
+    MyUART_Read(&uartHandle2, rxBuf, 4);
+  }
+  return 0;
 }

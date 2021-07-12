@@ -52,7 +52,7 @@ uint32_t sampleRate=200000;
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
 MyUARTHandle uartHandle1, uartHandle2;
-uint8_t uartBuf1[100], uartBuf2[100];
+uint8_t uartBuf1[100], uartBuf2[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -100,7 +100,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(120);
   MyUART_Init(&uartHandle1, USART1, uartBuf1, 100);
-  MyUART_Init(&uartHandle2, USART2, uartBuf2, 100);
+  MyUART_Init(&uartHandle2, USART2, uartBuf2, 20);
   printf("THD Test\r\n");
   Delay_ms(200);
   /* USER CODE END 2 */
