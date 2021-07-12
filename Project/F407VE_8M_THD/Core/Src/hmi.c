@@ -116,7 +116,10 @@ void HMI_THDPage()
     HMI_THD_Counter %= 10; // 200ms*10
     if (HMI_THD_Counter == 0)
     {
-      // Change channel
+      HMI_CurrentChannel++;
+      HMI_CurrentChannel %= 5;
+      HMI_THD_SetChannel(HMI_CurrentChannel);
+      HMI_THD_UpdateLabel();
     }
   }
   Delay_ms(200);
@@ -171,7 +174,17 @@ void HMI_THDInst()
   }
   else if (HMI_Buf[1] >= '0' && HMI_Buf[1] <= '5')
   {
-    HMI_THD_SetChannel(HMI_Buf[1] - '0');
+    tmp = HMI_Buf[1] - '0';
+    if (tmp >= 0 && tmp <= 4)
+    {
+      HMI_THD_AutoMode = 0;
+      HMI_CurrentChannel = tmp;
+      HMI_THD_SetChannel(tmp);
+    }
+    else if (tmp == 5)
+    {
+      HMI_THD_AutoMode = 1;
+    }
   }
 }
 
@@ -191,15 +204,7 @@ void HMI_SpectrumInst()
 void HMI_THD_SetChannel(uint8_t channel)
 {
   if (channel >= 0 && channel <= 4)
-  {
-    HMI_THD_AutoMode = 0;
-    HMI_CurrentChannel = channel;
-    // Change channel
-  }
-  else if (channel == 5)
-  {
-    HMI_THD_AutoMode = 1;
-  }
+    GPIOD->ODR = channel;
 }
 
 // Scale from xLen*yLen to xRange*yRange

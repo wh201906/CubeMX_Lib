@@ -152,7 +152,7 @@ double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
   double thd;
   uint8_t i, tmp;
   uint32_t baseI;
-  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.05;
+  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.001;
   float32_t currHarmony;
   uint16_t range = 1;
   arm_min_f32(data + offset, len - offset, &noiseV, &baseI); //no arm_min_no_idx_f32() now, baseI will be overrided
