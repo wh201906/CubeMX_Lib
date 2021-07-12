@@ -149,6 +149,7 @@ double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)
 
 double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
 {
+  double thd;
   uint8_t i, tmp;
   uint32_t baseI;
   float32_t baseV, harmonyV = 0, noiseV, threshold = 0.05;
@@ -171,7 +172,8 @@ double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
       harmonyV += currHarmony * currHarmony;
   }
   arm_sqrt_f32(harmonyV, &harmonyV);
-  return (double)harmonyV / baseV;
+  thd = (double)harmonyV / baseV;
+  return (thd > 1 ? 1.0 : thd);
 }
 
 void MyFFT_GenerateArray(float32_t *data, double sampleRate, double *freqArray, double *ampArray, uint32_t arrayLen)
