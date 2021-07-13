@@ -216,7 +216,7 @@ double HMI_THD_GetMovingAverage(double input)
   for (HMI_Buf[0] = 0; HMI_Buf[0] < windowLen; HMI_Buf[0]++)
     result += HMI_THD_Vals[HMI_Buf[0]];
   result /= windowLen;
-  if (fabs(result - input) > 0.02) // for faster response, threshold is 2%
+  if (fabs(result - input) > 0.005) // for faster response, threshold is 0.5%
   {
     for (HMI_Buf[0] = 0; HMI_Buf[0] < windowLen; HMI_Buf[0]++)
       HMI_THD_Vals[HMI_Buf[0]] = input;
