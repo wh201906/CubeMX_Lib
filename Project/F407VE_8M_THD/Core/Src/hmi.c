@@ -24,6 +24,11 @@ uint16_t HMI_Spectrum_rangeX = 400;
 uint16_t HMI_Spectrum_offsetY = 0;
 uint16_t HMI_Spectrum_rangeY = 250;
 
+uint16_t HMI_Wave_offsetX = 0;
+uint16_t HMI_Wave_rangeX = 400;
+uint16_t HMI_Wave_offsetY = 0;
+uint16_t HMI_Wave_rangeY = 250;
+
 extern MyUARTHandle uartHandle1, uartHandle2;
 extern uint16_t val[FFT_LENGTH];
 extern float32_t fftData[FFT_LENGTH];
@@ -89,6 +94,10 @@ void HMI_THDInit()
 }
 void HMI_WaveInit()
 {
+  __HAL_TIM_SET_AUTORELOAD(&htim2, 585);
+  __HAL_TIM_SET_PRESCALER(&htim2, 0);
+  htim2.Instance->EGR = TIM_EGR_UG;
+  HAL_TIM_Base_Start(&htim2);
 }
 void HMI_SpectrumInit()
 {
@@ -134,6 +143,28 @@ void HMI_THDPage()
 
 void HMI_WavePage()
 {
+  int32_t i;
+  uint8_t displayBuf[400];
+
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
+  while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
+    ;
+  hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+
+  for (i = 0; i < 400; i++)
+    displayBuf[i] = val[i] >> 4;
+
+  MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
+  MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
+  MyUART_WriteStr(&uartHandle2, "addt 1,0,400\xFF\xFF\xFF");
+  HMI_WaitResponse(0xFE, 30);
+
+  for (i = 0; i < 400; i++)
+    MyUART_WriteChar(&uartHandle2, displayBuf[i]);
+  HMI_WaitResponse(0xFD, 30);
+
+  MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
+  Delay_ms(200);
 }
 
 void HMI_SpectrumPage()
@@ -164,13 +195,9 @@ void HMI_THDInst()
   {
     tmp = myatoi(HMI_Buf + 2);
     if ((tmp == HMI_THD_harmony + 1 || tmp == HMI_THD_harmony - 1) && tmp != 0)
-    {
       HMI_THD_harmony = tmp;
-    }
     else
-    {
       HMI_THD_UpdateHarmony();
-    }
   }
   else if (HMI_Buf[1] >= '0' && HMI_Buf[1] <= '5')
   {
@@ -194,10 +221,59 @@ void HMI_WaveInst()
 
 void HMI_SpectrumInst()
 {
+  uint16_t tmp;
   if (HMI_Buf[1] >= '0' && HMI_Buf[1] <= '3')
   {
     HMI_Spectrum_windowType = HMI_Buf[1] - '0';
     HMI_Spectrum_SetWindow();
+  }
+  else if (HMI_Buf[1] == 'x')
+  {
+    if (HMI_Buf[2] == 's')
+    {
+      tmp = myatoi(HMI_Buf + 3);
+      if (tmp < FFT_LENGTH / 2)
+        HMI_Spectrum_offsetX = tmp;
+    }
+    else if (HMI_Buf[2] == 'u')
+    {
+      if (HMI_Spectrum_rangeX == 100)
+        HMI_Spectrum_rangeX = 200;
+      else if (HMI_Spectrum_rangeX == 200)
+        HMI_Spectrum_rangeX = 400;
+      else if (HMI_Spectrum_rangeX == 400)
+        HMI_Spectrum_rangeX = 1000;
+      else if (HMI_Spectrum_rangeX == 1000)
+        HMI_Spectrum_rangeX = 2000;
+      myitoa(FFT_LENGTH / 2 - HMI_Spectrum_rangeX, HMI_Buf, 10);
+      MyUART_WriteStr(&uartHandle2, "sliderX.maxval=");
+      MyUART_WriteStr(&uartHandle2, HMI_Buf);
+      MyUART_WriteStr(&uartHandle2, "\xFF\xFF\xFF");
+    }
+    else if (HMI_Buf[2] == 'd')
+    {
+      if (HMI_Spectrum_rangeX == 200)
+        HMI_Spectrum_rangeX = 100;
+      else if (HMI_Spectrum_rangeX == 400)
+        HMI_Spectrum_rangeX = 200;
+      else if (HMI_Spectrum_rangeX == 1000)
+        HMI_Spectrum_rangeX = 400;
+      else if (HMI_Spectrum_rangeX == 2000)
+        HMI_Spectrum_rangeX = 1000;
+      myitoa(FFT_LENGTH / 2 - HMI_Spectrum_rangeX, HMI_Buf, 10);
+      MyUART_WriteStr(&uartHandle2, "sliderX.maxval=");
+      MyUART_WriteStr(&uartHandle2, HMI_Buf);
+      MyUART_WriteStr(&uartHandle2, "\xFF\xFF\xFF");
+    }
+  }
+  else if (HMI_Buf[1] == 'y')
+  {
+    if (HMI_Buf[2] == 's')
+    {
+      tmp = myatoi(HMI_Buf + 3);
+      if (tmp < FFT_LENGTH / 2)
+        HMI_Spectrum_offsetY = tmp;
+    }
   }
 }
 
