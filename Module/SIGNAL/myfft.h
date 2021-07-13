@@ -5,7 +5,7 @@
 #include "arm_math.h"
 
 // bigger -> more precise -> takes longer time
-#define MYFFT_LENGTH 1024
+#define MYFFT_LENGTH 4096
 
 // use window, slower, more memory cost
 #define MYFFT_USE_WINDOW 1

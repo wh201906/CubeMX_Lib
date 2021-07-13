@@ -15,7 +15,7 @@ uint8_t HMI_THD_harmony = 5;
 uint8_t HMI_THD_Counter = 0;
 uint8_t HMI_THD_AutoMode = 0;
 // used for moving average
-double HMI_THD_Vals[10];
+double HMI_THD_Vals[50];
 uint8_t HMI_THD_idx = 0;
 
 uint16_t HMI_Spectrum_windowType = 0;
@@ -106,14 +106,14 @@ void HMI_THDPage()
   double THD;
   int32_t i;
   THD = 0;
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < 5; i++) // use -O3 optimize to get a proper refresh rate
   {
     HMI_DoFFT();
-    THD += MyFFT_THD(fftData, FFT_LENGTH / 2, 5, HMI_THD_harmony); // maybe replace 5 with 20 since 1024->4096?
+    THD += MyFFT_THD(fftData, FFT_LENGTH / 2, 20, HMI_THD_harmony);
   }
-  THD /= 3;
+  THD /= 5;
   THD = HMI_THD_GetMovingAverage(THD);
-  myftoa(THD * 100, HMI_Buf);
+  myftoa_FD(THD * 100, HMI_Buf, 3);
   MyUART_WriteStr(&uartHandle2, "thdtext.txt=\"");
   MyUART_WriteStr(&uartHandle2, HMI_Buf);
   MyUART_WriteStr(&uartHandle2, "%\"\xFF\xFF\xFF");
@@ -129,7 +129,7 @@ void HMI_THDPage()
       HMI_THD_UpdateLabel();
     }
   }
-  Delay_ms(100);
+  Delay_ms(10);
 }
 
 void HMI_WavePage()
@@ -209,12 +209,20 @@ void HMI_THD_SetChannel(uint8_t channel)
 
 double HMI_THD_GetMovingAverage(double input)
 {
+  uint8_t windowLen = 20;
   double result = 0;
   HMI_THD_Vals[HMI_THD_idx++] = input;
-  HMI_THD_idx %= 10;
-  for (HMI_Buf[0] = 0; HMI_Buf[0] < 10; HMI_Buf[0]++)
+  HMI_THD_idx %= windowLen;
+  for (HMI_Buf[0] = 0; HMI_Buf[0] < windowLen; HMI_Buf[0]++)
     result += HMI_THD_Vals[HMI_Buf[0]];
-  return result / 10.0;
+  result /= windowLen;
+  if (fabs(result - input) > 0.02) // for faster response, threshold is 2%
+  {
+    for (HMI_Buf[0] = 0; HMI_Buf[0] < windowLen; HMI_Buf[0]++)
+      HMI_THD_Vals[HMI_Buf[0]] = input;
+    result = HMI_THD_GetMovingAverage(input);
+  }
+  return result;
 }
 
 // Scale from xLen*yLen to xRange*yRange
@@ -246,15 +254,15 @@ void HMI_Scale(float32_t *src, uint8_t *dst, uint32_t xBegin, uint32_t xLen, uin
 void HMI_THD_UpdateLabel()
 {
   if (HMI_CurrentChannel == 0)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前波形：正常波形\"\xFF\xFF\xFF");
+    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：正常波形\"\xFF\xFF\xFF");
   else if (HMI_CurrentChannel == 1)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前波形：顶部失真\"\xFF\xFF\xFF");
+    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：顶部失真\"\xFF\xFF\xFF");
   else if (HMI_CurrentChannel == 2)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前波形：底部失真\"\xFF\xFF\xFF");
+    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：底部失真\"\xFF\xFF\xFF");
   else if (HMI_CurrentChannel == 3)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前波形：双向失真\"\xFF\xFF\xFF");
+    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：双向失真\"\xFF\xFF\xFF");
   else if (HMI_CurrentChannel == 4)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前波形：交越失真\"\xFF\xFF\xFF");
+    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：交越失真\"\xFF\xFF\xFF");
 }
 
 void HMI_THD_UpdateHarmony()
