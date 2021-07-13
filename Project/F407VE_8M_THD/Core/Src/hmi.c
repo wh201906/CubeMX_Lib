@@ -52,13 +52,13 @@ void HMI_Process()
     return;
   if (HMI_Buf[0] == 'p')
   {
-    MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
+  HMI_SendCMD("ref_star");
     HMI_CurrentPage = HMI_Buf[1];
     HMI_PageInit();
   }
   else if (HMI_Buf[0] != HMI_CurrentPage)
   {
-    MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
+  HMI_SendCMD("ref_star");
     HMI_CurrentPage = HMI_Buf[0];
     HMI_PageInit();
   }
@@ -154,16 +154,16 @@ void HMI_WavePage()
   for (i = 0; i < 400; i++)
     displayBuf[i] = val[i] >> 4;
 
-  MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "addt 1,0,400\xFF\xFF\xFF");
+  HMI_SendCMD("ref_stop");
+  HMI_SendCMD("cle 1,0");
+  HMI_SendCMD("addt 1,0,400");
   HMI_WaitResponse(0xFE, 30);
 
   for (i = 0; i < 400; i++)
     MyUART_WriteChar(&uartHandle2, displayBuf[i]);
   HMI_WaitResponse(0xFD, 30);
 
-  MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
+  HMI_SendCMD("ref_star");
   Delay_ms(200);
 }
 
@@ -175,16 +175,16 @@ void HMI_SpectrumPage()
 
   HMI_DoFFT(0);
   HMI_Scale(fftData, displayBuf, HMI_Spectrum_offsetX, HMI_Spectrum_rangeX, HMI_Spectrum_offsetY, HMI_Spectrum_rangeY);
-  MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "addt 1,0,400\xFF\xFF\xFF");
+  HMI_SendCMD("ref_stop");
+  HMI_SendCMD("cle 1,0");
+  HMI_SendCMD("addt 1,0,400");
   HMI_WaitResponse(0xFE, 30);
 
   for (i = 0; i < 400; i++)
     MyUART_WriteChar(&uartHandle2, displayBuf[i]);
   HMI_WaitResponse(0xFD, 30);
 
-  MyUART_WriteStr(&uartHandle2, "ref_star\xFF\xFF\xFF");
+  HMI_SendCMD("ref_star");
   Delay_ms(200);
 }
 
@@ -330,15 +330,15 @@ void HMI_Scale(float32_t *src, uint8_t *dst, uint32_t xBegin, uint32_t xLen, uin
 void HMI_THD_UpdateLabel()
 {
   if (HMI_CurrentChannel == 0)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：正常波形\"\xFF\xFF\xFF");
+    HMI_SendCMD("currtype.txt=\"当前测量：正常波形\"");
   else if (HMI_CurrentChannel == 1)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：顶部失真\"\xFF\xFF\xFF");
+    HMI_SendCMD("currtype.txt=\"当前测量：顶部失真\"");
   else if (HMI_CurrentChannel == 2)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：底部失真\"\xFF\xFF\xFF");
+    HMI_SendCMD("currtype.txt=\"当前测量：底部失真\"");
   else if (HMI_CurrentChannel == 3)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：双向失真\"\xFF\xFF\xFF");
+    HMI_SendCMD("currtype.txt=\"当前测量：双向失真\"");
   else if (HMI_CurrentChannel == 4)
-    MyUART_WriteStr(&uartHandle2, "currtype.txt=\"当前测量：交越失真\"\xFF\xFF\xFF");
+    HMI_SendCMD("currtype.txt=\"当前测量：交越失真\"");
 }
 
 void HMI_THD_UpdateHarmony()
@@ -352,14 +352,14 @@ void HMI_THD_UpdateHarmony()
 
 void HMI_THD_UpdateSelection()
 {
-  MyUART_WriteStr(&uartHandle2, "r0.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r1.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r2.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r3.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r4.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r5.val=0\xFF\xFF\xFF");
+  HMI_SendCMD("r0.val=0");
+  HMI_SendCMD("r1.val=0");
+  HMI_SendCMD("r2.val=0");
+  HMI_SendCMD("r3.val=0");
+  HMI_SendCMD("r4.val=0");
+  HMI_SendCMD("r5.val=0");
   if (HMI_THD_AutoMode)
-    MyUART_WriteStr(&uartHandle2, "r5.val=1\xFF\xFF\xFF");
+    HMI_SendCMD("r5.val=1");
   else
   {
     MyUART_WriteStr(&uartHandle2, "r");
@@ -370,10 +370,10 @@ void HMI_THD_UpdateSelection()
 
 void HMI_Spectrum_UpdateWindow()
 {
-  MyUART_WriteStr(&uartHandle2, "r0.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r1.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r2.val=0\xFF\xFF\xFF");
-  MyUART_WriteStr(&uartHandle2, "r3.val=0\xFF\xFF\xFF");
+  HMI_SendCMD("r0.val=0");
+  HMI_SendCMD("r1.val=0");
+  HMI_SendCMD("r2.val=0");
+  HMI_SendCMD("r3.val=0");
   MyUART_WriteStr(&uartHandle2, "r");
   MyUART_WriteChar(&uartHandle2, '0' + HMI_Spectrum_windowType);
   MyUART_WriteStr(&uartHandle2, ".val=1\xFF\xFF\xFF");
@@ -421,4 +421,10 @@ void HMI_DoFFT(uint8_t isAC)
     arm_offset_f32(fftData, -mean, fftData, FFT_LENGTH); // DC->AC
   }
   MyFFT_CalcInPlace(fftData);
+}
+
+void HMI_SendCMD(char *str)
+{
+  MyUART_WriteStr(&uartHandle2, str);
+  MyUART_WriteStr(&uartHandle2, "\xFF\xFF\xFF");
 }
