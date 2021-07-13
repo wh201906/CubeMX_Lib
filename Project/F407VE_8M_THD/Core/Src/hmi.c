@@ -84,6 +84,7 @@ void HMI_THDInit()
 {
   __HAL_TIM_SET_AUTORELOAD(&htim2, 585);
   __HAL_TIM_SET_PRESCALER(&htim2, 0);
+  ADC1->CR1 &= ~ADC_CR1_AWDEN;
   htim2.Instance->EGR = TIM_EGR_UG;
   HAL_TIM_Base_Start(&htim2);
   MyFFT_Init(1);
@@ -98,11 +99,14 @@ void HMI_WaveInit()
   __HAL_TIM_SET_PRESCALER(&htim2, 0);
   htim2.Instance->EGR = TIM_EGR_UG;
   HAL_TIM_Base_Start(&htim2);
+  ADC1->CR2 |= ADC_CR2_DDS;
+  // Need access to DMA2->S0CR->CIRC
 }
 void HMI_SpectrumInit()
 {
   __HAL_TIM_SET_AUTORELOAD(&htim2, 585);
   __HAL_TIM_SET_PRESCALER(&htim2, 0);
+  ADC1->CR1 &= ~ADC_CR1_AWDEN;
   htim2.Instance->EGR = TIM_EGR_UG;
   HAL_TIM_Base_Start(&htim2);
   MyFFT_Init(1);

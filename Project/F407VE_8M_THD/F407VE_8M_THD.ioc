@@ -1,11 +1,15 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_1
+ADC1.EnableAnalogWatchDog=true
 ADC1.ExternalTrigConv=ADC_EXTERNALTRIGCONV_T2_TRGO
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,master,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,Resolution,ExternalTrigConv
+ADC1.HighThreshold=2048
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,master,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,Resolution,ExternalTrigConv,EnableAnalogWatchDog,WatchdogChannel,ITMode,HighThreshold
+ADC1.ITMode=ENABLE
 ADC1.NbrOfConversionFlag=1
 ADC1.Rank-0\#ChannelRegularConversion=1
 ADC1.Resolution=ADC_RESOLUTION_12B
 ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_3CYCLES
+ADC1.WatchdogChannel=ADC_CHANNEL_1
 ADC1.master=1
 Dma.ADC1.0.Direction=DMA_PERIPH_TO_MEMORY
 Dma.ADC1.0.FIFOMode=DMA_FIFOMODE_DISABLE
@@ -58,6 +62,7 @@ Mcu.UserConstants=
 Mcu.UserName=STM32F407VETx
 MxCube.Version=6.2.0
 MxDb.Version=DB.6.0.20
+NVIC.ADC_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false
 NVIC.DMA2_Stream0_IRQn=true\:0\:0\:false\:false\:true\:false\:true
 NVIC.DebugMonitor_IRQn=true\:0\:0\:false\:false\:true\:false\:false
