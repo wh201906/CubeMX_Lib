@@ -337,10 +337,10 @@ void HMI_DoFFT(uint8_t isAC)
   while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
     ;
   hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+  for (i = 0; i < FFT_LENGTH; i++)
+    fftData[i] = val[i];
   if (isAC)
   {
-    for (i = 0; i < FFT_LENGTH; i++)
-      fftData[i] = val[i];
     arm_mean_f32(fftData, FFT_LENGTH, &mean);
     arm_offset_f32(fftData, -mean, fftData, FFT_LENGTH); // DC->AC
   }
