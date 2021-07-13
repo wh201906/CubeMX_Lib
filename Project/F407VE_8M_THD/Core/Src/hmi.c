@@ -108,7 +108,7 @@ void HMI_THDPage()
   THD = 0;
   for (i = 0; i < 5; i++) // use -O3 optimize to get a proper refresh rate
   {
-    HMI_DoFFT();
+    HMI_DoFFT(1);
     THD += MyFFT_THD(fftData, FFT_LENGTH / 2, 20, HMI_THD_harmony);
   }
   THD /= 5;
@@ -142,7 +142,7 @@ void HMI_SpectrumPage()
   uint8_t displayBuf[400];
   int32_t i;
 
-  HMI_DoFFT();
+  HMI_DoFFT(0);
   HMI_Scale(fftData, displayBuf, HMI_Spectrum_offsetX, HMI_Spectrum_rangeX, HMI_Spectrum_offsetY, HMI_Spectrum_rangeY);
   MyUART_WriteStr(&uartHandle2, "ref_stop\xFF\xFF\xFF");
   MyUART_WriteStr(&uartHandle2, "cle 1,0\xFF\xFF\xFF");
@@ -329,14 +329,20 @@ uint8_t HMI_WaitResponse(uint8_t ch, uint16_t timeout)
   return 0;
 }
 
-void HMI_DoFFT()
+void HMI_DoFFT(uint8_t isAC)
 {
   int32_t i;
+  float32_t mean;
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
   while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
     ;
   hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
-  for (i = 0; i < FFT_LENGTH; i++)
-    fftData[i] = val[i];
+  if (isAC)
+  {
+    for (i = 0; i < FFT_LENGTH; i++)
+      fftData[i] = val[i];
+    arm_mean_f32(fftData, FFT_LENGTH, &mean);
+    arm_offset_f32(fftData, -mean, fftData, FFT_LENGTH); // DC->AC
+  }
   MyFFT_CalcInPlace(fftData);
 }

@@ -150,13 +150,16 @@ double MyFFT_GetPeakFreq(float32_t *data, uint16_t len)
 double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
 {
   double thd;
-  uint8_t i, tmp;
-  uint32_t baseI;
-  float32_t baseV, harmonyV = 0, noiseV, threshold = 0.001;
-  float32_t currHarmony;
+  float32_t tmp;
+  uint8_t i;
+  uint32_t baseI, startPos;
+  double noiseV, baseV, harmonyV = 0, threshold = 0.0001;
+  double currHarmony;
   uint16_t range = 1;
-  arm_min_f32(data + offset, len - offset, &noiseV, &baseI); //no arm_min_no_idx_f32() now, baseI will be overrided
-  arm_max_f32(data + offset, len - offset, &baseV, &baseI);
+  arm_min_f32(data + offset, len - offset, &tmp, &baseI); //no arm_min_no_idx_f32() now, baseI will be overrided
+  noiseV = tmp;
+  arm_max_f32(data + offset, len - offset, &tmp, &baseI);
+  baseV = tmp;
   baseI += offset;
   threshold *= (baseV - noiseV);
   threshold += noiseV;
@@ -164,14 +167,15 @@ double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre)
   {
     if (i & 1u)
       range++;
-    tmp = baseI * i - range;
-    if (tmp < offset)
-      tmp = offset;
-    arm_max_no_idx_f32(data + tmp, 2 * range, &currHarmony);
+    startPos = baseI * i - range;
+    if (startPos < offset)
+      startPos = offset;
+    arm_max_no_idx_f32(data + startPos, 2 * range, &tmp);
+    currHarmony = tmp;
     if (currHarmony >= threshold)
       harmonyV += currHarmony * currHarmony;
   }
-  arm_sqrt_f32(harmonyV, &harmonyV);
+  harmonyV = sqrt(harmonyV);
   thd = (double)harmonyV / baseV;
   return (thd > 1 ? 1.0 : thd);
 }

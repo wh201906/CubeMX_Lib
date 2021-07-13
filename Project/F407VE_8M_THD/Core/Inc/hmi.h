@@ -7,7 +7,7 @@ void HMI_Process();
 void HMI_PageInit();
 void HMI_Scale(float32_t *src, uint8_t *dst, uint32_t xBegin, uint32_t xLen, uint32_t yBegin, uint32_t yLen);
 uint8_t HMI_WaitResponse(uint8_t ch, uint16_t timeout);
-void HMI_DoFFT();
+void HMI_DoFFT(uint8_t isAC);
 
 void HMI_THDPage();
 void HMI_WavePage();
