@@ -67,7 +67,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint8_t str[20];
-  uint8_t len;
   double freq;
   /* USER CODE END 1 */
 
@@ -107,10 +106,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(100);
-    len = MyUART_ReadUntil(&uart, str, '>');
-    if(len)
+    if(MyUART_ReadUntilWithEnd(&uart, str, '>'))
     {
-      str[len] = '>';
       freq = myatof(str);
       printf("Freq set to %f\r\n", freq);
       ADF4351_SetFreq(freq);
