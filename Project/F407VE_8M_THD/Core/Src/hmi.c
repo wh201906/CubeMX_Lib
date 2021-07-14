@@ -52,13 +52,13 @@ void HMI_Process()
     return;
   if (HMI_Buf[0] == 'p')
   {
-  HMI_SendCMD("ref_star");
+    HMI_SendCMD("ref_star");
     HMI_CurrentPage = HMI_Buf[1];
     HMI_PageInit();
   }
   else if (HMI_Buf[0] != HMI_CurrentPage)
   {
-  HMI_SendCMD("ref_star");
+    HMI_SendCMD("ref_star");
     HMI_CurrentPage = HMI_Buf[0];
     HMI_PageInit();
   }
@@ -137,7 +137,7 @@ void HMI_THDPage()
     if (HMI_THD_Counter == 0)
     {
       HMI_CurrentChannel++;
-      HMI_CurrentChannel %= 5;
+      HMI_CurrentChannel %= 5; // doesn't contain test point
       HMI_THD_SetChannel(HMI_CurrentChannel);
       HMI_THD_UpdateLabel();
     }
@@ -203,16 +203,16 @@ void HMI_THDInst()
     else
       HMI_THD_UpdateHarmony();
   }
-  else if (HMI_Buf[1] >= '0' && HMI_Buf[1] <= '5')
+  else if (HMI_Buf[1] >= '0' && HMI_Buf[1] <= '6')
   {
     tmp = HMI_Buf[1] - '0';
-    if (tmp >= 0 && tmp <= 4)
+    if (tmp >= 0 && tmp <= 5)
     {
       HMI_THD_AutoMode = 0;
       HMI_CurrentChannel = tmp;
       HMI_THD_SetChannel(tmp);
     }
-    else if (tmp == 5)
+    else if (tmp == 6)
     {
       HMI_THD_AutoMode = 1;
     }
@@ -283,7 +283,7 @@ void HMI_SpectrumInst()
 
 void HMI_THD_SetChannel(uint8_t channel)
 {
-  if (channel >= 0 && channel <= 4)
+  if (channel >= 0 && channel <= 5)
     GPIOD->ODR = channel;
 }
 
@@ -343,6 +343,8 @@ void HMI_THD_UpdateLabel()
     HMI_SendCMD("currtype.txt=\"当前测量：双向失真\"");
   else if (HMI_CurrentChannel == 4)
     HMI_SendCMD("currtype.txt=\"当前测量：交越失真\"");
+  else if (HMI_CurrentChannel == 5)
+    HMI_SendCMD("currtype.txt=\"当前测量：测试端\"");
 }
 
 void HMI_THD_UpdateHarmony()
@@ -362,8 +364,9 @@ void HMI_THD_UpdateSelection()
   HMI_SendCMD("r3.val=0");
   HMI_SendCMD("r4.val=0");
   HMI_SendCMD("r5.val=0");
+  HMI_SendCMD("r6.val=0");
   if (HMI_THD_AutoMode)
-    HMI_SendCMD("r5.val=1");
+    HMI_SendCMD("r6.val=1");
   else
   {
     MyUART_WriteStr(&uartHandle2, "r");
