@@ -28,8 +28,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DELAY/delay.h"
-#include "USART/myusart1.h"
-#include "USART/myusart2.h"
 #include "SIGNAL/myfft.h"
 /* USER CODE END Includes */
 
@@ -56,7 +54,8 @@ void printAll(float32_t* addr,uint16_t len);
 /* USER CODE BEGIN PV */
 uint16_t val[FFT_LENGTH];
 float32_t fftData[FFT_LENGTH];
-
+MyUARTHandle myuart1, myuart2;
+uint8_t uartBuf1[100], uartBuf2[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,11 +112,13 @@ int main(void)
   HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
   HAL_TIM_Base_Start(&htim2);
   HAL_GPIO_WritePin(GPIOE,GPIO_PIN_4,GPIO_PIN_SET);
-  MyUSART1_Init(&huart1);
-  MyUSART2_Init(&huart2);
+  MyUART_Init(&myuart1, USART1, uartBuf1, 100);
+  MyUART_Init(&myuart2, USART2, uartBuf2, 100);
+  MyUART_SetOStream(USART1);
   Delay_ms(500);
   HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   MyFFT_Init(sampleRate);
+  MyFFT_FlattopWindow();
   HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
   Delay_ms(200);
   //printAll(rfftInAndFreq,FFT_LENGTH/2);
@@ -139,16 +140,19 @@ int main(void)
       HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4);
       MyFFT_CalcInPlace(fftData);
       HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_4); 
-      //printAll(fftData,sizeof(fftData));
+      //printAll(fftData,sizeof(fftData)/sizeof(fftData[0]));
       
       // Init transfer
-      MyUSART2_ClearBuffer();
+      MyUART_ClearBuffer(&myuart2);
       str[0]=0x00;
       j=0;
       
       // Write command
-      MyUSART2_Write("cle 1,0\xFF\xFF\xFF",10);
-      MyUSART2_Write("addt 1,0,480\xFF\xFF\xFF",15);
+      MyUART_WriteStr(&myuart2, "ref_stop\xFF\xFF\xFF");
+      Delay_ms(5);
+      MyUART_WriteStr(&myuart2, "cle 1,0\xFF\xFF\xFF");
+      Delay_ms(5);
+      MyUART_WriteStr(&myuart2, "addt 1,0,480\xFF\xFF\xFF");
       
        // Wait for response in 30ms
       for(i=0;i<15;i++)
@@ -156,7 +160,7 @@ int main(void)
         if(str[0]==0xFE)
           break;
         Delay_ms(2);
-        j=MyUSART2_Read(str+j,4);
+        j=MyUART_Read(&myuart2, str + j, 4);
       }
       arm_max_no_idx_f32(fftData,FFT_LENGTH/2,&tmp);
       tmp=256/tmp;
@@ -164,18 +168,20 @@ int main(void)
       // Write data
       for(i=0;i<480;i++)
       {
-        outVal=fftData[479-i]*tmp;
-        MyUSART2_WriteChar(outVal);
+        outVal=fftData[i]*tmp;
+        MyUART_WriteChar(&myuart2, outVal);
       }
       Delay_ms(5);
-      MyUSART2_ClearBuffer();
+      MyUART_WriteStr(&myuart2, "ref_star\xFF\xFF\xFF");
+      Delay_ms(5);
+      MyUART_ClearBuffer(&myuart2);
       // DMA DOES take the bandwidth, so I start it after UART transmition.
       HAL_ADC_Start_DMA(&hadc1,(uint32_t*)val,FFT_LENGTH);
     }
     for(i=0;i<10;i++)
     {
       Delay_ms(30);
-      j=MyUSART2_Read(str,3);
+      j=MyUART_Read(&myuart2, str, 3);
       if(j==3)
       {
         sampleRate = str[0]&0xFF;
@@ -192,7 +198,7 @@ int main(void)
       }
     }
     
-    MyUSART2_ClearBuffer();
+    MyUART_ClearBuffer(&myuart2);
   }
   /* USER CODE END 3 */
 }
@@ -249,7 +255,7 @@ void printAll(float32_t* addr,uint16_t len)
   for(i=0;i<len;i++)
   {
     sprintf(buf,"%d:%f",i,*(addr+i));
-    MyUSART1_WriteLine(buf);
+    MyUART_WriteLine(&myuart1, buf);
     Delay_ms(2);
   }
 }

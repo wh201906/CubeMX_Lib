@@ -111,6 +111,36 @@ int64_t myatoi(char *str)
   return val;
 }
 
+int64_t myatoi_hex(char *str)
+{
+  int64_t val = 0;
+  uint8_t i = 0, isPositive = 1;
+
+  while (str[i] == ' ') // skip leading spaces
+    i++;
+
+  isPositive = (str[i] != '-'); // handle sign
+  if (str[i] == '+' || str[i] == '-')
+    i++;
+  if (str[i] == '0' && (str[i + 1] == 'x' || str[i + 1] == 'X'))
+    i += 2;
+
+  while (str[i] >= '0' && str[i] <= '9' || str[i] >= 'a' && str[i] <= 'f' || str[i] >= 'A' && str[i] <= 'F') // read until isdigit(str[i])=false, this will also handle '\0'
+  {
+    val *= 16;
+    if (str[i] >= '0' && str[i] <= '9')
+      val += str[i++] - '0';
+    else if (str[i] >= 'a' && str[i] <= 'f')
+      val += str[i++] - 'a' + 10;
+    else
+      val += str[i++] - 'A' + 10;
+  }
+
+  if (!isPositive) // handle negative number
+    val = -val;
+  return val;
+}
+
 double myatof(char *str)
 {
   double val = 0, floatPart = 0;
@@ -118,7 +148,7 @@ double myatof(char *str)
 
   val = myatoi(str); // get int part
 
-  while (str[len] != '\0') // get string length
+  while ((str[len] >= '0' && str[len] <= '9') || str[len] == '.' || str[len] == '-') // get float string length
     len++;
   for (; dotPos < len; dotPos++) // get dot position
     if (str[dotPos] == '.')

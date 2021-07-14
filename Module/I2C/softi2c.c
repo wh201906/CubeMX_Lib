@@ -320,3 +320,21 @@ uint8_t SoftI2C_ReadByte_ACK(SoftI2C_Port *port, uint8_t ACK)
   SoftI2C_SendACK(port, ACK);
   return result;
 }
+
+// return the number of available addresses, support 7bit/10bit address(depending on the port->addrLen)
+uint16_t SoftI2C_SearchAddr(SoftI2C_Port *port, uint16_t start, uint16_t end, uint16_t *buf)
+{
+  uint16_t num = 0;
+  if (port->addrLen == SI2C_ADDR_7b && end > 127)
+    end = 127;
+  else if (port->addrLen == SI2C_ADDR_7b && end > 1023)
+    end = 1023;
+  for (; start <= end; start++)
+  {
+    SoftI2C_Start(port);
+    if (SoftI2C_SendAddr(port,start,SI2C_WRITE))
+      buf[num++] = start;
+    SoftI2C_Stop(port);
+  }
+  return num;
+}
