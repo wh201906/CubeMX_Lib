@@ -166,3 +166,15 @@ double myatof(char *str)
   val += val < 0 ? -floatPart : floatPart;
   return val;
 }
+
+uint64_t mygcd(uint64_t a, uint64_t b)
+{
+  uint64_t tmp;
+  while (b > 0)
+  {
+    tmp = a % b;
+    a = b;
+    b = tmp;
+  }
+  return a;
+}

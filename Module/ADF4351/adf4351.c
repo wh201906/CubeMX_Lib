@@ -15,6 +15,7 @@ https://shop110336474.taobao.com/?spm=a230r.7195193.1997079397.2.Ic3MRJ
 **********************************************************/
 #include "ADF4351/adf4351.h"
 #include "DELAY/delay.h"
+#include "UTIL/util.h"
 
 #define ADF4351_CE_PIN GPIO_PIN_10 // reversed CS
 #define ADF4351_LE_PIN GPIO_PIN_11 // make postive pulse to update register
@@ -45,11 +46,12 @@ https://shop110336474.taobao.com/?spm=a230r.7195193.1997079397.2.Ic3MRJ
 #define ADF4351_R5 ((uint32_t)0X580005)
 
 #define ADF4351_R1_Base ((uint32_t)0X8001)
+#define ADF4351_R2_Base ((uint32_t)0x00000E42)
 #define ADF4351_R4_Base ((uint32_t)0X8C803C)
 #define ADF4351_R4_ON ((uint32_t)0X8C803C)
 #define ADF4351_R4_OFF ((uint32_t)0X8C883C)
 
-//#define ADF4351_RF_OFF	((uint32_t)0XEC801C)
+#define ADF4351_RF_OFF ((uint32_t)0XEC801C)
 
 #define ADF4351_PD_ON ((uint32_t)0X10E42)
 #define ADF4351_PD_OFF ((uint32_t)0X10E02)
@@ -115,8 +117,6 @@ void ADF4351_Write(uint32_t val)
 
 void ADF4351_Init(void)
 {
-	uint8_t buf[4] = {0, 0, 0, 0};
-
 	ADF4351_GPIO_Init();
 	ADF4351_DelayTicks = Delay_GetSYSFreq() / 30000000; // around 33ns
 
@@ -135,8 +135,76 @@ void ADF4351_Reg_Init(void)
 	ADF4351_Write(ADF4351_R5);
 }
 
-void ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
+void ADF4351_SetRef(ADF4351_CLKConfig *config, double freqRef)
 {
+	config->ref = freqRef;
+}
+
+// use isDoubled for lower external clock
+// use is2Divided for 50% duty cycle of clock, which is useful in cycle slip reduction
+double ADF4351_SetPFD(ADF4351_CLKConfig *config, double freqPFD, uint8_t isDoubled, uint8_t is2Divided)
+{
+	config->D = !!isDoubled;
+	config->T = !!is2Divided;
+	config->R = config->ref * (1 + config->D) / freqPFD / (1 + config->T);
+	return ADF4351_GetPFD(config);
+}
+
+double ADF4351_GetPFD(ADF4351_CLKConfig *config)
+{
+	return (config->ref * (1 + config->D) / config->R / (1 + config->T));
+}
+
+uint8_t ADF4351_SetDiv(ADF4351_ClKConfig *config, uint8_t div)
+{
+	uint8_t n;
+	if (div == 0)
+		div = 1;
+	else if (div > 64)
+		div = 64;
+	n = 0;
+	while (div & 0x01 != 0)
+		n++;
+	config->Div_n = n;
+	return ADF4351_GetDiv(config);
+}
+
+uint8_t ADF4351_GetDiv(ADF4351_ClKConfig *config)
+{
+	return (1 << config->Div_n);
+}
+
+double ADF4351_SetResolution(ADF4351_ClKConfig *config, double resolution) // resolution in MHz
+{
+	uint64_t numerator, denominator, factor;
+
+	// Fraction PFD
+	numerator = config->ref * (1 + config->D) * 1000000;
+	denominator = config->R * (1 + config->T) * 1000000;
+	factor = mygcd(numerator, denominator);
+	numerator /= factor;
+	denominator /= factor;
+
+	denominator *= ADF4351_GetDiv(config);
+
+	// Fraction resolution
+	denominator *= resolution * 1000000;
+	numerator *= 1000000;
+	factor = mygcd(numerator, denominator);
+
+	numerator /= factor;
+	config->MOD = numerator;
+	return ADF4351_GetResolution(config);
+}
+
+double ADF4351_GetResolution(ADF4351_ClKConfig *config)
+{
+	return (ADF4351_GetPFD(config) / ADF4351_GetDiv(config) / config->MOD);
+}
+
+double ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
+{
+	double f_pfd = 25;
 	uint16_t Fre_temp, N_Mul = 1, Mul_Core = 0;
 	uint16_t INT_Fre, Frac_temp, Mod_temp, i;
 	uint32_t W_ADF4351_R0 = 0, W_ADF4351_R1 = 0, W_ADF4351_R4 = 0;
@@ -147,7 +215,7 @@ void ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
 	if (freq > 4400.0)
 		freq = 4400.0;
 	Mod_temp = 1000;
-	freq = ((float)((uint32_t)(freq * 10))) / 10;
+	freq = ((float)((uint32_t)(freq * 100))) / 100;
 
 	Fre_temp = freq;
 	for (i = 0; i < 10; i++)
@@ -158,7 +226,7 @@ void ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
 		N_Mul = N_Mul * 2;
 	}
 
-	multiple = (freq * N_Mul) / 25; //25：鉴相频率，板载100M参考，经寄存器4分频得25M鉴相。若用户更改为80M参考输入，需将25改为20；10M参考输入，需将25改为2.5，以此类推。。。
+	multiple = (freq * N_Mul) / f_pfd; //25：鉴相频率，板载100M参考，经寄存器4分频得25M鉴相。若用户更改为80M参考输入，需将25改为20；10M参考输入，需将25改为2.5，以此类推。。。
 	INT_Fre = (uint16_t)multiple;
 	Frac_temp = ((uint32_t)(multiple * 1000)) % 1000;
 	while (((Frac_temp % 5) == 0) && ((Mod_temp % 5) == 0))
@@ -184,4 +252,5 @@ void ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
 	ADF4351_Write(W_ADF4351_R0);
 	ADF4351_Write(W_ADF4351_R4);
 	//	WriteOneRegToADF4351(ADF4351_PD_ON);
+	return (INT_Fre + (double)Frac_temp / Mod_temp) * f_pfd / N_Mul;
 }

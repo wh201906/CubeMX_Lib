@@ -69,6 +69,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   float freq;
+  double freq_actural;
   double tmp, val_all, val_head, val_tail, val_ave;
   uint8_t i;
   uint8_t flag = 1;
@@ -124,7 +125,7 @@ int main(void)
     if(!flag)
       continue;
     val_all = val_head = val_tail = val_ave = 0;
-    ADF4351_SetFreq(freq);
+    freq_actural = ADF4351_SetFreq(freq);
     Delay_us(300+500);
     //Delay_ms(1);
     for(i = 0;i<5;i++)
@@ -141,10 +142,10 @@ int main(void)
     }
     val_all/=5;
     // printf("%f, %f, %f, %f, %f\r\n", freq, val_all, val_head, val_tail, val_ave);
-    printf("%f, %f\r\n", freq, val_all);
+    printf("%f, %f, %f\r\n", freq, freq_actural, val_all);
     if(freq > 120)
       flag = 0;
-    freq+=0.27;
+    freq+=0.01;
   }
   /* USER CODE END 3 */
 }
