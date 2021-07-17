@@ -167,9 +167,9 @@ double myatof(char *str)
   return val;
 }
 
-uint64_t mygcd(uint64_t a, uint64_t b)
+int64_t mygcd(int64_t a, int64_t b)
 {
-  uint64_t tmp;
+  int64_t tmp;
   while (b > 0)
   {
     tmp = a % b;

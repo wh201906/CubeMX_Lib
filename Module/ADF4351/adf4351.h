@@ -4,7 +4,7 @@
 
 typedef struct _ADF4351_CLKConfig
 {
-  double ref, PFD, resolution, out;
+  double ref;
   // D, T and R are used to config Freq_PFD, storaged in R2;
   // Freq_PFD = Freq_REF * ((1 + D) / (R * (1 + T)))
   // Use T(R2_24) and CSR(R3_18) to enable cycle slip reduction
@@ -23,14 +23,17 @@ typedef struct _ADF4351_CLKConfig
 void ADF4351_Init(void);
 void ADF4351_Write(uint32_t val);
 void ADF4351_Reg_Init(void);
-double ADF4351_SetFreq(float freq); //	(xx.x) M Hz
+// double ADF4351_SetFreq(float freq); //	(xx.x) M Hz
 
 void ADF4351_SetRef(ADF4351_CLKConfig *config, double freqRef);
 double ADF4351_SetPFD(ADF4351_CLKConfig *config, double freqPFD, uint8_t isDoubled, uint8_t is2Divided);
 double ADF4351_GetPFD(ADF4351_CLKConfig *config);
-uint8_t ADF4351_SetDiv(ADF4351_ClKConfig *config, uint8_t div);
-uint8_t ADF4351_GetDiv(ADF4351_ClKConfig *config);
-double ADF4351_SetResolution(ADF4351_ClKConfig *config, double resolution); // resolution in MHz
-double ADF4351_GetResolution(ADF4351_ClKConfig *config);
+uint8_t ADF4351_SetDiv(ADF4351_CLKConfig *config, uint8_t div);
+uint8_t ADF4351_GetDiv(ADF4351_CLKConfig *config);
+double ADF4351_SetResolution(ADF4351_CLKConfig *config, double resolution); // resolution in MHz
+double ADF4351_GetResolution(ADF4351_CLKConfig *config);
+double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double freqPFD, uint8_t isDoubled, uint8_t is2Divided, uint8_t div, double resolution);
+void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config);
+double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq);
 
 #endif

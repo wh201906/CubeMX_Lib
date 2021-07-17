@@ -48,6 +48,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1, uart2;
 uint8_t uartBuf1[100], uartBuf2[100];
+ADF4351_CLKConfig ADF4351_CLK;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -111,7 +112,9 @@ int main(void)
   AD7190_SetGain(AD7190_GAIN_1);
   
   ADF4351_Init();
-  freq = 60.0;
+  ADF4351_SetCLKConfig(&ADF4351_CLK, 100, 25, 0, 1, 32, 0.001);
+  ADF4351_WriteCLKConfig(&ADF4351_CLK);
+  freq = 69.0;
   Delay_ms(1000);
   /* USER CODE END 2 */
 
@@ -125,8 +128,8 @@ int main(void)
     if(!flag)
       continue;
     val_all = val_head = val_tail = val_ave = 0;
-    freq_actural = ADF4351_SetFreq(freq);
-    Delay_us(300+500);
+    freq_actural = ADF4351_SetFreq(&ADF4351_CLK, freq);
+    Delay_us(1200+500);
     //Delay_ms(1);
     for(i = 0;i<5;i++)
     {

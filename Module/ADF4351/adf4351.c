@@ -1,18 +1,3 @@
-/**********************************************************
-                       康威电子
-										 
-功能：ADF4351正弦波点频输出，范围35M-4400M，步进0.1M，stm32f103rct6控制
-			显示：12864
-接口：CLK-PC11 DATA-PC10 LE-PC9 CE-PC12  按键接口请参照key.h
-时间：2015/11/3
-版本：1.0
-作者：康威电子
-其他：
-
-更多电子需求，请到淘宝店，康威电子竭诚为您服务 ^_^
-https://shop110336474.taobao.com/?spm=a230r.7195193.1997079397.2.Ic3MRJ
-
-**********************************************************/
 #include "ADF4351/adf4351.h"
 #include "DELAY/delay.h"
 #include "UTIL/util.h"
@@ -38,12 +23,25 @@ https://shop110336474.taobao.com/?spm=a230r.7195193.1997079397.2.Ic3MRJ
 #define ADF4351_CLK(__STATE__) HAL_GPIO_WritePin(ADF4351_CLK_GPIO, ADF4351_CLK_PIN, (__STATE__))
 
 //#define
-#define ADF4351_R0 ((uint32_t)0X2C8018)
-#define ADF4351_R1 ((uint32_t)0X8029)
-#define ADF4351_R2 ((uint32_t)0X10E42)
-#define ADF4351_R3 ((uint32_t)0X4B3)
-#define ADF4351_R4 ((uint32_t)0XEC803C)
-#define ADF4351_R5 ((uint32_t)0X580005)
+
+#define ADF4351_R0_DEFAULT 0X002C8018
+#define ADF4351_R1_DEFAULT 0X00008029
+#define ADF4351_R2_DEFAULT 0X00010E42
+#define ADF4351_R3_DEFAULT 0X000404B3
+#define ADF4351_R4_DEFAULT 0X00EC803C
+#define ADF4351_R5_DEFAULT 0X00580005
+
+#define ADF4351_R0_INT_MASK 0x7FFF8000
+#define ADF4351_R0_FRAC_MASK 0x00007FF8
+#define ADF4351_R1_MOD_MASK 0X00007FF8
+#define ADF4351_R2_DOUBLER 0x02000000
+#define ADF4351_R2_RDIV2 0x01000000
+#define ADF4351_R2_R_MASK 0x00FFC000
+#define ADF4351_R4_RFDIV_MASK 0x00700000
+
+#define ADF4351_R4_RFOUT_ON 0x00000020
+#define ADF4351_R4_VCO_POWERDOWN 0x00000800
+#define ADF4351_R2_CHIP_POWERDOWN 0x00000020
 
 #define ADF4351_R1_Base ((uint32_t)0X8001)
 #define ADF4351_R2_Base ((uint32_t)0x00000E42)
@@ -57,6 +55,8 @@ https://shop110336474.taobao.com/?spm=a230r.7195193.1997079397.2.Ic3MRJ
 #define ADF4351_PD_OFF ((uint32_t)0X10E02)
 
 uint32_t ADF4351_DelayTicks;
+
+uint32_t ADF4351_R[6];
 
 void ADF4351_GPIO_Init(void)
 {
@@ -118,21 +118,21 @@ void ADF4351_Write(uint32_t val)
 void ADF4351_Init(void)
 {
 	ADF4351_GPIO_Init();
-	ADF4351_DelayTicks = Delay_GetSYSFreq() / 30000000; // around 33ns
+	ADF4351_DelayTicks = Delay_GetSYSFreq() / 30000000.0 + 0.5; // around 33ns
 
-	ADF4351_Write(0x00580005); // reg5
-	ADF4351_Write(0x00EC803C); // reg4
-	ADF4351_Write(0x000004B3); // reg3
-	ADF4351_Write(0x00010E42); // reg2
-	ADF4351_Write(0x00008029); // reg1
-	ADF4351_Write(0x002C8018); // reg0
-}
+	ADF4351_R[5] = ADF4351_R5_DEFAULT;
+	ADF4351_R[4] = ADF4351_R4_DEFAULT;
+	ADF4351_R[3] = ADF4351_R3_DEFAULT;
+	ADF4351_R[2] = ADF4351_R2_DEFAULT;
+	ADF4351_R[1] = ADF4351_R1_DEFAULT;
+	ADF4351_R[0] = ADF4351_R0_DEFAULT;
 
-void ADF4351_Reg_Init(void)
-{
-	ADF4351_Write(ADF4351_R2);
-	ADF4351_Write(ADF4351_R3);
-	ADF4351_Write(ADF4351_R5);
+	ADF4351_Write(ADF4351_R[5]);
+	ADF4351_Write(ADF4351_R[4]);
+	ADF4351_Write(ADF4351_R[3]);
+	ADF4351_Write(ADF4351_R[2]);
+	ADF4351_Write(ADF4351_R[1]);
+	ADF4351_Write(ADF4351_R[0]);
 }
 
 void ADF4351_SetRef(ADF4351_CLKConfig *config, double freqRef)
@@ -155,7 +155,7 @@ double ADF4351_GetPFD(ADF4351_CLKConfig *config)
 	return (config->ref * (1 + config->D) / config->R / (1 + config->T));
 }
 
-uint8_t ADF4351_SetDiv(ADF4351_ClKConfig *config, uint8_t div)
+uint8_t ADF4351_SetDiv(ADF4351_CLKConfig *config, uint8_t div)
 {
 	uint8_t n;
 	if (div == 0)
@@ -163,24 +163,27 @@ uint8_t ADF4351_SetDiv(ADF4351_ClKConfig *config, uint8_t div)
 	else if (div > 64)
 		div = 64;
 	n = 0;
-	while (div & 0x01 != 0)
+	while ((div & 0x01) == 0)
+	{
+		div >>= 1;
 		n++;
+	}
 	config->Div_n = n;
 	return ADF4351_GetDiv(config);
 }
 
-uint8_t ADF4351_GetDiv(ADF4351_ClKConfig *config)
+uint8_t ADF4351_GetDiv(ADF4351_CLKConfig *config)
 {
 	return (1 << config->Div_n);
 }
 
-double ADF4351_SetResolution(ADF4351_ClKConfig *config, double resolution) // resolution in MHz
+double ADF4351_SetResolution(ADF4351_CLKConfig *config, double resolution) // resolution in MHz
 {
 	uint64_t numerator, denominator, factor;
 
 	// Fraction PFD
-	numerator = config->ref * (1 + config->D) * 1000000;
-	denominator = config->R * (1 + config->T) * 1000000;
+	numerator = config->ref * (1 + config->D) * 10000000; // 0.1ppm
+	denominator = config->R * (1 + config->T) * 10000000;
 	factor = mygcd(numerator, denominator);
 	numerator /= factor;
 	denominator /= factor;
@@ -188,8 +191,8 @@ double ADF4351_SetResolution(ADF4351_ClKConfig *config, double resolution) // re
 	denominator *= ADF4351_GetDiv(config);
 
 	// Fraction resolution
-	denominator *= resolution * 1000000;
-	numerator *= 1000000;
+	denominator *= resolution * 10000000; // 0.1ppm
+	numerator *= 10000000;
 	factor = mygcd(numerator, denominator);
 
 	numerator /= factor;
@@ -197,12 +200,50 @@ double ADF4351_SetResolution(ADF4351_ClKConfig *config, double resolution) // re
 	return ADF4351_GetResolution(config);
 }
 
-double ADF4351_GetResolution(ADF4351_ClKConfig *config)
+double ADF4351_GetResolution(ADF4351_CLKConfig *config)
 {
 	return (ADF4351_GetPFD(config) / ADF4351_GetDiv(config) / config->MOD);
 }
 
-double ADF4351_SetFreq(float freq) //	fre单位MHz -> (xx.x) M Hz
+double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double freqPFD, uint8_t isDoubled, uint8_t is2Divided, uint8_t div, double resolution)
+{
+	ADF4351_SetRef(config, freqRef);
+	ADF4351_SetPFD(config, freqPFD, isDoubled, is2Divided);
+	ADF4351_SetDiv(config, div);
+	return ADF4351_SetResolution(config, resolution);
+}
+
+void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config)
+{
+	ADF4351_R[4] &= ~ADF4351_R4_RFDIV_MASK;
+	ADF4351_R[4] |= config->Div_n << 20;
+	ADF4351_R[2] &= ~(ADF4351_R2_DOUBLER | ADF4351_R2_RDIV2 | ADF4351_R2_R_MASK);
+	ADF4351_R[2] |= (config->D << 25 | config->T << 24 | config->R << 14);
+	ADF4351_R[1] &= ~ADF4351_R1_MOD_MASK;
+	ADF4351_R[1] |= config->MOD << 3;
+	ADF4351_Write(ADF4351_R[4]);
+	ADF4351_Write(ADF4351_R[2]);
+	ADF4351_Write(ADF4351_R[1]);
+	ADF4351_Write(ADF4351_R[0]); // Necessary for DBR/DBB
+}
+
+double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq)
+{
+	double resolution;
+	uint32_t val;
+	uint16_t INT, FRAC;
+	resolution = ADF4351_GetResolution(config);
+	val = freq / resolution;
+	INT = val / config->MOD;
+	FRAC = val % config->MOD;
+	ADF4351_R[0] &= ~(ADF4351_R0_INT_MASK | ADF4351_R0_FRAC_MASK);
+	ADF4351_R[0] |= (INT << 15 | FRAC << 3);
+	ADF4351_Write(ADF4351_R[1]); // re-lock, when the PLL gives a wrong frequency, Write R1/R5 then R0 might help
+	ADF4351_Write(ADF4351_R[0]);
+	return ((INT * config->MOD + FRAC) * resolution);
+}
+
+double ADF4351_OldSetFreq(double freq) //	fre单位MHz -> (xx.x) M Hz
 {
 	double f_pfd = 25;
 	uint16_t Fre_temp, N_Mul = 1, Mul_Core = 0;

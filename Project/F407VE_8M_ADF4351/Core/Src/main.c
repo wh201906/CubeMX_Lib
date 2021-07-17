@@ -68,6 +68,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint8_t str[20];
   double freq;
+  ADF4351_CLKConfig CLK;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,8 +93,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   ADF4351_Init();
+  ADF4351_SetCLKConfig(&CLK, 100, 25, 0, 1, 32, 0.001);
+  ADF4351_WriteCLKConfig(&CLK);
   MyUART_Init(&uart, USART1, uartBuf, 100);
-  ADF4351_SetFreq(20.5);
+  ADF4351_SetFreq(&CLK, 80.001);
   printf("ADF4351 Test\r\n");
   
   /* USER CODE END 2 */
@@ -108,9 +111,35 @@ int main(void)
     Delay_ms(100);
     if(MyUART_ReadUntilWithEnd(&uart, str, '>'))
     {
-      freq = myatof(str);
-      printf("Freq set to %f\r\n", freq);
-      ADF4351_SetFreq(freq);
+      if(str[0] == 'f')
+      {
+        freq = myatof(str+1);
+        printf("Freq set to %f\r\n", ADF4351_SetFreq(&CLK, freq));
+      }
+      else if(str[0] == 'c')
+      {
+        ADF4351_WriteCLKConfig(&CLK);
+        printf("WriteCLKConfig\r\n");
+      }
+      else if(str[0] == 'i')
+      {
+        ADF4351_Init();
+        printf("Init\r\n");
+      }
+      else if(str[0] == 't')
+      {
+        if(str[1] == '1')
+          ADF4351_Write(0x0000E1A9);
+        else if(str[1] == '2')
+          ADF4351_Write(0x01008E42);
+        else if(str[1] == '3')
+          ADF4351_Write(0x000404B3);
+        else if(str[1] == '4')
+          ADF4351_Write(0x00580005);
+        else if(str[1] == '5')
+          ADF4351_Write(0x0000E1A9);
+        printf("Write to R%c\r\n", str[1]);
+      }
     }
   }
   /* USER CODE END 3 */

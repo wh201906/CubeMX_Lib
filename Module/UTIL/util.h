@@ -11,5 +11,6 @@ uint8_t myftoa(double val, char *str);
 int64_t myatoi(char *str);
 int64_t myatoi_hex(char *str);
 double myatof(char *str);
+int64_t mygcd(int64_t a, int64_t b);
 
 #endif
