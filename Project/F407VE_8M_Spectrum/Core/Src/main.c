@@ -69,7 +69,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  float freq;
+  double freq;
   double freq_actural;
   double tmp, val_all, val_head, val_tail, val_ave;
   uint8_t i;
@@ -101,7 +101,7 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   MyUART_Init(&uart2, USART2, uartBuf2, 100);
-  MyUART_WriteLine(&uart1, "Spectrum Analyzer");
+  // MyUART_WriteLine(&uart1, "Spectrum Analyzer");
   SigPara_Freq_HF_Init();
   
   AD7190_Init(3.0);
@@ -112,7 +112,7 @@ int main(void)
   AD7190_SetGain(AD7190_GAIN_1);
   
   ADF4351_Init();
-  ADF4351_SetCLKConfig(&ADF4351_CLK, 100, 25, 0, 1, 32, 0.001);
+  ADF4351_SetCLKConfig(&ADF4351_CLK, 100, 25, 0, 1, 32, 0.01);
   ADF4351_WriteCLKConfig(&ADF4351_CLK);
   freq = 69.0;
   Delay_ms(1000);
@@ -129,7 +129,7 @@ int main(void)
       continue;
     val_all = val_head = val_tail = val_ave = 0;
     freq_actural = ADF4351_SetFreq(&ADF4351_CLK, freq);
-    Delay_us(1200+500);
+    Delay_us(4000);
     //Delay_ms(1);
     for(i = 0;i<5;i++)
     {
@@ -145,7 +145,7 @@ int main(void)
     }
     val_all/=5;
     // printf("%f, %f, %f, %f, %f\r\n", freq, val_all, val_head, val_tail, val_ave);
-    printf("%f, %f, %f\r\n", freq, freq_actural, val_all);
+    printf("%f, %f\r\n", freq_actural, val_all);
     if(freq > 120)
       flag = 0;
     freq+=0.01;
