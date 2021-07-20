@@ -143,6 +143,14 @@ void Spectrum_SweepInst()
   {
     tmp = myatoi(Spectrum_Buf + 2);
     Spectrum_Sweep_amp = tmp;
+    if (tmp == 0)
+      ADF4351_SetOutputPower(ADF4351_R4_PWR_N4DBM);
+    else if (tmp == 1)
+      ADF4351_SetOutputPower(ADF4351_R4_PWR_N1DBM);
+    else if (tmp == 2)
+      ADF4351_SetOutputPower(ADF4351_R4_PWR_2DBM);
+    else if (tmp == 3)
+      ADF4351_SetOutputPower(ADF4351_R4_PWR_5DBM);
   }
   else if (Spectrum_Buf[1] == 'b')
   {

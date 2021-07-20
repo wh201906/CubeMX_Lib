@@ -2,6 +2,12 @@
 #define _ADF4351_H_
 #include "main.h"
 
+#define ADF4351_R4_PWR_N4DBM 0x00000000
+#define ADF4351_R4_PWR_N1DBM 0x00000008
+#define ADF4351_R4_PWR_2DBM 0x00000010
+#define ADF4351_R4_PWR_5DBM 0x00000018
+#define ADF4351_R4_PWR_MASK ADF4351_R4_PWR_5DBM
+
 typedef struct _ADF4351_CLKConfig
 {
   double ref;
@@ -36,5 +42,6 @@ double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double fr
 void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config);
 uint8_t ADF4351_CalcDiv(double freqOut);
 double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq);
+void ADF4351_SetOutputPower(uint32_t pwr);
 
 #endif

@@ -43,17 +43,6 @@
 #define ADF4351_R4_VCO_POWERDOWN 0x00000800
 #define ADF4351_R2_CHIP_POWERDOWN 0x00000020
 
-#define ADF4351_R1_Base ((uint32_t)0X8001)
-#define ADF4351_R2_Base ((uint32_t)0x00000E42)
-#define ADF4351_R4_Base ((uint32_t)0X8C803C)
-#define ADF4351_R4_ON ((uint32_t)0X8C803C)
-#define ADF4351_R4_OFF ((uint32_t)0X8C883C)
-
-#define ADF4351_RF_OFF ((uint32_t)0XEC801C)
-
-#define ADF4351_PD_ON ((uint32_t)0X10E42)
-#define ADF4351_PD_OFF ((uint32_t)0X10E02)
-
 uint32_t ADF4351_DelayTicks;
 
 uint32_t ADF4351_R[6];
@@ -261,55 +250,9 @@ uint8_t ADF4351_CalcDiv(double freqOut)
 	return div;
 }
 
-double ADF4351_OldSetFreq(double freq) //	fre单位MHz -> (xx.x) M Hz
+void ADF4351_SetOutputPower(uint32_t pwr)
 {
-	double f_pfd = 25;
-	uint16_t Fre_temp, N_Mul = 1, Mul_Core = 0;
-	uint16_t INT_Fre, Frac_temp, Mod_temp, i;
-	uint32_t W_ADF4351_R0 = 0, W_ADF4351_R1 = 0, W_ADF4351_R4 = 0;
-	float multiple;
-
-	if (freq < 35.0)
-		freq = 35.0;
-	if (freq > 4400.0)
-		freq = 4400.0;
-	Mod_temp = 1000;
-	freq = ((float)((uint32_t)(freq * 100))) / 100;
-
-	Fre_temp = freq;
-	for (i = 0; i < 10; i++)
-	{
-		if (((Fre_temp * N_Mul) >= 2199.9) && ((Fre_temp * N_Mul) <= 4400.1))
-			break;
-		Mul_Core++;
-		N_Mul = N_Mul * 2;
-	}
-
-	multiple = (freq * N_Mul) / f_pfd; //25：鉴相频率，板载100M参考，经寄存器4分频得25M鉴相。若用户更改为80M参考输入，需将25改为20；10M参考输入，需将25改为2.5，以此类推。。。
-	INT_Fre = (uint16_t)multiple;
-	Frac_temp = ((uint32_t)(multiple * 1000)) % 1000;
-	while (((Frac_temp % 5) == 0) && ((Mod_temp % 5) == 0))
-	{
-		Frac_temp = Frac_temp / 5;
-		Mod_temp = Mod_temp / 5;
-	}
-	while (((Frac_temp % 2) == 0) && ((Mod_temp % 2) == 0))
-	{
-		Frac_temp = Frac_temp / 2;
-		Mod_temp = Mod_temp / 2;
-	}
-
-	Mul_Core %= 7;
-	W_ADF4351_R0 = (INT_Fre << 15) + (Frac_temp << 3);
-	W_ADF4351_R1 = ADF4351_R1_Base + (Mod_temp << 3);
-	W_ADF4351_R4 = ADF4351_R4_ON + (Mul_Core << 20);
-
-	//	WriteOneRegToADF4351(ADF4351_PD_OFF); //ADF4351_RF_OFF
-	//	WriteOneRegToADF4351((uint32_t)(ADF4351_R4_OFF + (6<<20)));
-	ADF4351_Write(ADF4351_RF_OFF);
-	ADF4351_Write(W_ADF4351_R1);
-	ADF4351_Write(W_ADF4351_R0);
-	ADF4351_Write(W_ADF4351_R4);
-	//	WriteOneRegToADF4351(ADF4351_PD_ON);
-	return (INT_Fre + (double)Frac_temp / Mod_temp) * f_pfd / N_Mul;
+	ADF4351_R[4] &= ~ADF4351_R4_PWR_MASK;
+	ADF4351_R[4] |= pwr;
+	ADF4351_Write(ADF4351_R[4]);
 }
