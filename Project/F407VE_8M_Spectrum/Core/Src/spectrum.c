@@ -2,12 +2,17 @@
 
 #include "DELAY/delay.h"
 #include "ADF4351/adf4351.h"
+#include "AD7190/ad7190.h"
 #include "UTIL/util.h"
+#include "arm_math.h"
 #include "tim.h"
 
 #define SPECTRUM_PAGE_MAIN '0'
 #define SPECTRUM_PAGE_SPECTRUM '1'
 #define SPECTRUM_PAGE_SWEEP '2'
+
+uint8_t displayBuf[401];
+float32_t val[401];
 
 extern MyUARTHandle uart2;
 
@@ -26,8 +31,7 @@ double Spectrum_Sweep_freq;
 void Spectrum_Process()
 {
   if (Spectrum_CurrentPage == SPECTRUM_PAGE_SPECTRUM)
-    //Spectrum_SpectrumPage();
-    ;
+    Spectrum_SpectrumPage();
   else if (Spectrum_CurrentPage == SPECTRUM_PAGE_SWEEP)
     Spectrum_SweepPage();
 
@@ -53,7 +57,7 @@ void Spectrum_Process()
     Spectrum_PageInit();
   }
   if (Spectrum_Buf[0] == SPECTRUM_PAGE_SPECTRUM)
-    ; //Spectrum_SpectrumInst();
+    Spectrum_SpectrumInst();
   else if (Spectrum_Buf[0] == SPECTRUM_PAGE_SWEEP)
     Spectrum_SweepInst();
 }
@@ -61,7 +65,7 @@ void Spectrum_Process()
 void Spectrum_PageInit()
 {
   if (Spectrum_CurrentPage == SPECTRUM_PAGE_SPECTRUM)
-    ; //Spectrum_SpectrumInit();
+    Spectrum_SpectrumInit();
   else if (Spectrum_CurrentPage == SPECTRUM_PAGE_SWEEP)
     Spectrum_SweepInit();
 }
@@ -75,9 +79,19 @@ void Spectrum_SweepInit()
   ADF4351_WriteCLKConfig(&PLLConfig);
 }
 
-// void Spectrum_SpectrumInit()
-// {
-// }
+void Spectrum_SpectrumInit()
+{
+  ADF4351_Init();
+  ADF4351_SetCLKConfig(&PLLConfig, 100, 25, 0, 1, 32, 0.001);
+  ADF4351_WriteCLKConfig(&PLLConfig);
+
+  AD7190_Init(3.0);
+  AD7190_SetPolar(AD7190_POLAR_UNIPOLAR);
+  AD7190_SetChannel(AD7190_CH_1G);
+  AD7190_SetFS(1);
+  AD7190_SetCLKSource(AD7190_CLK_EXT_12);
+  AD7190_SetGain(AD7190_GAIN_1);
+}
 
 void Spectrum_SweepPage()
 {
@@ -85,56 +99,52 @@ void Spectrum_SweepPage()
   Delay_ms(100);
 }
 
-// void Spectrum_WavePage()
-// {
-//   int32_t i;
-//   uint8_t displayBuf[400];
+void Spectrum_SpectrumPage()
+{
+  uint8_t rxBuf[10], aveNum;
+  float32_t maxVal, minVal;
+  int32_t i, j;
+  double begin, end, curr;
+  begin = 90.7;
+  end = 110.7;
+  aveNum = 5;
+  i = 0;
+  for (curr = begin; curr < end; curr += 0.05)
+  {
+    val[i] = 0;
+    ADF4351_SetFreq(&PLLConfig, curr);
+    Delay_ms(2);
+    for (j = 0; j < aveNum; j++)
+    {
+      val[i] += AD7190_GetVoltage() * 85;
+      Delay_us(3);
+    }
+    val[i] /= aveNum;
+    i++;
+  }
+  arm_max_no_idx_f32(val, 400, &maxVal);
+  arm_min_f32(val, 400, &minVal, &i);
+  arm_offset_f32(val, -minVal, val, 400);
+  arm_scale_f32(val, 248.0 / (maxVal - minVal), val, 400);
+  for (i = 0; i < 400; i++)
+    displayBuf[i] = val[i];
 
-//   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)val, FFT_LENGTH);
-//   while (!__HAL_ADC_GET_FLAG(&hadc1, ADC_FLAG_OVR))
-//     ;
-//   hadc1.Instance->CR2 &= ~ADC_CR2_DMA;
+  Spectrum_SendCMD("ref_stop");
+  Spectrum_SendCMD("cle 1,0");
+  Spectrum_SendCMD("addt 1,0,400");
+  Spectrum_WaitResponse(0xFE, 30);
 
-//   for (i = 0; i < 400; i++)
-//     displayBuf[i] = val[i] >> 4;
+  for (i = 0; i < 400; i++)
+    MyUART_WriteChar(&uart2, displayBuf[i]);
+  Spectrum_WaitResponse(0xFD, 30);
 
-//   Spectrum_SendCMD("ref_stop");
-//   Spectrum_SendCMD("cle 1,0");
-//   Spectrum_SendCMD("addt 1,0,400");
-//   Spectrum_WaitResponse(0xFE, 30);
+  Spectrum_SendCMD("ref_star");
+  Delay_ms(200);
+}
 
-//   for (i = 0; i < 400; i++)
-//     MyUART_WriteChar(&uart2, displayBuf[i]);
-//   Spectrum_WaitResponse(0xFD, 30);
-
-//   Spectrum_SendCMD("ref_star");
-//   Delay_ms(200);
-// }
-
-// void Spectrum_SpectrumPage()
-// {
-//   uint8_t rxBuf[10];
-//   uint8_t displayBuf[400];
-//   int32_t i;
-
-//   Spectrum_DoFFT(0);
-//   Spectrum_Scale(fftData, displayBuf, Spectrum_Spectrum_offsetX, Spectrum_Spectrum_rangeX, Spectrum_Spectrum_offsetY, Spectrum_Spectrum_rangeY);
-//   Spectrum_SendCMD("ref_stop");
-//   Spectrum_SendCMD("cle 1,0");
-//   Spectrum_SendCMD("addt 1,0,400");
-//   Spectrum_WaitResponse(0xFE, 30);
-
-//   for (i = 0; i < 400; i++)
-//     MyUART_WriteChar(&uart2, displayBuf[i]);
-//   Spectrum_WaitResponse(0xFD, 30);
-
-//   Spectrum_SendCMD("ref_star");
-//   Delay_ms(200);
-// }
-
-// void Spectrum_SpectrumInst()
-// {
-// }
+void Spectrum_SpectrumInst()
+{
+}
 
 void Spectrum_SweepInst()
 {
@@ -183,7 +193,7 @@ void Spectrum_SweepInst()
   }
   else if (Spectrum_Buf[1] == '0')
   {
-    Spectrum_Sweep_freq = Spectrum_Sweep_begin;
+    Spectrum_Sweep_freq = Spectrum_Sweep_begin - Spectrum_Sweep_step;
     ADF4351_SetCLKConfig(&PLLConfig, 100, 25, 0, 1, 32, 0.001);
     ADF4351_WriteCLKConfig(&PLLConfig);
     __HAL_TIM_SET_AUTORELOAD(&htim2, Spectrum_Sweep_delay - 1);
@@ -195,70 +205,6 @@ void Spectrum_SweepInst()
     HAL_TIM_Base_Stop_IT(&htim2);
   }
 }
-
-// void Spectrum_SpectrumInst()
-// {
-//   uint16_t tmp;
-//   if (Spectrum_Buf[1] >= '0' && Spectrum_Buf[1] <= '3')
-//   {
-//     Spectrum_Spectrum_windowType = Spectrum_Buf[1] - '0';
-//     Spectrum_Spectrum_SetWindow();
-//   }
-//   else if (Spectrum_Buf[1] == 'x')
-//   {
-//     if (Spectrum_Buf[2] == 's')
-//     {
-//       tmp = myatoi(Spectrum_Buf + 3);
-//       if (tmp < FFT_LENGTH / 2)
-//         Spectrum_Spectrum_offsetX = tmp;
-//     }
-//     else if (Spectrum_Buf[2] == 'u')
-//     {
-//       if (Spectrum_Spectrum_rangeX == 100)
-//         Spectrum_Spectrum_rangeX = 200;
-//       else if (Spectrum_Spectrum_rangeX == 200)
-//         Spectrum_Spectrum_rangeX = 400;
-//       else if (Spectrum_Spectrum_rangeX == 400)
-//         Spectrum_Spectrum_rangeX = 1000;
-//       else if (Spectrum_Spectrum_rangeX == 1000)
-//         Spectrum_Spectrum_rangeX = 2000;
-//       myitoa(FFT_LENGTH / 2 - Spectrum_Spectrum_rangeX, Spectrum_Buf, 10);
-//       MyUART_WriteStr(&uart2, "sliderX.maxval=");
-//       MyUART_WriteStr(&uart2, Spectrum_Buf);
-//       MyUART_WriteStr(&uart2, "\xFF\xFF\xFF");
-//     }
-//     else if (Spectrum_Buf[2] == 'd')
-//     {
-//       if (Spectrum_Spectrum_rangeX == 200)
-//         Spectrum_Spectrum_rangeX = 100;
-//       else if (Spectrum_Spectrum_rangeX == 400)
-//         Spectrum_Spectrum_rangeX = 200;
-//       else if (Spectrum_Spectrum_rangeX == 1000)
-//         Spectrum_Spectrum_rangeX = 400;
-//       else if (Spectrum_Spectrum_rangeX == 2000)
-//         Spectrum_Spectrum_rangeX = 1000;
-//       myitoa(FFT_LENGTH / 2 - Spectrum_Spectrum_rangeX, Spectrum_Buf, 10);
-//       MyUART_WriteStr(&uart2, "sliderX.maxval=");
-//       MyUART_WriteStr(&uart2, Spectrum_Buf);
-//       MyUART_WriteStr(&uart2, "\xFF\xFF\xFF");
-//     }
-//   }
-//   else if (Spectrum_Buf[1] == 'y')
-//   {
-//     if (Spectrum_Buf[2] == 's')
-//     {
-//       tmp = myatoi(Spectrum_Buf + 3);
-//       if (tmp < FFT_LENGTH / 2)
-//         Spectrum_Spectrum_offsetY = tmp;
-//     }
-//   }
-// }
-
-// void Spectrum_THD_SetChannel(uint8_t channel)
-// {
-//   if (channel >= 0 && channel <= 5)
-//     GPIOD->ODR = channel;
-// }
 
 // Scale from xLen*yLen to xRange*yRange
 // xRange set to 400
@@ -320,16 +266,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim == &htim2)
   {
-    if (Spectrum_Sweep_freq >= Spectrum_Sweep_end)
+    Spectrum_Sweep_freq += Spectrum_Sweep_step;
+    ADF4351_SetFreq(&PLLConfig, Spectrum_Sweep_freq);
+    if (Spectrum_Sweep_freq >= Spectrum_Sweep_end || Spectrum_Sweep_end - Spectrum_Sweep_freq < 0.00001)
     {
       HAL_TIM_Base_Stop_IT(&htim2);
       return;
-    }
-    ADF4351_SetFreq(&PLLConfig, Spectrum_Sweep_freq);
-    Spectrum_Sweep_freq += Spectrum_Sweep_step;
-    if (Spectrum_Sweep_freq > Spectrum_Sweep_end)
-    {
-      Spectrum_Sweep_freq = Spectrum_Sweep_end;
     }
   }
 }
