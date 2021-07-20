@@ -168,14 +168,23 @@ void Spectrum_SweepInst()
   {
     tmp = myatoi(Spectrum_Buf + 2);
     Spectrum_Sweep_freq = tmp / 1000.0;
+    ADF4351_SetCLKConfig(&PLLConfig, 100, 25, 0, 1, ADF4351_CalcDiv(Spectrum_Sweep_freq), 0.001);
+    ADF4351_WriteCLKConfig(&PLLConfig);
     ADF4351_SetFreq(&PLLConfig, Spectrum_Sweep_freq);
     Spectrum_Sweep_UpdateFreq();
   }
   else if (Spectrum_Buf[1] == '0')
   {
     Spectrum_Sweep_freq = Spectrum_Sweep_begin;
+    ADF4351_SetCLKConfig(&PLLConfig, 100, 25, 0, 1, 32, 0.001);
+    ADF4351_WriteCLKConfig(&PLLConfig);
     __HAL_TIM_SET_AUTORELOAD(&htim2, Spectrum_Sweep_delay - 1);
+    htim2.Instance->EGR = TIM_EGR_UG;
     HAL_TIM_Base_Start_IT(&htim2);
+  }
+  else if (Spectrum_Buf[1] == '1')
+  {
+    HAL_TIM_Base_Stop_IT(&htim2);
   }
 }
 
@@ -272,7 +281,7 @@ void Spectrum_Sweep_UpdateFreq()
 {
   uint8_t tmp[10];
   uint32_t val;
-  val = Spectrum_Sweep_freq * 1000;
+  val = Spectrum_Sweep_freq * 1000 + 0.5;
   myitoa(val, tmp, 10);
   MyUART_WriteStr(&uart2, "curF.val=");
   MyUART_WriteStr(&uart2, tmp);
@@ -303,13 +312,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim == &htim2)
   {
-    if (Spectrum_Sweep_freq > Spectrum_Sweep_end)
+    if (Spectrum_Sweep_freq >= Spectrum_Sweep_end)
     {
-      HAL_TIM_Base_Stop(&htim2);
+      HAL_TIM_Base_Stop_IT(&htim2);
       return;
     }
-
-    Spectrum_Sweep_freq += Spectrum_Sweep_step;
     ADF4351_SetFreq(&PLLConfig, Spectrum_Sweep_freq);
+    Spectrum_Sweep_freq += Spectrum_Sweep_step;
+    if (Spectrum_Sweep_freq > Spectrum_Sweep_end)
+    {
+      Spectrum_Sweep_freq = Spectrum_Sweep_end;
+    }
   }
 }

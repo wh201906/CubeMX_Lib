@@ -253,7 +253,10 @@ uint8_t ADF4351_CalcDiv(double freqOut)
 
 	div = 1;
 	while (freqOut < 2200.0)
+	{
+		freqOut *= 2;
 		div *= 2;
+	}
 
 	return div;
 }
