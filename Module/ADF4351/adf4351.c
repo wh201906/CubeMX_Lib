@@ -243,6 +243,21 @@ double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq)
 	return ((INT * config->MOD + FRAC) * resolution);
 }
 
+uint8_t ADF4351_CalcDiv(double freqOut)
+{
+	uint8_t div;
+	if (freqOut < 35.0)
+		freqOut = 35.0;
+	else if (freqOut > 4400.0)
+		freqOut = 4400.0;
+
+	div = 1;
+	while (freqOut < 2200.0)
+		div *= 2;
+
+	return div;
+}
+
 double ADF4351_OldSetFreq(double freq) //	freµ¥Î»MHz -> (xx.x) M Hz
 {
 	double f_pfd = 25;

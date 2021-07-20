@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "ADF4351/adf4351.h"
 #include "AD7190/ad7190.h"
+#include "spectrum.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,11 +70,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  double freq;
-  double freq_actural;
-  double tmp, val_all, val_head, val_tail, val_ave;
-  uint8_t i;
-  uint8_t flag = 1;
+  uint32_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,20 +99,20 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   MyUART_Init(&uart2, USART2, uartBuf2, 100);
   // MyUART_WriteLine(&uart1, "Spectrum Analyzer");
-  SigPara_Freq_HF_Init();
+  // SigPara_Freq_HF_Init();
   
-  AD7190_Init(3.0);
-  AD7190_SetPolar(AD7190_POLAR_UNIPOLAR);
-  AD7190_SetChannel(AD7190_CH_1G);
-  AD7190_SetFS(1);
-  AD7190_SetCLKSource(AD7190_CLK_EXT_12);
-  AD7190_SetGain(AD7190_GAIN_1);
+//  AD7190_Init(3.0);
+//  AD7190_SetPolar(AD7190_POLAR_UNIPOLAR);
+//  AD7190_SetChannel(AD7190_CH_1G);
+//  AD7190_SetFS(1);
+//  AD7190_SetCLKSource(AD7190_CLK_EXT_12);
+//  AD7190_SetGain(AD7190_GAIN_1);
   
-  ADF4351_Init();
-  ADF4351_SetCLKConfig(&ADF4351_CLK, 100, 25, 0, 1, 32, 0.01);
-  ADF4351_WriteCLKConfig(&ADF4351_CLK);
-  freq = 69.0;
-  Delay_ms(1000);
+//  ADF4351_Init();
+//  ADF4351_SetCLKConfig(&ADF4351_CLK, 100, 25, 0, 1, 32, 0.01);
+//  ADF4351_WriteCLKConfig(&ADF4351_CLK);
+//  freq = 69.0;
+//  Delay_ms(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,30 +122,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(!flag)
-      continue;
-    val_all = val_head = val_tail = val_ave = 0;
-    freq_actural = ADF4351_SetFreq(&ADF4351_CLK, freq);
-    Delay_us(4000);
-    //Delay_ms(1);
-    for(i = 0;i<5;i++)
-    {
-      tmp = AD7190_GetVoltage();
-      val_all += tmp;
-      //if(i<5)
-      //  val_head+=tmp;
-      //if(i%40 == 0)
-      //  val_ave+=tmp;
-      //if(i>=195)
-      //  val_tail+=tmp;
-      Delay_us(20);
-    }
-    val_all/=5;
-    // printf("%f, %f, %f, %f, %f\r\n", freq, val_all, val_head, val_tail, val_ave);
-    printf("%f, %f\r\n", freq_actural, val_all);
-    if(freq > 120)
-      flag = 0;
-    freq+=0.01;
+    Spectrum_Process();
+    Delay_ms(10);
   }
   /* USER CODE END 3 */
 }

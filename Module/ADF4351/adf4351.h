@@ -34,6 +34,7 @@ double ADF4351_SetResolution(ADF4351_CLKConfig *config, double resolution); // r
 double ADF4351_GetResolution(ADF4351_CLKConfig *config);
 double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double freqPFD, uint8_t isDoubled, uint8_t is2Divided, uint8_t div, double resolution);
 void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config);
+uint8_t ADF4351_CalcDiv(double freqOut);
 double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq);
 
 #endif

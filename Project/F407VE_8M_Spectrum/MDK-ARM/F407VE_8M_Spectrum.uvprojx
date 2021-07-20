@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>2</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,USE_FULL_LL_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";    ../../../Module</IncludePath>
+              <IncludePath>../Core/Inc;  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";  ../../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -393,6 +393,11 @@
         <Group>
           <GroupName>Application/User/Core</GroupName>
           <Files>
+            <File>
+              <FileName>spectrum.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\spectrum.c</FilePath>
+            </File>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
@@ -905,11 +910,6 @@
         <Group>
           <GroupName>Module</GroupName>
           <Files>
-            <File>
-              <FileName>sigpara.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\SIGNAL\sigpara.c</FilePath>
-            </File>
             <File>
               <FileName>myuart.c</FileName>
               <FileType>1</FileType>
