@@ -101,9 +101,9 @@ void Spectrum_SweepPage()
 
 void Spectrum_SpectrumPage()
 {
-  uint8_t rxBuf[10], aveNum;
+  uint8_t buf[15], aveNum;
   float32_t maxVal, minVal;
-  int32_t i, j;
+  uint32_t i, j;
   double begin, end, curr;
   begin = 90.7;
   end = 110.7;
@@ -122,13 +122,17 @@ void Spectrum_SpectrumPage()
     val[i] /= aveNum;
     i++;
   }
-  arm_max_no_idx_f32(val, 400, &maxVal);
   arm_min_f32(val, 400, &minVal, &i);
+  arm_max_f32(val, 400, &maxVal, &j);
   arm_offset_f32(val, -minVal, val, 400);
-  arm_scale_f32(val, 248.0 / (maxVal - minVal), val, 400);
+  //arm_scale_f32(val, 248.0 / (maxVal - minVal), val, 400);
   for (i = 0; i < 400; i++)
-    displayBuf[i] = val[i];
-
+  {
+    if(i == j && maxVal - minVal > 40)
+      displayBuf[i] = 248;
+    else
+      displayBuf[i] = val[i] * 0.2;
+  }
   Spectrum_SendCMD("ref_stop");
   Spectrum_SendCMD("cle 1,0");
   Spectrum_SendCMD("addt 1,0,400");
@@ -139,6 +143,10 @@ void Spectrum_SpectrumPage()
   Spectrum_WaitResponse(0xFD, 30);
 
   Spectrum_SendCMD("ref_star");
+  MyUART_WriteStr(&uart2, "state.txt=\"Freq: ");
+  myftoa(j *0.05+80.0 - 0.05, buf);
+  MyUART_WriteStr(&uart2, buf);
+  MyUART_WriteStr(&uart2, "\"\xFF\xFF\xFF");
   Delay_ms(200);
 }
 
