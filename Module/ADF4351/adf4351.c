@@ -38,8 +38,10 @@
 #define ADF4351_R2_RDIV2 0x01000000
 #define ADF4351_R2_R_MASK 0x00FFC000
 #define ADF4351_R4_RFDIV_MASK 0x00700000
+#define ADF4351_R4_BANDCLKDIV_MASK 0x000FF000
 
 #define ADF4351_R4_RFOUT_ON 0x00000020
+#define ADF4351_R4_AUXRFOUT_ON 0x00000100
 #define ADF4351_R4_VCO_POWERDOWN 0x00000800
 #define ADF4351_R2_CHIP_POWERDOWN 0x00000020
 
@@ -133,10 +135,13 @@ void ADF4351_SetRef(ADF4351_CLKConfig *config, double freqRef)
 // use is2Divided for 50% duty cycle of clock, which is useful in cycle slip reduction
 double ADF4351_SetPFD(ADF4351_CLKConfig *config, double freqPFD, uint8_t isDoubled, uint8_t is2Divided)
 {
+	double actualPFD;
 	config->D = !!isDoubled;
 	config->T = !!is2Divided;
 	config->R = config->ref * (1 + config->D) / freqPFD / (1 + config->T);
-	return ADF4351_GetPFD(config);
+	actualPFD = ADF4351_GetPFD(config);
+	config->BandClkDiv = actualPFD / 0.125 + 0.9999; // just like ceil(), not precise, but simple
+	return actualPFD;
 }
 
 double ADF4351_GetPFD(ADF4351_CLKConfig *config)
@@ -204,8 +209,8 @@ double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double fr
 
 void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config)
 {
-	ADF4351_R[4] &= ~ADF4351_R4_RFDIV_MASK;
-	ADF4351_R[4] |= config->Div_n << 20;
+	ADF4351_R[4] &= ~(ADF4351_R4_RFDIV_MASK | ADF4351_R4_BANDCLKDIV_MASK);
+	ADF4351_R[4] |= (config->Div_n << 20 | config->BandClkDiv << 12);
 	ADF4351_R[2] &= ~(ADF4351_R2_DOUBLER | ADF4351_R2_RDIV2 | ADF4351_R2_R_MASK);
 	ADF4351_R[2] |= (config->D << 25 | config->T << 24 | config->R << 14);
 	ADF4351_R[1] &= ~ADF4351_R1_MOD_MASK;
@@ -252,7 +257,34 @@ uint8_t ADF4351_CalcDiv(double freqOut)
 
 void ADF4351_SetOutputPower(uint32_t pwr)
 {
+	if (pwr & ADF4351_R4_AUXPWR_MASK) // AUXPWR->PWR
+		pwr >>= 3;
 	ADF4351_R[4] &= ~ADF4351_R4_PWR_MASK;
 	ADF4351_R[4] |= pwr;
+	ADF4351_Write(ADF4351_R[4]);
+}
+
+void ADF4351_SetAUXOutputPower(uint32_t pwr) // PWR->AUXPWR
+{
+	if (pwr & ADF4351_R4_PWR_MASK) // shift if pwr is PWR
+		pwr <<= 3;
+	ADF4351_R[4] &= ~ADF4351_R4_AUXPWR_MASK;
+	ADF4351_R[4] |= pwr;
+	ADF4351_Write(ADF4351_R[4]);
+}
+
+void ADF4351_SetRFout(uint8_t isEnabled)
+{
+	ADF4351_R[4] &= ~ADF4351_R4_RFOUT_ON;
+	if (isEnabled)
+		ADF4351_R[4] |= ADF4351_R4_RFOUT_ON;
+	ADF4351_Write(ADF4351_R[4]);
+}
+
+void ADF4351_SetAUXRFout(uint8_t isEnabled)
+{
+	ADF4351_R[4] &= ~ADF4351_R4_AUXRFOUT_ON;
+	if (isEnabled)
+		ADF4351_R[4] |= ADF4351_R4_AUXRFOUT_ON;
 	ADF4351_Write(ADF4351_R[4]);
 }

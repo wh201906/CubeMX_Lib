@@ -8,6 +8,12 @@
 #define ADF4351_R4_PWR_5DBM 0x00000018
 #define ADF4351_R4_PWR_MASK ADF4351_R4_PWR_5DBM
 
+#define ADF4351_R4_AUXPWR_N4DBM 0x00000000
+#define ADF4351_R4_AUXPWR_N1DBM 0x00000040
+#define ADF4351_R4_AUXPWR_2DBM 0x00000080
+#define ADF4351_R4_AUXPWR_5DBM 0x000000C0
+#define ADF4351_R4_AUXPWR_MASK ADF4351_R4_AUXPWR_5DBM
+
 typedef struct _ADF4351_CLKConfig
 {
   double ref;
@@ -23,7 +29,9 @@ typedef struct _ADF4351_CLKConfig
   // MOD is storaged in R1, which is resolution to set resolution. Res = Freq_PFD / Div / MOD
   uint8_t Div_n;
   uint16_t MOD;
-
+  // In the official ADF435x software, band select clock is less than or equal to 125k when generated
+  // Use this divider to meet the requirement
+  uint8_t BandClkDiv;
 } ADF4351_CLKConfig;
 
 void ADF4351_Init(void);
@@ -41,7 +49,11 @@ double ADF4351_GetResolution(ADF4351_CLKConfig *config);
 double ADF4351_SetCLKConfig(ADF4351_CLKConfig *config, double freqRef, double freqPFD, uint8_t isDoubled, uint8_t is2Divided, uint8_t div, double resolution);
 void ADF4351_WriteCLKConfig(ADF4351_CLKConfig *config);
 uint8_t ADF4351_CalcDiv(double freqOut);
+
 double ADF4351_SetFreq(ADF4351_CLKConfig *config, double freq);
 void ADF4351_SetOutputPower(uint32_t pwr);
+void ADF4351_SetAUXOutputPower(uint32_t pwr);
+void ADF4351_SetRFout(uint8_t isEnabled);
+void ADF4351_SetAUXRFout(uint8_t isEnabled);
 
 #endif
