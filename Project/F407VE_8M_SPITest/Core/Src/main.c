@@ -122,7 +122,12 @@ int main(void)
       {
         buf[0] = myatoi(str + 1);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 0);
-        HAL_SPI_Transmit(&hspi3, buf, 1, 100);
+        __HAL_SPI_ENABLE(&hspi3);
+        hspi3.Instance->DR = (uint16_t)buf[0];
+        while(!__HAL_SPI_GET_FLAG(&hspi3, SPI_FLAG_TXE))
+          ;
+        Delay_ticks(20);
+        // HAL_SPI_Transmit(&hspi3, buf, 1, 100);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
         MyUART_WriteLine(&uart1, "Sended");
       }
