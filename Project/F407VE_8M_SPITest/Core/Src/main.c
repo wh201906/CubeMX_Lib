@@ -19,14 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "DELAY/delay.h"
-#include "USART/myusart1.h"
-#include "AD9910/ad9910.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+MyUARTHandle uart1;
+uint8_t uartBuf1[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +67,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t str[30];
+  double fparam[5];
+  int64_t hparam[5];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,10 +91,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
-  Init_ad9910();	
-  Freq_convert(500000);
+  MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  MyUART_WriteLine(&uart1, "SPI test");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,6 +105,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if(MyUART_ReadUntilWithEnd(&uart1, str, '>'))
+    {
+      splitparam_f(str, ',', fparam, 2); 
+      splitparam_hex(str, ',', hparam, 2); 
+    }
+    Delay_ms(100);
   }
   /* USER CODE END 3 */
 }

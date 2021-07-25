@@ -189,6 +189,16 @@ uint32_t MyUART_ReadUntilWithEnd(MyUARTHandle *handle, uint8_t *str, uint16_t en
   return result;
 }
 
+uint32_t MyUART_ReadUntilWithZero(MyUARTHandle *handle, uint8_t *str, uint16_t endChar)
+{
+  uint32_t result;
+  result = MyUART_ReadUntil(handle, str, endChar);
+  if (result == 0)
+    return 0;
+  str[result++] = '\0';
+  return result;
+}
+
 uint32_t MyUART_ReadLine(MyUARTHandle *handle, uint8_t *str)
 {
   uint32_t i;

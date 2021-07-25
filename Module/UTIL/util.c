@@ -167,6 +167,38 @@ double myatof(char *str)
   return val;
 }
 
+void splitparam_hex(char *str, char spliter, int64_t *result, uint64_t num)
+{
+  uint64_t i;
+  char *ptr;
+  ptr = str;
+  for (i = 0; i < num - 1 && *ptr != '\0'; i++)
+  {
+    result[i] = myatoi_hex(ptr);
+    while (*ptr != spliter && *ptr != '\0')
+      ptr++;
+  }
+  if (*ptr == spliter)
+    ptr++;
+  result[i] = myatoi_hex(ptr);
+}
+
+void splitparam_f(char *str, char spliter, double *result, uint64_t num)
+{
+  uint64_t i;
+  char *ptr;
+  ptr = str;
+  for (i = 0; i < num - 1 && *ptr != '\0'; i++)
+  {
+    result[i] = myatof(ptr);
+    while (*ptr != spliter && *ptr != '\0')
+      ptr++;
+  }
+  if (*ptr == spliter)
+    ptr++;
+  result[i] = myatof(ptr);
+}
+
 int64_t mygcd(int64_t a, int64_t b)
 {
   int64_t tmp;
