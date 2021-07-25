@@ -96,6 +96,7 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   MyUART_WriteLine(&uart1, "SPI test");
+  LL_SPI_Enable(SPI3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,7 +112,19 @@ int main(void)
       {
         len = myatoi(str + 1);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 0);
-        HAL_SPI_Receive(&hspi3, buf, len, 100);
+        for(i = 0; i < len; i++)
+        {
+          while(LL_SPI_IsActiveFlag_BSY(SPI3))
+            ;
+          if(LL_SPI_IsActiveFlag_RXNE(SPI3))
+            buf[i] = LL_SPI_ReceiveData16(SPI3); // dummy read
+          LL_SPI_TransmitData16(SPI3,0); // dummy write
+          while(!LL_SPI_IsActiveFlag_RXNE(SPI3))
+            ;
+          buf[i] = LL_SPI_ReceiveData16(SPI3);
+        }
+        while(LL_SPI_IsActiveFlag_BSY(SPI3))
+            ;
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
         MyUART_WriteLine(&uart1, "Received");
         for(i = 0; i < len; i++)
@@ -122,12 +135,12 @@ int main(void)
       {
         buf[0] = myatoi(str + 1);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 0);
-        __HAL_SPI_ENABLE(&hspi3);
-        hspi3.Instance->DR = (uint16_t)buf[0];
-        while(!__HAL_SPI_GET_FLAG(&hspi3, SPI_FLAG_TXE))
+        LL_SPI_TransmitData16(SPI3,buf[0]);
+        LL_SPI_IsActiveFlag_TXE(SPI3);
+        while(!LL_SPI_IsActiveFlag_TXE(SPI3))
           ;
-        Delay_ticks(20);
-        // HAL_SPI_Transmit(&hspi3, buf, 1, 100);
+        while(LL_SPI_IsActiveFlag_BSY(SPI3))
+          ;
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
         MyUART_WriteLine(&uart1, "Sended");
       }

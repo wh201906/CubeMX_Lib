@@ -313,7 +313,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";  "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";  ../../../Module</IncludePath>
+              <IncludePath>../Core/Inc;   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/CMSIS/Include";   ../../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -429,9 +429,9 @@
           <GroupName>Drivers/STM32F4xx_HAL_Driver</GroupName>
           <Files>
             <File>
-              <FileName>stm32f4xx_hal_spi.c</FileName>
+              <FileName>stm32f4xx_ll_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c</FilePath>
+              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_spi.c</FilePath>
               <FileOption>
                 <CommonProperty>
                   <UseCPPCompiler>2</UseCPPCompiler>
@@ -483,6 +483,16 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+            <File>
+              <FileName>stm32f4xx_ll_gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_ll_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_hal_rcc.c</FileName>
@@ -578,16 +588,6 @@
               <FileName>stm32f4xx_ll_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_ll_gpio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_ll_dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c</FilePath>
             </File>
           </Files>
         </Group>
