@@ -68,8 +68,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint8_t str[30];
-  double fparam[5];
-  int64_t hparam[5];
+  uint32_t i, len;
+  uint16_t buf[30];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,10 +105,27 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(MyUART_ReadUntilWithEnd(&uart1, str, '>'))
+    if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
     {
-      splitparam_f(str, ',', fparam, 2); 
-      splitparam_hex(str, ',', hparam, 2); 
+      if(str[0] == 'r')
+      {
+        len = myatoi(str + 1);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 0);
+        HAL_SPI_Receive(&hspi3, buf, len, 100);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
+        MyUART_WriteLine(&uart1, "Received");
+        for(i = 0; i < len; i++)
+          printf("0x%x ", buf[i]);
+        MyUART_WriteLine(&uart1, "");
+      }
+      else if(str[0] == 't')
+      {
+        buf[0] = myatoi(str + 1);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 0);
+        HAL_SPI_Transmit(&hspi3, buf, 1, 100);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
+        MyUART_WriteLine(&uart1, "Sended");
+      }
     }
     Delay_ms(100);
   }
