@@ -95,7 +95,7 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-
+extern MyUARTHandle uart1;
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -262,6 +262,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  MyUSB_RecvHandler(&uart1, Buf, *Len);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
@@ -292,7 +293,21 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
-
+void MyUSB_RecvHandler(MyUARTHandle *handle, uint8_t *buf, uint32_t len)
+{
+  uint32_t newTail, i;
+  for(i = 0; i < len; i++)
+  {
+    newTail = MyUART_TailNext(handle);
+    if (newTail == handle->headPos)
+    {
+      handle->isOverflow = 1;
+      return;
+    }
+    handle->buffer[handle->tailPos] = buf[i];
+    handle->tailPos = newTail;
+  }
+}
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**

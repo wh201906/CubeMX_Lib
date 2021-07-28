@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ad9910.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,6 +48,17 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
+static char help[][60] = 
+{
+  "AD9910 Test\r\n",
+  "This is ",
+  " interface\r\n",
+  "fXXX: set frequency to XXX Hz\r\n",
+  "aXXX: set amplitude to XXX(1~649)\r\n",
+  "r: reset\r\n",
+  "h: help\r\n",
+  "append \\r\\n at every end of command\r\n",
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,7 +69,37 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void showhelp(void)
+{
+  printf(help[0]);
+  printf(help[1]);
+  printf("UART");
+  printf(help[2]);
+  printf(help[3]);
+  printf(help[4]);
+  printf(help[5]);
+  printf(help[6]);
+  printf(help[7]);
+  
+  while(CDC_Transmit_FS(help[0], strlen(help[0])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[1], strlen(help[1])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS("USB_CDC" , 7) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[2], strlen(help[2])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[3], strlen(help[3])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[4], strlen(help[4])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[5], strlen(help[5])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[6], strlen(help[6])) == USBD_BUSY)
+    ;
+  while(CDC_Transmit_FS(help[7], strlen(help[7])) == USBD_BUSY)
+    ;
+}
 /* USER CODE END 0 */
 
 /**
@@ -67,7 +109,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t str[40];
+  uint32_t len;
+  int32_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,6 +140,10 @@ int main(void)
   Init_ad9910();
   Freq_convert(5000);
   Amp_convert(649);
+  Delay_ms(1000);
+  
+  showhelp();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,6 +153,44 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    len = MyUART_ReadLine(&uart1, str);
+    if(len)
+    {
+      str[len] = '\0';
+      if(str[0] == 'f')
+      {
+        val = myatoi(str + 1);
+        Freq_convert(val);
+        sprintf(str, "Frequency set to %d\r\n", val);
+        printf(str);
+        while(CDC_Transmit_FS(str, strlen(str)) == USBD_BUSY)
+          ;
+      }
+      else if(str[0] == 'a')
+      {
+        val = myatoi(str + 1);
+        if(val < 1)
+          val = 1;
+        if(val > 649)
+          val = 649;
+        Amp_convert(val);
+        sprintf(str, "Amplitude set to %d\r\n", val);
+        printf(str);
+        while(CDC_Transmit_FS(str, strlen(str)) == USBD_BUSY)
+          ;
+      }
+      else if(str[0] == 'r')
+      {
+        Init_ad9910();
+        strcpy(str, "Reseted\r\n");
+        printf(str);
+        while(CDC_Transmit_FS(str, strlen(str)) == USBD_BUSY)
+          ;
+      }
+      else if(str[0] == 'h')
+        showhelp();
+    }
   }
   /* USER CODE END 3 */
 }
