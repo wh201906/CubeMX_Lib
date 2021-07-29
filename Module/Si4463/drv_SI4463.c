@@ -12,40 +12,40 @@
   * 阿里巴巴:	https://cdzeyao.1688.com
   ******************************************************************************
   */
-    
+
 #include "drv_SI446x.h"
 #include "DELAY/delay.h"
 
-const static uint8_t config_table[ ] = RADIO_CONFIGURATION_DATA_ARRAY;
+const static uint8_t config_table[] = RADIO_CONFIGURATION_DATA_ARRAY;
 
 /**
   * @brief :SI446x等待CTS状态
   * @param :无
   * @note  :无
   * @retval:无
-  */ 
-void SI446x_Wait_Cts( void )
+  */
+void SI446x_Wait_Cts(void)
 {
-    uint8_t l_Cts;
-	uint16_t l_ReadCtsTimes = 0;
-	
-    do
+  uint8_t l_Cts;
+  uint16_t l_ReadCtsTimes = 0;
+
+  do
+  {
+    SI4463_CSN(0); //SPI片选
+
+    //读CTS状态
+    drv_spi_read_write_byte(READ_CMD_BUFF);
+    l_Cts = drv_spi_read_write_byte(0xFF);
+
+    SI4463_CSN(1); //取消SPI片选
+
+    if (1000 == l_ReadCtsTimes++)
     {
-        SI_SET_CSN_LOW( );		//SPI片选
-		
-		//读CTS状态
-        drv_spi_read_write_byte( READ_CMD_BUFF );
-        l_Cts = drv_spi_read_write_byte( 0xFF );		
-		
-        SI_SET_CSN_HIGH( );		//取消SPI片选
-		
-		if( 1000 == l_ReadCtsTimes++ )
-		{
-			SI446x_Init( );
-			break;
-		}
-		
-	}while( l_Cts != 0xFF );	//直到读CTS的返回值等于0xFF
+      SI446x_Init();
+      break;
+    }
+
+  } while (l_Cts != 0xFF); //直到读CTS的返回值等于0xFF
 }
 
 /**
@@ -55,20 +55,20 @@ void SI446x_Wait_Cts( void )
   *			@CmdNumber：命令个数
   * @note  :无
   * @retval:无
-  */ 
-void SI446x_Write_Cmds( uint8_t *pCmd, uint8_t CmdNumber )
+  */
+void SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber)
 {
-    SI446x_Wait_Cts( );			//查询CTS状态
-	
-    SI_SET_CSN_LOW( );			//SPI片选
-	
-    while( CmdNumber -- )
-    {
-        drv_spi_read_write_byte( *pCmd );	//发送命令
-		pCmd++;
-    }
-	
-    SI_SET_CSN_HIGH( );			//取消SPI片选
+  SI446x_Wait_Cts(); //查询CTS状态
+
+  SI4463_CSN(0); //SPI片选
+
+  while (CmdNumber--)
+  {
+    drv_spi_read_write_byte(*pCmd); //发送命令
+    pCmd++;
+  }
+
+  SI4463_CSN(1); //取消SPI片选
 }
 
 /**
@@ -78,18 +78,18 @@ void SI446x_Write_Cmds( uint8_t *pCmd, uint8_t CmdNumber )
   * @note  :SI446x复位之后需要调用
   * @retval:无
   */
-void SI446x_Power_Up( uint32_t Xo_Freq )
+void SI446x_Power_Up(uint32_t Xo_Freq)
 {
-    uint8_t l_Cmd[7] = { 0 };
-	
-    l_Cmd[0] = POWER_UP;		//Power_Up命令
-    l_Cmd[1] = 0x01;
-    l_Cmd[2] = 0x00;
-    l_Cmd[3] = Xo_Freq >> 24;
-    l_Cmd[4] = Xo_Freq >> 16;
-    l_Cmd[5] = Xo_Freq >> 8;
-    l_Cmd[6] = Xo_Freq;
-    SI446x_Write_Cmds( l_Cmd, 7 );	//写命令
+  uint8_t l_Cmd[7] = {0};
+
+  l_Cmd[0] = POWER_UP; //Power_Up命令
+  l_Cmd[1] = 0x01;
+  l_Cmd[2] = 0x00;
+  l_Cmd[3] = Xo_Freq >> 24;
+  l_Cmd[4] = Xo_Freq >> 16;
+  l_Cmd[5] = Xo_Freq >> 8;
+  l_Cmd[6] = Xo_Freq;
+  SI446x_Write_Cmds(l_Cmd, 7); //写命令
 }
 
 /**
@@ -100,20 +100,19 @@ void SI446x_Power_Up( uint32_t Xo_Freq )
   * @note  :无
   * @retval:无
   */
-void SI446x_Read_Response( uint8_t *pRead, uint8_t Length )
+void SI446x_Read_Response(uint8_t *pRead, uint8_t Length)
 {
-    SI446x_Wait_Cts( );		//查询CTS状态
-    SI_SET_CSN_LOW( );		//SPI片选
-	
-	drv_spi_read_write_byte( READ_CMD_BUFF );	//发送读命令
-	while( Length-- )
-    {
-        *pRead = drv_spi_read_write_byte( 0xFF );	//交换数据
-		pRead++;
-    }
-	
-    SI_SET_CSN_HIGH( );		//SPI取消片选
+  SI446x_Wait_Cts(); //查询CTS状态
+  SI4463_CSN(0);     //SPI片选
 
+  drv_spi_read_write_byte(READ_CMD_BUFF); //发送读命令
+  while (Length--)
+  {
+    *pRead = drv_spi_read_write_byte(0xFF); //交换数据
+    pRead++;
+  }
+
+  SI4463_CSN(1); //SPI取消片选
 }
 
 /**
@@ -122,17 +121,17 @@ void SI446x_Read_Response( uint8_t *pRead, uint8_t Length )
   * @note  :无
   * @retval:无
   */
-uint8_t SI446x_Nop( void )
+uint8_t SI446x_Nop(void)
 {
-    uint8_t l_Cts;
-	
-    SI_SET_CSN_LOW( );		//SPI片选
-	
-    l_Cts = drv_spi_read_write_byte( NOP );	//空操作命令
-	
-    SI_SET_CSN_HIGH( );		//SPI取消片选
-	
-	return l_Cts;
+  uint8_t l_Cts;
+
+  SI4463_CSN(0); //SPI片选
+
+  l_Cts = drv_spi_read_write_byte(NOP); //空操作命令
+
+  SI4463_CSN(1); //SPI取消片选
+
+  return l_Cts;
 }
 
 /**
@@ -142,13 +141,12 @@ uint8_t SI446x_Nop( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Get_Part_Informatoin( uint8_t *pRead )
+void SI446x_Get_Part_Informatoin(uint8_t *pRead)
 {
-    uint8_t l_Cmd = PART_INFO;
+  uint8_t l_Cmd = PART_INFO;
 
-    SI446x_Write_Cmds( &l_Cmd, 1 );		//命令
-    SI446x_Read_Response( pRead, 8 );	//读设备基本信息
-
+  SI446x_Write_Cmds(&l_Cmd, 1);   //命令
+  SI446x_Read_Response(pRead, 8); //读设备基本信息
 }
 
 /**
@@ -158,12 +156,12 @@ void SI446x_Get_Part_Informatoin( uint8_t *pRead )
   * @note  :无
   * @retval:无
   */
-void SI446x_Get_Fun_Informatoin( uint8_t *pRead )
+void SI446x_Get_Fun_Informatoin(uint8_t *pRead)
 {
-    uint8_t l_Cmd = FUNC_INFO;
+  uint8_t l_Cmd = FUNC_INFO;
 
-    SI446x_Write_Cmds( &l_Cmd, 1 );		//命令
-    SI446x_Read_Response( pRead, 7 );	//读设备功能版本信息
+  SI446x_Write_Cmds(&l_Cmd, 1);   //命令
+  SI446x_Read_Response(pRead, 7); //读设备功能版本信息
 }
 
 /**
@@ -173,17 +171,17 @@ void SI446x_Get_Fun_Informatoin( uint8_t *pRead )
   * @note  :无
   * @retval:无
   */
-void SI446x_Interrupt_Status( uint8_t *pRead )
+void SI446x_Interrupt_Status(uint8_t *pRead)
 {
-    uint8_t l_Cmd[ 4 ] = { 0 };
-	
-    l_Cmd[0] = GET_INT_STATUS;		
-    l_Cmd[1] = 0;
-    l_Cmd[2] = 0;
-    l_Cmd[3] = 0;
+  uint8_t l_Cmd[4] = {0};
 
-    SI446x_Write_Cmds( l_Cmd, 4 );		//发送中断读取命令
-    SI446x_Read_Response( pRead, 9 );	//读取状态
+  l_Cmd[0] = GET_INT_STATUS;
+  l_Cmd[1] = 0;
+  l_Cmd[2] = 0;
+  l_Cmd[3] = 0;
+
+  SI446x_Write_Cmds(l_Cmd, 4);    //发送中断读取命令
+  SI446x_Read_Response(pRead, 9); //读取状态
 }
 
 /**
@@ -195,17 +193,17 @@ void SI446x_Interrupt_Status( uint8_t *pRead )
   * @note  :无
   * @retval:无
   */
-void SI446x_Get_Property( SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t *pRead  )
+void SI446x_Get_Property(SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t *pRead)
 {
-    uint8_t l_Cmd[ 4 ] = { 0 };
+  uint8_t l_Cmd[4] = {0};
 
-    l_Cmd[ 0 ] = GET_PROPERTY;
-    l_Cmd[ 1 ] = Group_Num >> 8;
-    l_Cmd[ 2 ] = Num_Props;
-    l_Cmd[ 3 ] = Group_Num;
+  l_Cmd[0] = GET_PROPERTY;
+  l_Cmd[1] = Group_Num >> 8;
+  l_Cmd[2] = Num_Props;
+  l_Cmd[3] = Group_Num;
 
-    SI446x_Write_Cmds( l_Cmd, 4 );		//发送读取属性命令
-    SI446x_Read_Response( pRead, Num_Props + 1 );	//读属性
+  SI446x_Write_Cmds(l_Cmd, 4);                //发送读取属性命令
+  SI446x_Read_Response(pRead, Num_Props + 1); //读属性
 }
 
 /**
@@ -217,26 +215,26 @@ void SI446x_Get_Property( SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t 
   * @note  :无
   * @retval:无
   */
-void SI446x_Set_Property( SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t *pWrite )
+void SI446x_Set_Property(SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t *pWrite)
 {
-    uint8_t l_Cmd[ 20 ] = { 0 }, i = 0;
-	
-    if( Num_Props >= 16 )   
-	{ 
-		return; 	//数量不大于16
-	}
-	
-    l_Cmd[ i++ ] = SET_PROPERTY;		//设置属性命令
-    l_Cmd[ i++ ] = Group_Num >> 8;
-    l_Cmd[ i++ ] = Num_Props;
-    l_Cmd[ i++ ] = Group_Num;
-	
-    while( Num_Props-- )
-    {
-        l_Cmd[ i++ ] = *pWrite;
-		pWrite++;
-    }
-    SI446x_Write_Cmds( l_Cmd, i );		//发送命令及数据
+  uint8_t l_Cmd[20] = {0}, i = 0;
+
+  if (Num_Props >= 16)
+  {
+    return; //数量不大于16
+  }
+
+  l_Cmd[i++] = SET_PROPERTY; //设置属性命令
+  l_Cmd[i++] = Group_Num >> 8;
+  l_Cmd[i++] = Num_Props;
+  l_Cmd[i++] = Group_Num;
+
+  while (Num_Props--)
+  {
+    l_Cmd[i++] = *pWrite;
+    pWrite++;
+  }
+  SI446x_Write_Cmds(l_Cmd, i); //发送命令及数据
 }
 
 /**
@@ -247,17 +245,17 @@ void SI446x_Set_Property( SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t 
   * @note  :无
   * @retval:无
   */
-void SI446x_Set_Property_1( SI446X_PROPERTY Group_Num, uint8_t Start_Prop )
+void SI446x_Set_Property_1(SI446X_PROPERTY Group_Num, uint8_t Start_Prop)
 {
-    uint8_t l_Cmd[ 5 ] = { 0 };
+  uint8_t l_Cmd[5] = {0};
 
-    l_Cmd[ 0 ] = SET_PROPERTY;		//命令
-    l_Cmd[ 1 ] = Group_Num >> 8;
-    l_Cmd[ 2 ] = 1;
-    l_Cmd[ 3 ] = Group_Num;
-    l_Cmd[ 4 ] = Start_Prop;
-	
-    SI446x_Write_Cmds( l_Cmd, 5 );	//发送命令设置属性
+  l_Cmd[0] = SET_PROPERTY; //命令
+  l_Cmd[1] = Group_Num >> 8;
+  l_Cmd[2] = 1;
+  l_Cmd[3] = Group_Num;
+  l_Cmd[4] = Start_Prop;
+
+  SI446x_Write_Cmds(l_Cmd, 5); //发送命令设置属性
 }
 
 /**
@@ -267,19 +265,19 @@ void SI446x_Set_Property_1( SI446X_PROPERTY Group_Num, uint8_t Start_Prop )
   * @note  :无
   * @retval:无
   */
-uint8_t SI446x_Get_Property_1( SI446X_PROPERTY Group_Num )
+uint8_t SI446x_Get_Property_1(SI446X_PROPERTY Group_Num)
 {
-    uint8_t l_Cmd[ 4 ] = { 0 };
+  uint8_t l_Cmd[4] = {0};
 
-    l_Cmd[ 0 ] = GET_PROPERTY;
-    l_Cmd[ 1 ] = Group_Num >> 8;
-    l_Cmd[ 2 ] = 1;
-    l_Cmd[ 3 ] = Group_Num;
-    SI446x_Write_Cmds( l_Cmd, 4 );		//发送命令
-	
-    SI446x_Read_Response( l_Cmd, 2 );	//读取属性
-	
-    return l_Cmd[ 1 ];
+  l_Cmd[0] = GET_PROPERTY;
+  l_Cmd[1] = Group_Num >> 8;
+  l_Cmd[2] = 1;
+  l_Cmd[3] = Group_Num;
+  SI446x_Write_Cmds(l_Cmd, 4); //发送命令
+
+  SI446x_Read_Response(l_Cmd, 2); //读取属性
+
+  return l_Cmd[1];
 }
 
 /**
@@ -288,13 +286,13 @@ uint8_t SI446x_Get_Property_1( SI446X_PROPERTY Group_Num )
   * @note  :无
   * @retval:无
   */
-void SI446x_Reset( void )
+void SI446x_Reset(void)
 {
-    SI_SET_SDN_HIGH( );		//关设备
-    Delay_us(20);     //延时 等待设备完全断电
-    SI_SET_SDN_LOW( );		//开设备
-    SI_SET_CSN_HIGH( );		//取消SPI片选
-//	drv_delay_us( 35 );
+  SI4463_SDN(1); //关设备
+  Delay_us(20);  //延时 等待设备完全断电
+  SI4463_SDN(0); //开设备
+  SI4463_CSN(1); //取消SPI片选
+  //	drv_delay_us( 35 );
 }
 
 /**
@@ -303,21 +301,21 @@ void SI446x_Reset( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Config_Gpio( uint8_t Gpio_0, uint8_t Gpio_1, uint8_t Gpio_2, uint8_t Gpio_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config )
+void SI446x_Config_Gpio(uint8_t Gpio_0, uint8_t Gpio_1, uint8_t Gpio_2, uint8_t Gpio_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config)
 {
-    uint8_t l_Cmd[ 10] = { 0 };
-	
-    l_Cmd[ 0 ] = GPIO_PIN_CFG;
-    l_Cmd[ 1 ] = Gpio_0;
-    l_Cmd[ 2 ] = Gpio_1;
-    l_Cmd[ 3 ] = Gpio_2;
-    l_Cmd[ 4 ] = Gpio_3;
-    l_Cmd[ 5 ] = Irq;
-    l_Cmd[ 6 ] = Sdo;
-    l_Cmd[ 7 ] = Gen_Config;
-	
-    SI446x_Write_Cmds( l_Cmd, 8 );		//写配置
-    SI446x_Read_Response( l_Cmd, 8 );	//读配置
+  uint8_t l_Cmd[10] = {0};
+
+  l_Cmd[0] = GPIO_PIN_CFG;
+  l_Cmd[1] = Gpio_0;
+  l_Cmd[2] = Gpio_1;
+  l_Cmd[3] = Gpio_2;
+  l_Cmd[4] = Gpio_3;
+  l_Cmd[5] = Irq;
+  l_Cmd[6] = Sdo;
+  l_Cmd[7] = Gen_Config;
+
+  SI446x_Write_Cmds(l_Cmd, 8);    //写配置
+  SI446x_Read_Response(l_Cmd, 8); //读配置
 }
 
 /**
@@ -326,43 +324,43 @@ void SI446x_Config_Gpio( uint8_t Gpio_0, uint8_t Gpio_1, uint8_t Gpio_2, uint8_t
   * @note  :无
   * @retval:无
   */
-void SI446x_Config_Init( void )
+void SI446x_Config_Init(void)
 {
-    uint8_t i;
-    uint16_t j = 0;
+  uint8_t i;
+  uint16_t j = 0;
 
-    while( ( i = config_table[j] ) != 0 )
-    {
-        j += 1;
-        SI446x_Write_Cmds( (uint8_t *)config_table + j, i );
-        j += i;
-    }
-#if PACKET_LENGTH > 0           //固定数据长度
-	
-    SI446x_Set_Property_1( PKT_FIELD_1_LENGTH_7_0, PACKET_LENGTH );
-	
-#else                           //动态数据长度
-	
-    SI446x_Set_Property_1( PKT_CONFIG1, 0x00 );
-    SI446x_Set_Property_1( PKT_CRC_CONFIG, 0x00 );
-    SI446x_Set_Property_1( PKT_LEN_FIELD_SOURCE, 0x01 );
-    SI446x_Set_Property_1( PKT_LEN, 0x2A );
-    SI446x_Set_Property_1( PKT_LEN_ADJUST, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_1_LENGTH_12_8, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_1_LENGTH_7_0, 0x01 );
-    SI446x_Set_Property_1( PKT_FIELD_1_CONFIG, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_1_CRC_CONFIG, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_2_LENGTH_12_8, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_2_LENGTH_7_0, 0x20 );
-    SI446x_Set_Property_1( PKT_FIELD_2_CONFIG, 0x00 );
-    SI446x_Set_Property_1( PKT_FIELD_2_CRC_CONFIG, 0x00 );
-	
-#endif 
-	
-	//4463 的GDO2 GDO3控制射频开关 33 32
-	// 发射：GDO2 = 0, GDO3 = 1
-	// 接收：GDO2 = 1, GDO3 = 0
-    SI446x_Config_Gpio( 0, 0, 33|0x40, 32|0x40, 0, 0, 0 );    
+  while ((i = config_table[j]) != 0)
+  {
+    j += 1;
+    SI446x_Write_Cmds((uint8_t *)config_table + j, i);
+    j += i;
+  }
+#if PACKET_LENGTH > 0 //固定数据长度
+
+  SI446x_Set_Property_1(PKT_FIELD_1_LENGTH_7_0, PACKET_LENGTH);
+
+#else //动态数据长度
+
+  SI446x_Set_Property_1(PKT_CONFIG1, 0x00);
+  SI446x_Set_Property_1(PKT_CRC_CONFIG, 0x00);
+  SI446x_Set_Property_1(PKT_LEN_FIELD_SOURCE, 0x01);
+  SI446x_Set_Property_1(PKT_LEN, 0x2A);
+  SI446x_Set_Property_1(PKT_LEN_ADJUST, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_1_LENGTH_12_8, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_1_LENGTH_7_0, 0x01);
+  SI446x_Set_Property_1(PKT_FIELD_1_CONFIG, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_1_CRC_CONFIG, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_2_LENGTH_12_8, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_2_LENGTH_7_0, 0x20);
+  SI446x_Set_Property_1(PKT_FIELD_2_CONFIG, 0x00);
+  SI446x_Set_Property_1(PKT_FIELD_2_CRC_CONFIG, 0x00);
+
+#endif
+
+  //4463 的GDO2 GDO3控制射频开关 33 32
+  // 发射：GDO2 = 0, GDO3 = 1
+  // 接收：GDO2 = 1, GDO3 = 0
+  SI446x_Config_Gpio(0, 0, 33 | 0x40, 32 | 0x40, 0, 0, 0);
 }
 
 /**
@@ -373,15 +371,15 @@ void SI446x_Config_Init( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Write_TxFifo( uint8_t *pWriteData, uint8_t Length )
+void SI446x_Write_TxFifo(uint8_t *pWriteData, uint8_t Length)
 {
-    SI_SET_CSN_LOW( );
-    drv_spi_read_write_byte( WRITE_TX_FIFO );		//写命令
-    while( Length-- )    
-	{ 
-		drv_spi_read_write_byte( *pWriteData++ ); 	//写数据
-	}
-    SI_SET_CSN_HIGH( );
+  SI4463_CSN(0);
+  drv_spi_read_write_byte(WRITE_TX_FIFO); //写命令
+  while (Length--)
+  {
+    drv_spi_read_write_byte(*pWriteData++); //写数据
+  }
+  SI4463_CSN(1);
 }
 
 /**
@@ -390,13 +388,13 @@ void SI446x_Write_TxFifo( uint8_t *pWriteData, uint8_t Length )
   * @note  :无
   * @retval:无
   */
-void SI446x_Reset_RxFifo( void )
+void SI446x_Reset_RxFifo(void)
 {
-    uint8_t l_Cmd[ 2 ] = { 0 };
+  uint8_t l_Cmd[2] = {0};
 
-    l_Cmd[ 0 ] = FIFO_INFO;
-    l_Cmd[ 1 ] = 0x02;
-    SI446x_Write_Cmds( l_Cmd, 2 );
+  l_Cmd[0] = FIFO_INFO;
+  l_Cmd[1] = 0x02;
+  SI446x_Write_Cmds(l_Cmd, 2);
 }
 
 /**
@@ -405,13 +403,13 @@ void SI446x_Reset_RxFifo( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Reset_TxFifo( void )
+void SI446x_Reset_TxFifo(void)
 {
-    uint8_t l_Cmd[ 2 ] = { 0 };
+  uint8_t l_Cmd[2] = {0};
 
-    l_Cmd[0] = FIFO_INFO;
-    l_Cmd[1] = 0x02;
-    SI446x_Write_Cmds( l_Cmd, 2 );
+  l_Cmd[0] = FIFO_INFO;
+  l_Cmd[1] = 0x02;
+  SI446x_Write_Cmds(l_Cmd, 2);
 }
 
 /**
@@ -424,38 +422,38 @@ void SI446x_Reset_TxFifo( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Send_Packet( uint8_t *pTxData, uint8_t Length, uint8_t Channel, uint8_t Condition )
+void SI446x_Send_Packet(uint8_t *pTxData, uint8_t Length, uint8_t Channel, uint8_t Condition)
 {
-    uint8_t l_Cmd[ 5 ] = { 0 };
-    uint8_t tx_len = Length;
+  uint8_t l_Cmd[5] = {0};
+  uint8_t tx_len = Length;
 
-    SI446x_Reset_TxFifo( );		//清空TX FIFO
+  SI446x_Reset_TxFifo(); //清空TX FIFO
 
-    SI_SET_CSN_LOW( );		
-	
-    drv_spi_read_write_byte( WRITE_TX_FIFO );	//写TX FIFO命令
-	
-#if PACKET_LENGTH == 0			//动态数据长度
-	
-    tx_len ++;
-    drv_spi_read_write_byte( Length );
-	
+  SI4463_CSN(0);
+
+  drv_spi_read_write_byte(WRITE_TX_FIFO); //写TX FIFO命令
+
+#if PACKET_LENGTH == 0 //动态数据长度
+
+  tx_len++;
+  drv_spi_read_write_byte(Length);
+
 #endif
-	
-    while( Length-- )    
-	{
-		drv_spi_read_write_byte( *pTxData++ ); 	//写数据到TX FIFO
-	}
-	
-    SI_SET_CSN_HIGH( );
-	
-    l_Cmd[ 0 ] = START_TX;
-    l_Cmd[ 1 ] = Channel;
-    l_Cmd[ 2 ] = Condition;
-    l_Cmd[ 3 ] = 0;
-    l_Cmd[ 4 ] = tx_len;
-	
-    SI446x_Write_Cmds( l_Cmd, 5 );		//发送数据包
+
+  while (Length--)
+  {
+    drv_spi_read_write_byte(*pTxData++); //写数据到TX FIFO
+  }
+
+  SI4463_CSN(1);
+
+  l_Cmd[0] = START_TX;
+  l_Cmd[1] = Channel;
+  l_Cmd[2] = Condition;
+  l_Cmd[3] = 0;
+  l_Cmd[4] = tx_len;
+
+  SI446x_Write_Cmds(l_Cmd, 5); //发送数据包
 }
 
 /**
@@ -467,17 +465,17 @@ void SI446x_Send_Packet( uint8_t *pTxData, uint8_t Length, uint8_t Channel, uint
   * @note  :无
   * @retval:无
   */
-void SI446x_Start_Tx( uint8_t Channel, uint8_t Condition, uint16_t Length )
+void SI446x_Start_Tx(uint8_t Channel, uint8_t Condition, uint16_t Length)
 {
-    uint8_t l_Cmd[5] = { 0 };
+  uint8_t l_Cmd[5] = {0};
 
-    l_Cmd[ 0 ] = START_TX;		
-    l_Cmd[ 1 ] = Channel;
-    l_Cmd[ 2 ] = Condition;
-    l_Cmd[ 3 ] = Length >> 8;
-    l_Cmd[ 4 ] = Length;
-	
-    SI446x_Write_Cmds( l_Cmd, 5 );
+  l_Cmd[0] = START_TX;
+  l_Cmd[1] = Channel;
+  l_Cmd[2] = Condition;
+  l_Cmd[3] = Length >> 8;
+  l_Cmd[4] = Length;
+
+  SI446x_Write_Cmds(l_Cmd, 5);
 }
 
 /**
@@ -487,34 +485,34 @@ void SI446x_Start_Tx( uint8_t Channel, uint8_t Condition, uint16_t Length )
   * @note  :无
   * @retval:数据个数
   */
-uint8_t SI446x_Read_Packet( uint8_t *pRxData )
+uint8_t SI446x_Read_Packet(uint8_t *pRxData)
 {
-    uint8_t length = 0, i = 0;
-	
-    SI446x_Wait_Cts( );
-    SI_SET_CSN_LOW( );
+  uint8_t length = 0, i = 0;
 
-    drv_spi_read_write_byte( READ_RX_FIFO );	//读FIFO命令
-	
+  SI446x_Wait_Cts();
+  SI4463_CSN(0);
+
+  drv_spi_read_write_byte(READ_RX_FIFO); //读FIFO命令
+
 #if PACKET_LENGTH == 0
-	
-    length = drv_spi_read_write_byte( 0xFF );	//读数据长度
-	
-#else
-	
-    length = PACKET_LENGTH;
-	
-#endif
-    i = length;
 
-    while( length -- )
-    {
-        *pRxData++ = drv_spi_read_write_byte( 0xFF );	//读数据
-    }
-	
-    SI_SET_CSN_HIGH( );		//返回数据个数
-	
-    return i;
+  length = drv_spi_read_write_byte(0xFF); //读数据长度
+
+#else
+
+  length = PACKET_LENGTH;
+
+#endif
+  i = length;
+
+  while (length--)
+  {
+    *pRxData++ = drv_spi_read_write_byte(0xFF); //读数据
+  }
+
+  SI4463_CSN(1); //返回数据个数
+
+  return i;
 }
 
 /**
@@ -529,23 +527,23 @@ uint8_t SI446x_Read_Packet( uint8_t *pRxData )
   * @note  :无
   * @retval:无
   */
-void SI446x_Start_Rx( uint8_t Channel, uint8_t Condition, uint16_t Length, uint8_t Next_State1, uint8_t Next_State2, uint8_t Next_State3 )
+void SI446x_Start_Rx(uint8_t Channel, uint8_t Condition, uint16_t Length, uint8_t Next_State1, uint8_t Next_State2, uint8_t Next_State3)
 {
-    uint8_t l_Cmd[ 8 ] = { 0 };
-	
-    SI446x_Reset_RxFifo( );
-    SI446x_Reset_TxFifo( );
-	
-    l_Cmd[ 0 ] = START_RX;
-    l_Cmd[ 1 ] = Channel;
-    l_Cmd[ 2 ] = Condition;
-    l_Cmd[ 3 ] = Length >> 8;
-    l_Cmd[ 4 ] = Length;
-    l_Cmd[ 5 ] = Next_State1;
-    l_Cmd[ 6 ] = Next_State2;
-    l_Cmd[ 7 ] = Next_State3;
-	
-    SI446x_Write_Cmds( l_Cmd, 8 );
+  uint8_t l_Cmd[8] = {0};
+
+  SI446x_Reset_RxFifo();
+  SI446x_Reset_TxFifo();
+
+  l_Cmd[0] = START_RX;
+  l_Cmd[1] = Channel;
+  l_Cmd[2] = Condition;
+  l_Cmd[3] = Length >> 8;
+  l_Cmd[4] = Length;
+  l_Cmd[5] = Next_State1;
+  l_Cmd[6] = Next_State2;
+  l_Cmd[7] = Next_State3;
+
+  SI446x_Write_Cmds(l_Cmd, 8);
 }
 
 /**
@@ -558,19 +556,19 @@ void SI446x_Start_Rx( uint8_t Channel, uint8_t Condition, uint16_t Length, uint8
   * @note  :无
   * @retval:无
   */
-void SI446x_Get_Packet_Information( uint8_t *pReadData, uint8_t FieldNumMask, uint16_t Length, uint16_t DiffLen )
+void SI446x_Get_Packet_Information(uint8_t *pReadData, uint8_t FieldNumMask, uint16_t Length, uint16_t DiffLen)
 {
-    uint8_t l_Cmd[ 6 ] = { 0 };
-	
-    l_Cmd[ 0 ] = PACKET_INFO;
-    l_Cmd[ 1 ] = FieldNumMask;
-    l_Cmd[ 2 ] = Length >> 8;
-    l_Cmd[ 3 ] = Length;
-    l_Cmd[ 4 ] = DiffLen >> 8;
-    l_Cmd[ 5 ] = DiffLen;
+  uint8_t l_Cmd[6] = {0};
 
-    SI446x_Write_Cmds( l_Cmd, 6 );
-    SI446x_Read_Response( pReadData, 3 );
+  l_Cmd[0] = PACKET_INFO;
+  l_Cmd[1] = FieldNumMask;
+  l_Cmd[2] = Length >> 8;
+  l_Cmd[3] = Length;
+  l_Cmd[4] = DiffLen >> 8;
+  l_Cmd[5] = DiffLen;
+
+  SI446x_Write_Cmds(l_Cmd, 6);
+  SI446x_Read_Response(pReadData, 3);
 }
 
 /**
@@ -580,15 +578,15 @@ void SI446x_Get_Packet_Information( uint8_t *pReadData, uint8_t FieldNumMask, ui
   * @note  :无
   * @retval:无
   */
-void SI446x_Get_Fifo_Information( uint8_t *pReadData )
+void SI446x_Get_Fifo_Information(uint8_t *pReadData)
 {
-    uint8_t l_Cmd[ 2 ] = { 0 };
-	
-    l_Cmd[ 0 ] = FIFO_INFO;
-    l_Cmd[ 1 ] = 0x03;
+  uint8_t l_Cmd[2] = {0};
 
-    SI446x_Write_Cmds( l_Cmd, 2 );
-    SI446x_Read_Response( pReadData, 3 );
+  l_Cmd[0] = FIFO_INFO;
+  l_Cmd[1] = 0x03;
+
+  SI446x_Write_Cmds(l_Cmd, 2);
+  SI446x_Read_Response(pReadData, 3);
 }
 
 /**
@@ -598,14 +596,14 @@ void SI446x_Get_Fifo_Information( uint8_t *pReadData )
   * @note  :无
   * @retval:无
   */
-void SI446x_Change_Status( uint8_t NextStatus )
+void SI446x_Change_Status(uint8_t NextStatus)
 {
-    uint8_t l_Cmd[ 2 ] = { 0 };
-	
-    l_Cmd[ 0 ] = CHANGE_STATE;
-    l_Cmd[ 1 ] = NextStatus;
-	
-    SI446x_Write_Cmds( l_Cmd, 2 );
+  uint8_t l_Cmd[2] = {0};
+
+  l_Cmd[0] = CHANGE_STATE;
+  l_Cmd[1] = NextStatus;
+
+  SI446x_Write_Cmds(l_Cmd, 2);
 }
 
 /**
@@ -614,16 +612,16 @@ void SI446x_Change_Status( uint8_t NextStatus )
   * @note  :无
   * @retval:设备当前状态
   */
-uint8_t SI446x_Get_Device_Status( void )
+uint8_t SI446x_Get_Device_Status(void)
 {
-   uint8_t l_Cmd[ 3 ] = { 0 };
-   
-   l_Cmd [ 0 ] = REQUEST_DEVICE_STATE;
-   
-   SI446x_Write_Cmds( l_Cmd, 1 );
-   SI446x_Read_Response( l_Cmd, 3 );
-   
-   return l_Cmd[ 1 ] & 0x0F;
+  uint8_t l_Cmd[3] = {0};
+
+  l_Cmd[0] = REQUEST_DEVICE_STATE;
+
+  SI446x_Write_Cmds(l_Cmd, 1);
+  SI446x_Read_Response(l_Cmd, 3);
+
+  return l_Cmd[1] & 0x0F;
 }
 
 /**
@@ -633,9 +631,9 @@ uint8_t SI446x_Get_Device_Status( void )
   * @note  :无
   * @retval:设备当前状态
   */
-void SI446x_Set_Power( uint8_t PowerLevel )
+void SI446x_Set_Power(uint8_t PowerLevel)
 {
-    SI446x_Set_Property_1( PA_PWR_LVL, PowerLevel );
+  SI446x_Set_Property_1(PA_PWR_LVL, PowerLevel);
 }
 
 /**
@@ -644,46 +642,46 @@ void SI446x_Set_Power( uint8_t PowerLevel )
   * @note  :无
   * @retval:无
   */
-void SI446x_Gpio_Init( void )
+void SI446x_Gpio_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	
-	//打开引脚端口时钟
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  //打开引脚端口时钟
   SI4463_SDN_CLKEN();
   SI4463_IRQ_CLKEN();
   SI4463_GPIO0_CLKEN();
   SI4463_GPIO1_CLKEN();
   SI4463_GPIO2_CLKEN();
   SI4463_GPIO3_CLKEN();
-	
-	//SDN 引脚配置为推挽输出
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+
+  //SDN 引脚配置为推挽输出
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
-	GPIO_InitStruct.Pin = SI4463_SDN_PIN;
-  HAL_GPIO_Init(SI4463_SDN_PORT, &GPIO_InitStruct);	
-	
-	//IRQ GPIO0~GPIO3输入 可做外部信号中断输入 Demo程序采用查询方式 未配置成中断
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pin = SI4463_SDN_PIN;
+  HAL_GPIO_Init(SI4463_SDN_PORT, &GPIO_InitStruct);
+
+  //IRQ GPIO0~GPIO3输入 可做外部信号中断输入 Demo程序采用查询方式 未配置成中断
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-	
+
   GPIO_InitStruct.Pin = SI4463_IRQ_PIN;
-  HAL_GPIO_Init(SI4463_IRQ_PORT, &GPIO_InitStruct);	
-	
+  HAL_GPIO_Init(SI4463_IRQ_PORT, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = SI4463_GPIO0_PIN;
-  HAL_GPIO_Init(SI4463_GPIO0_PORT, &GPIO_InitStruct);	
-	
+  HAL_GPIO_Init(SI4463_GPIO0_PORT, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = SI4463_GPIO1_PIN;
-  HAL_GPIO_Init(SI4463_GPIO1_PORT, &GPIO_InitStruct);	
-	
+  HAL_GPIO_Init(SI4463_GPIO1_PORT, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = SI4463_GPIO2_PIN;
-  HAL_GPIO_Init(SI4463_GPIO2_PORT, &GPIO_InitStruct);	
-	
+  HAL_GPIO_Init(SI4463_GPIO2_PORT, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = SI4463_GPIO3_PIN;
-  HAL_GPIO_Init(SI4463_GPIO3_PORT, &GPIO_InitStruct);	
-	
-	HAL_GPIO_WritePin(SI4463_SDN_PORT, SI4463_SDN_PIN, 0);
+  HAL_GPIO_Init(SI4463_GPIO3_PORT, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(SI4463_SDN_PORT, SI4463_SDN_PIN, 0);
 }
 
 /**
@@ -692,15 +690,15 @@ void SI446x_Gpio_Init( void )
   * @note  :无
   * @retval:无
   */
-void SI446x_Init( void )
+void SI446x_Init(void)
 {
-	SI446x_Gpio_Init( );
-	SI446x_Reset( );
-	SI446x_Power_Up( 30000000 );
-	SI446x_Config_Init( );
-	SI446x_Set_Power( 0x7F );
-	SI446x_Change_Status(6);	// Rx mode
-	while(SI446x_Get_Device_Status() != 6);
-	SI446x_Start_Rx( 0, 0, PACKET_LENGTH,0,0,3 );
-
+  SI446x_Gpio_Init();
+  SI446x_Reset();
+  SI446x_Power_Up(30000000);
+  SI446x_Config_Init();
+  SI446x_Set_Power(0x7F);
+  SI446x_Change_Status(6); // Rx mode
+  while (SI446x_Get_Device_Status() != 6)
+    ;
+  SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
 }
