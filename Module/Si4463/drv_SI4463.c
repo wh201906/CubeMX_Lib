@@ -1,4 +1,4 @@
-﻿/**
+/**
   ******************************************************************************
   * @author  泽耀科技 ASHINING
   * @version V3.0
@@ -12,14 +12,11 @@
   * 阿里巴巴:	https://cdzeyao.1688.com
   ******************************************************************************
   */
-  
-  
+    
 #include "drv_SI446x.h"
-
+#include "DELAY/delay.h"
 
 const static uint8_t config_table[ ] = RADIO_CONFIGURATION_DATA_ARRAY;
- 
-
 
 /**
   * @brief :SI446x等待CTS状态
@@ -294,7 +291,7 @@ uint8_t SI446x_Get_Property_1( SI446X_PROPERTY Group_Num )
 void SI446x_Reset( void )
 {
     SI_SET_SDN_HIGH( );		//关设备
-	drv_delay_us( 20 );		//延时 等待设备完全断电
+    Delay_us(20);     //延时 等待设备完全断电
     SI_SET_SDN_LOW( );		//开设备
     SI_SET_CSN_HIGH( );		//取消SPI片选
 //	drv_delay_us( 35 );
@@ -649,36 +646,44 @@ void SI446x_Set_Power( uint8_t PowerLevel )
   */
 void SI446x_Gpio_Init( void )
 {
-	GPIO_InitTypeDef GpioInitStructer;
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	
 	//打开引脚端口时钟
-	RCC_APB2PeriphClockCmd( SI4463_SDN_CLK | SI4463_IRQ_CLK | SI4463_GPIO0_CLK | SI4463_GPIO1_CLK | SI4463_GPIO2_CLK | SI4463_GPIO3_CLK, ENABLE );
+  SI4463_SDN_CLKEN();
+  SI4463_IRQ_CLKEN();
+  SI4463_GPIO0_CLKEN();
+  SI4463_GPIO1_CLKEN();
+  SI4463_GPIO2_CLKEN();
+  SI4463_GPIO3_CLKEN();
 	
 	//SDN 引脚配置为推挽输出
-	GpioInitStructer.GPIO_Mode = GPIO_Mode_Out_PP;
-	GpioInitStructer.GPIO_Speed = GPIO_Speed_10MHz;
-	GpioInitStructer.GPIO_Pin = SI4463_SDN_PIN;
-	GPIO_Init( SI4463_SDN_PORT, &GpioInitStructer );	
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+
+	GPIO_InitStruct.Pin = SI4463_SDN_PIN;
+  HAL_GPIO_Init(SI4463_SDN_PORT, &GPIO_InitStruct);	
 	
 	//IRQ GPIO0~GPIO3输入 可做外部信号中断输入 Demo程序采用查询方式 未配置成中断
-	GpioInitStructer.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
 	
-	GpioInitStructer.GPIO_Pin = SI4463_IRQ_PIN;
-	GPIO_Init( SI4463_IRQ_PORT, &GpioInitStructer );	//IRQ
+  GPIO_InitStruct.Pin = SI4463_IRQ_PIN;
+  HAL_GPIO_Init(SI4463_IRQ_PORT, &GPIO_InitStruct);	
 	
-	GpioInitStructer.GPIO_Pin = SI4463_GPIO0_PIN;
-	GPIO_Init( SI4463_GPIO0_PORT, &GpioInitStructer );	//GPIO0
+  GPIO_InitStruct.Pin = SI4463_GPIO0_PIN;
+  HAL_GPIO_Init(SI4463_GPIO0_PORT, &GPIO_InitStruct);	
 	
-	GpioInitStructer.GPIO_Pin = SI4463_GPIO1_PIN;
-	GPIO_Init( SI4463_GPIO1_PORT, &GpioInitStructer );	//GPIO1
+  GPIO_InitStruct.Pin = SI4463_GPIO1_PIN;
+  HAL_GPIO_Init(SI4463_GPIO1_PORT, &GPIO_InitStruct);	
 	
-	GpioInitStructer.GPIO_Pin = SI4463_GPIO2_PIN;
-	GPIO_Init( SI4463_GPIO2_PORT, &GpioInitStructer );	//GPIO2
+  GPIO_InitStruct.Pin = SI4463_GPIO2_PIN;
+  HAL_GPIO_Init(SI4463_GPIO2_PORT, &GPIO_InitStruct);	
 	
-	GpioInitStructer.GPIO_Pin = SI4463_GPIO3_PIN;
-	GPIO_Init( SI4463_GPIO3_PORT, &GpioInitStructer );	//GPIO3
+  GPIO_InitStruct.Pin = SI4463_GPIO3_PIN;
+  HAL_GPIO_Init(SI4463_GPIO3_PORT, &GPIO_InitStruct);	
 	
-	GPIO_ResetBits( SI4463_SDN_PORT, SI4463_SDN_PIN );	//SDN 置低 使能设备
+	HAL_GPIO_WritePin(SI4463_SDN_PORT, SI4463_SDN_PIN, 0);
 }
 
 /**
@@ -689,13 +694,13 @@ void SI446x_Gpio_Init( void )
   */
 void SI446x_Init( void )
 {
-	SI446x_Gpio_Init( );		//SI4463引脚初始化
-	SI446x_Reset( );			//SI4463复位
-	SI446x_Power_Up( 30000000 );//reset 后需要Power up设备 晶振30MHz
-	SI446x_Config_Init( );		//SI4463模块初始化
-	SI446x_Set_Power( 0x7F );	//功率设置
-	SI446x_Change_Status( 6 );	//切换到RX状态
-	while( 6 != SI446x_Get_Device_Status( ));
+	SI446x_Gpio_Init( );
+	SI446x_Reset( );
+	SI446x_Power_Up( 30000000 );
+	SI446x_Config_Init( );
+	SI446x_Set_Power( 0x7F );
+	SI446x_Change_Status(6);	// Rx mode
+	while(SI446x_Get_Device_Status() != 6);
 	SI446x_Start_Rx( 0, 0, PACKET_LENGTH,0,0,3 );
 
 }

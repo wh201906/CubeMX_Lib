@@ -18,10 +18,18 @@
 #ifndef __DRV_SI4463_H__
 #define __DRV_SI4463_H__
 
-
+#include "main.h"
 #include "drv_spi.h"
-#include "drv_delay.h"
 #include "drv_Si446x_Config_30M.h"
+
+enum
+{
+	TX_MODE_1 = 0,		//发送模式1，发送固定的字符串
+	TX_MODE_2			//发送模式2，发送串口接收到的数据
+};
+
+#define 	__SI446X_TX_TEST__							//**@@ 如果测试发送功能则需要定义该宏，如果测试接收则需要屏蔽该宏 **@@//
+//#define 	__USE_SOFT_SPI_INTERFACE__					//**@@ 如果使用软件SPI则需要定义该宏，反之如果使用硬件SPI则需要屏蔽该宏 **@@//
 
 
 #define  PACKET_LENGTH      		0 		//0-64, 0:动态长度 1:固定长度
@@ -29,28 +37,28 @@
 
 /** SI4463硬件接口IO定义 */
 #define SI4463_SDN_PORT				GPIOF									
-#define SI4463_SDN_CLK				RCC_APB2Periph_GPIOF
-#define SI4463_SDN_PIN				GPIO_Pin_13
+#define SI4463_SDN_CLKEN()				__HAL_RCC_GPIOF_CLK_ENABLE()
+#define SI4463_SDN_PIN				GPIO_PIN_13
 
 #define SI4463_IRQ_PORT				GPIOF									
-#define SI4463_IRQ_CLK				RCC_APB2Periph_GPIOF
-#define SI4463_IRQ_PIN				GPIO_Pin_14
+#define SI4463_IRQ_CLKEN()				__HAL_RCC_GPIOF_CLK_ENABLE()
+#define SI4463_IRQ_PIN				GPIO_PIN_14
 
 #define SI4463_GPIO0_PORT			GPIOF									
-#define SI4463_GPIO0_CLK			RCC_APB2Periph_GPIOF
-#define SI4463_GPIO0_PIN			GPIO_Pin_12
+#define SI4463_GPIO0_CLKEN()			__HAL_RCC_GPIOF_CLK_ENABLE()
+#define SI4463_GPIO0_PIN			GPIO_PIN_12
 
 #define SI4463_GPIO1_PORT			GPIOF								
-#define SI4463_GPIO1_CLK			RCC_APB2Periph_GPIOF
-#define SI4463_GPIO1_PIN			GPIO_Pin_11
+#define SI4463_GPIO1_CLKEN()			__HAL_RCC_GPIOF_CLK_ENABLE()
+#define SI4463_GPIO1_PIN			GPIO_PIN_11
 
 #define SI4463_GPIO2_PORT			GPIOB								
-#define SI4463_GPIO2_CLK			RCC_APB2Periph_GPIOB
-#define SI4463_GPIO2_PIN			GPIO_Pin_1
+#define SI4463_GPIO2_CLKEN()			__HAL_RCC_GPIOB_CLK_ENABLE()
+#define SI4463_GPIO2_PIN			GPIO_PIN_1
 
 #define SI4463_GPIO3_PORT			GPIOB								
-#define SI4463_GPIO3_CLK			RCC_APB2Periph_GPIOB
-#define SI4463_GPIO3_PIN			GPIO_Pin_2
+#define SI4463_GPIO3_CLKEN()			__HAL_RCC_GPIOB_CLK_ENABLE()
+#define SI4463_GPIO3_PIN			GPIO_PIN_2
 
 
 //IO操作函数定义

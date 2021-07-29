@@ -17,38 +17,31 @@
 #ifndef __DRV_SPI_H__
 #define __DRV_SPI_H__
 
-
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_spi.h"
 #include "main.h"
 
 
 
 //SPI引脚定义
-#define SPI_CLK_GPIO_PORT			GPIOA
-#define SPI_CLK_GPIO_CLK			RCC_APB2Periph_GPIOA
-#define SPI_CLK_GPIO_PIN			GPIO_Pin_5
+#define SPI_CLK_GPIO_PORT			GPIOD
+#define SPI_CLK_GPIO_CLKEN()	__HAL_RCC_GPIOD_CLK_ENABLE()
+#define SPI_CLK_GPIO_PIN			GPIO_PIN_11
 
-#define SPI_MISO_GPIO_PORT			GPIOA
-#define SPI_MISO_GPIO_CLK			RCC_APB2Periph_GPIOA
-#define SPI_MISO_GPIO_PIN			GPIO_Pin_6
+#define SPI_MISO_GPIO_PORT		GPIOD
+#define SPI_MISO_GPIO_CLKEN()	__HAL_RCC_GPIOD_CLK_ENABLE()
+#define SPI_MISO_GPIO_PIN			GPIO_PIN_12
 
-#define SPI_MOSI_GPIO_PORT			GPIOA
-#define SPI_MOSI_GPIO_CLK			RCC_APB2Periph_GPIOA
-#define SPI_MOSI_GPIO_PIN			GPIO_Pin_7
+#define SPI_MOSI_GPIO_PORT		GPIOD
+#define SPI_MOSI_GPIO_CLKEN()	__HAL_RCC_GPIOD_CLK_ENABLE()
+#define SPI_MOSI_GPIO_PIN			GPIO_PIN_13
 
-#define SPI_NSS_GPIO_PORT			GPIOG
-#define SPI_NSS_GPIO_CLK			RCC_APB2Periph_GPIOG
-#define SPI_NSS_GPIO_PIN			GPIO_Pin_7
+#define SPI_NSS_GPIO_PORT			GPIOD
+#define SPI_NSS_GPIO_CLKEN()	__HAL_RCC_GPIOD_CLK_ENABLE()
+#define SPI_NSS_GPIO_PIN			GPIO_PIN_14
 
 
 #define spi_set_nss_high( )			SPI_NSS_GPIO_PORT->ODR |= SPI_NSS_GPIO_PIN								//片选置高
 #define spi_set_nss_low( )			SPI_NSS_GPIO_PORT->ODR &= (uint32_t)( ~((uint32_t)SPI_NSS_GPIO_PIN ))	//片选置低
-
-
-
-#ifdef __USE_SOFT_SPI_INTERFACE__			/** 只有使用软件SPI才需要的封装 */			
+		
 
 #define spi_set_clk_high( )			SPI_CLK_GPIO_PORT->ODR |= SPI_CLK_GPIO_PIN								//时钟置高
 #define spi_set_clk_low( )			SPI_CLK_GPIO_PORT->ODR &= (uint32_t)( ~((uint32_t)SPI_CLK_GPIO_PIN ))	//时钟置低
@@ -62,21 +55,6 @@
 void drv_spi_init( void );
 uint8_t drv_spi_read_write_byte( uint8_t TxByte );
 void drv_spi_read_write_string( uint8_t* ReadBuffer, uint8_t* WriteBuffer, uint16_t Length );
-
-
-#else									/** 只有使用硬件SPI时会使用 */
-
-
-//SPI接口定义
-#define SPI_PORT					SPI1						//SPI接口
-#define SPI_PORT_CLK				RCC_APB2Periph_SPI1			//SPI时钟
-
-
-void drv_spi_init( void );
-uint8_t drv_spi_read_write_byte( uint8_t TxByte );
-void drv_spi_read_write_string( uint8_t* ReadBuffer, uint8_t* WriteBuffer, uint16_t Length );
-
-#endif
 
 
 

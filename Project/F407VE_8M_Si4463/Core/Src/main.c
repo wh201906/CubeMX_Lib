@@ -24,7 +24,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "Si4463/drv_spi.h"
+#include "Si4463/drv_SI446x.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,7 +67,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t g_SI4463ItStatus[9] = {0};
+  uint8_t g_SI4463RxBuffer[64] = {0};
+  uint32_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,6 +94,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  printf("Si4463 Test\r\n");
+  drv_spi_init();
+  SI446x_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,6 +106,29 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    SI446x_Interrupt_Status(g_SI4463ItStatus);
+    if (g_SI4463ItStatus[3] & (0x01 << 4))
+    {
+      i = SI446x_Read_Packet(g_SI4463RxBuffer);
+      if (i != 0)
+      {
+        MyUART_Write(&uart1, g_SI4463RxBuffer, i);
+      }
+      SI446x_Change_Status(6);
+      while (SI446x_Get_Device_Status() != 6)
+        ;
+      SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
+    }
+    else
+    {
+      if (i++ != 3000)
+      {
+        i = 0;
+        SI446x_Init();
+      }
+      Delay_ms(1);
+    }
   }
   /* USER CODE END 3 */
 }
