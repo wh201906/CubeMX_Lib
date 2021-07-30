@@ -292,7 +292,7 @@ void SI446x_Reset(void)
   Delay_us(20);  //延时 等待设备完全断电
   SI4463_SDN(0); //开设备
   SI4463_CSN(1); //取消SPI片选
-  //	drv_delay_us( 35 );
+  Delay_us(35);
 }
 
 /**

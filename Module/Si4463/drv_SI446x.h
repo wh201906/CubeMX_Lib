@@ -18,7 +18,7 @@
 
 #include "main.h"
 #include "drv_spi.h"
-#include "drv_Si446x_Config_30M.h"
+#include "Si446x_Config_30M_915.h"
 
 enum
 {
@@ -26,15 +26,12 @@ enum
   TX_MODE_2      //发送模式2，发送串口接收到的数据
 };
 
-#define __SI446X_TX_TEST__ //**@@ 如果测试发送功能则需要定义该宏，如果测试接收则需要屏蔽该宏 **@@//
-//#define 	__USE_SOFT_SPI_INTERFACE__					//**@@ 如果使用软件SPI则需要定义该宏，反之如果使用硬件SPI则需要屏蔽该宏 **@@//
-
 #define PACKET_LENGTH 0 //0-64, 0:动态长度 1:固定长度
 
 /** SI4463硬件接口IO定义 */
-#define SI4463_SDN_PORT GPIOF
-#define SI4463_SDN_CLKEN() __HAL_RCC_GPIOF_CLK_ENABLE()
-#define SI4463_SDN_PIN GPIO_PIN_13
+#define SI4463_SDN_PORT GPIOD
+#define SI4463_SDN_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_SDN_PIN GPIO_PIN_15
 
 #define SI4463_IRQ_PORT GPIOF
 #define SI4463_IRQ_CLKEN() __HAL_RCC_GPIOF_CLK_ENABLE()

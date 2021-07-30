@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "Si4463/drv_spi.h"
 #include "Si4463/drv_SI446x.h"
+#include "KEY/key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,7 +70,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint8_t g_SI4463ItStatus[9] = {0};
   uint8_t g_SI4463RxBuffer[64] = {0};
-  uint32_t i;
+  uint32_t i, fail;
+  uint8_t status;
+  uint8_t mode = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,9 +97,23 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  Key_Init();
   printf("Si4463 Test\r\n");
   drv_spi_init();
   SI446x_Init();
+  printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+  fail = 0;
+  
+  for(i = 0; i < 6; i++)
+  {
+    if(Key_ScanRaw() != 0xFF)
+    {
+      mode = !mode;
+      printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
+    }
+    Delay_ms(500);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,29 +123,44 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(100);
-    SI446x_Interrupt_Status(g_SI4463ItStatus);
-    if (g_SI4463ItStatus[3] & (0x01 << 4))
+    if(Key_ScanRaw() != 0xFF)
     {
-      i = SI446x_Read_Packet(g_SI4463RxBuffer);
-      if (i != 0)
-      {
-        MyUART_Write(&uart1, g_SI4463RxBuffer, i);
-      }
-      SI446x_Change_Status(6);
-      while (SI446x_Get_Device_Status() != 6)
-        ;
-      SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
+      mode = !mode;
+      printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
+    }
+    if(mode)
+    {
+      SI446x_Send_Packet("hello",5,0,0);
     }
     else
     {
-      if (i++ != 3000)
+      SI446x_Interrupt_Status(g_SI4463ItStatus);
+      if (g_SI4463ItStatus[3] & (0x01 << 4))
       {
-        i = 0;
-        SI446x_Init();
+        i = SI446x_Read_Packet(g_SI4463RxBuffer);
+        if (i != 0)
+        {
+          MyUART_Write(&uart1, g_SI4463RxBuffer, i);
+        }
+        SI446x_Change_Status(6);
+        status = SI446x_Get_Device_Status();
+        while (status != 6)
+          status = SI446x_Get_Device_Status();
+        SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
       }
-      Delay_ms(1);
+      else
+      {
+        fail++;
+        if(fail >= 6)
+        {
+          fail = 0;
+          SI446x_Init();
+        }
+      }
     }
+    Delay_ms(500);
+
   }
   /* USER CODE END 3 */
 }
