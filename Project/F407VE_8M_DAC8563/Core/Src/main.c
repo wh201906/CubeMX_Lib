@@ -19,12 +19,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DAC8563/dac8563.h"
+#include "Timer/timer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,6 +69,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint16_t val = 0;
+  uint64_t ticks;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -88,10 +91,26 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   DAC8563_Init();
+  Timer_Init();
+  MyUART_WriteLine(&uart1, "DAC8563 Test");
+  Delay_ms(1000);
+  Timer_Start();
+  DAC8563_SetOutput(1, val);
+  ticks = Timer_Stop();
+  printf("Set Channel A: %f\r\n", ticks / 168.0);
+  Timer_Start();
+  DAC8563_SetOutput(0, val);
+  ticks = Timer_Stop();
+  printf("Set Channel B: %f\r\n", ticks / 168.0);
+  Timer_Start();
+  DAC8563_SetOutputAB(val, val);
+  ticks = Timer_Stop();
+  printf("Set Channel A&B: %f\r\n", ticks / 168.0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,7 +122,9 @@ int main(void)
     /* USER CODE BEGIN 3 */
     Delay_ms(100);
     val+=500;
+    Timer_Start();
     DAC8563_SetOutput(0, val);
+    ticks = Timer_Stop();
   }
   /* USER CODE END 3 */
 }

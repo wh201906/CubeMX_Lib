@@ -37,49 +37,28 @@ void DAC8563_IO_Init(void)
 	GPIO_InitStruct.Pin = DAC8563_LD_PIN;
 	HAL_GPIO_Init(DAC8563_LD_GPIO, &GPIO_InitStruct);
 
-	DAC8563_delayTicks = Delay_GetSYSFreq() * 0.000000013 + 1.0; // 13ns, to meet t3 in datasheet
+	DAC8563_delayTicks = Delay_GetSYSFreq() * 0.000000010 + 1.0; // 10ns
 }
 
 void DAC8563_Write(uint8_t cmd, uint16_t data)
 {
 	uint8_t s = 0;
+	uint32_t all;
+
+	all = (cmd << 16) | data;
 	DAC8563_SYN(1);
-	Delay_us(4);
+	Delay_ticks(DAC8563_delayTicks * 8); // SYNC HIGH time
 	DAC8563_SYN(0);
-	DAC8563_SCK(0);
-	for (s = 0; s < 8; s++)
+	Delay_ticks(DAC8563_delayTicks / 2 + 1); // SYNC to SCLK negedge - SCLK HIGH time
+	//DAC8563_SCK(0);
+	for (s = 0; s < 24; s++)
 	{
-		if ((cmd & 0x80) == 0x80)
-		{
-			DAC8563_DIN(1);
-		}
-		else
-		{
-			DAC8563_DIN(0);
-		}
-		Delay_us(4);
-		DAC8563_SCK(1);
-		Delay_us(4);
-		cmd <<= 1;
+		DAC8563_DIN(!!(all & 0x800000));
+		Delay_ticks(DAC8563_delayTicks); // SCLK HIGH time
 		DAC8563_SCK(0);
-		Delay_us(4);
-	}
-	for (s = 0; s < 16; s++)
-	{
-		if ((data & 0x8000) == 0x8000)
-		{
-			DAC8563_DIN(1);
-		}
-		else
-		{
-			DAC8563_DIN(0);
-		}
-		Delay_us(4);
+		Delay_ticks(DAC8563_delayTicks); // SCLK LOW time
 		DAC8563_SCK(1);
-		Delay_us(4);
-		data <<= 1;
-		DAC8563_SCK(0);
-		Delay_us(4);
+		all <<= 1;
 	}
 }
 
@@ -106,7 +85,7 @@ void DAC8563_SetOutputAB(uint16_t data_a, uint16_t data_b)
 	DAC8563_Write(CMD_SETA_UPDATEA, data_a);
 	DAC8563_Write(CMD_SETB_UPDATEB, data_b);
 	DAC8563_LD(0);
-	Delay_us(4);
+	Delay_ticks(DAC8563_delayTicks); // LDAC pulse duration
 	DAC8563_LD(1);
 }
 
@@ -117,6 +96,6 @@ void DAC8563_SetOutput(uint8_t isChannelA, uint16_t data)
   else
     DAC8563_Write(CMD_SETB_UPDATEB, data);
 	DAC8563_LD(0);
-	Delay_us(4);
+	Delay_ticks(DAC8563_delayTicks); // LDAC pulse duration
 	DAC8563_LD(1);
 }
