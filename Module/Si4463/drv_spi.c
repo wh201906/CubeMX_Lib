@@ -58,7 +58,7 @@ void drv_spi_init(void)
 	GPIO_InitStruct.Pin = SPI_MISO_GPIO_PIN;
 	HAL_GPIO_Init(SPI_MISO_GPIO_PORT, &GPIO_InitStruct);
 
-	Si4463_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0;
+	Si4463_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0; // 50ns, to meet select hold time
 }
 
 /**

@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "DAC8563/dac8563.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +44,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+MyUARTHandle uart1;
+uint8_t uartBuf1[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +66,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint16_t val = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -88,7 +89,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  Delay_Init(168);
+  MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  DAC8563_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +101,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    val+=500;
+    DAC8563_SetOutput(0, val);
   }
   /* USER CODE END 3 */
 }
