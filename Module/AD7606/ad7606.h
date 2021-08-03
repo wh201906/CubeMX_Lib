@@ -57,7 +57,9 @@
 
 void AD7606_Init(void);
 void AD7606_SetOversample(uint8_t oversample);
-int16_t AD7606_GetVal(uint8_t id);
+// channel id from 0~7
+int16_t AD7606_ReadChannel(uint8_t channelId);
+void AD7606_ReadAll(int16_t *result);
 // note: the delay between the posedges of CONVA and CONVB cannot be longer than 0.5s
 // which means I can't convert half of the channels individually
 void AD7606_StartConvA(void);

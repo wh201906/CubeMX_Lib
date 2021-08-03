@@ -66,7 +66,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  uint8_t i;
   int32_t val;
+  int16_t valList[16];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -104,8 +106,13 @@ int main(void)
     AD7606_StartConvAll();
     while(AD7606_isBusy())
       ;
-    val = AD7606_GetVal(0);
-    printf("%d, %f\r\n",val, (double)val / 0x8000 * 10);
+    val = AD7606_ReadChannel(7);
+    AD7606_ReadAll(valList);
+    for(i = 0; i < 8; i++)
+    {
+      printf("%d: %d, %f\r\n", i, valList[i], valList[i] * 10.0 / 0x8000);
+    }
+    printf("\r\n");
     Delay_ms(500);
   }
   /* USER CODE END 3 */

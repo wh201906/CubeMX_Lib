@@ -53,9 +53,9 @@ void AD7606_SetOversample(uint8_t oversample)
   AD7606_OS2(oversample & 0x4);
 }
 
-int16_t AD7606_GetVal(uint8_t channelId)
+int16_t AD7606_ReadChannel(uint8_t channelId)
 {
-  uint16_t val;
+  uint16_t val = 0;
   uint8_t i;
   channelId *= 16; // skip channelId * 16 clocks
   AD7606_CS(0);
@@ -68,15 +68,37 @@ int16_t AD7606_GetVal(uint8_t channelId)
   }
   for (i = 0; i < 16; i++)
   {
+    val <<= 1;
     AD7606_SCK(0);
     Delay_ticks(AD7606_delayTicks);
     val |= AD7606_DIN(); // read before change
     AD7606_SCK(1);
-    val <<= 1;
     Delay_ticks(AD7606_delayTicks);
   }
   AD7606_CS(1);
   return (int16_t)val;
+}
+
+void AD7606_ReadAll(int16_t *result)
+{
+  uint16_t val;
+  uint8_t i, j;
+  AD7606_CS(0);
+  for (i = 0; i < 8; i++)
+  {
+    val = 0;
+    for (j = 0; j < 16; j++)
+    {
+      val <<= 1;
+      AD7606_SCK(0);
+      Delay_ticks(AD7606_delayTicks);
+      val |= AD7606_DIN(); // read before change
+      AD7606_SCK(1);
+      Delay_ticks(AD7606_delayTicks);
+    }
+    result[i] = val;
+  }
+  AD7606_CS(1);
 }
 
 void AD7606_StartConvA(void)
