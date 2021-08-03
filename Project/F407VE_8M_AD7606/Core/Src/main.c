@@ -66,7 +66,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint16_t val;
+  int32_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,7 +105,7 @@ int main(void)
     while(AD7606_isBusy())
       ;
     val = AD7606_GetVal(0);
-    printf("%d, %f\r\n",val, (double)val / 0xFFFF * 20 - 10);
+    printf("%d, %f\r\n",val, (double)val / 0x8000 * 10);
     Delay_ms(500);
   }
   /* USER CODE END 3 */

@@ -3,6 +3,7 @@
 
 #include "main.h"
 
+#define AD7606_RST_GPIO GPIOB
 #define AD7606_OS0_GPIO GPIOB
 #define AD7606_OS1_GPIO GPIOB
 #define AD7606_OS2_GPIO GPIOB
@@ -13,6 +14,7 @@
 #define AD7606_DIN_GPIO GPIOD
 #define AD7606_CS_GPIO GPIOD
 
+#define AD7606_RST_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define AD7606_OS0_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define AD7606_OS1_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define AD7606_OS2_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
@@ -23,6 +25,7 @@
 #define AD7606_DIN_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
 #define AD7606_CS_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
 
+#define AD7606_RST_PIN GPIO_PIN_6
 #define AD7606_OS0_PIN GPIO_PIN_7
 #define AD7606_OS1_PIN GPIO_PIN_8
 #define AD7606_OS2_PIN GPIO_PIN_9
@@ -33,6 +36,7 @@
 #define AD7606_DIN_PIN GPIO_PIN_4
 #define AD7606_CS_PIN GPIO_PIN_5
 
+#define AD7606_RST(__PINSTATE__) (AD7606_RST_GPIO->BSRR = (uint32_t)(AD7606_RST_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define AD7606_OS0(__PINSTATE__) (AD7606_OS0_GPIO->BSRR = (uint32_t)(AD7606_OS0_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define AD7606_OS1(__PINSTATE__) (AD7606_OS1_GPIO->BSRR = (uint32_t)(AD7606_OS1_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define AD7606_OS2(__PINSTATE__) (AD7606_OS2_GPIO->BSRR = (uint32_t)(AD7606_OS2_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
@@ -53,9 +57,13 @@
 
 void AD7606_Init(void);
 void AD7606_SetOversample(uint8_t oversample);
-uint16_t AD7606_GetVal(uint8_t id);
+int16_t AD7606_GetVal(uint8_t id);
+// note: the delay between the posedges of CONVA and CONVB cannot be longer than 0.5s
+// which means I can't convert half of the channels individually
 void AD7606_StartConvA(void);
 void AD7606_StartConvB(void);
+void AD7606_StartConvAll(void);
+void AD7606_Reset(void);
 #define AD7606_isBusy() AD7606_BUSY()
 
 #endif
