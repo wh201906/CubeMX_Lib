@@ -38,9 +38,9 @@
 #define AD7606_OS2(__PINSTATE__) (AD7606_OS2_GPIO->BSRR = (uint32_t)(AD7606_OS2_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define AD7606_CONVA(__PINSTATE__) (AD7606_CONVA_GPIO->BSRR = (uint32_t)(AD7606_CONVA_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define AD7606_CONVB(__PINSTATE__) (AD7606_CONVB_GPIO->BSRR = (uint32_t)(AD7606_CONVB_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
-#define AD7606_BUSY(__PINSTATE__) (!!(AD7606_BUSY_GPIO->IDR & AD7606_BUSY_PIN))
+#define AD7606_BUSY() (!!(AD7606_BUSY_GPIO->IDR & AD7606_BUSY_PIN))
 #define AD7606_SCK(__PINSTATE__) (AD7606_SCK_GPIO->BSRR = (uint32_t)(AD7606_SCK_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
-#define AD7606_DIN(__PINSTATE__) (AD7606_DIN_GPIO->BSRR = (uint32_t)(AD7606_DIN_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define AD7606_DIN() (!!(AD7606_DIN_GPIO->IDR & AD7606_DIN_PIN))
 #define AD7606_CS(__PINSTATE__) (AD7606_CS_GPIO->BSRR = (uint32_t)(AD7606_CS_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 
 #define AD7606_OVERSAMPLE_NO 0
@@ -56,3 +56,6 @@ void AD7606_SetOversample(uint8_t oversample);
 uint16_t AD7606_GetVal(uint8_t id);
 void AD7606_StartConvA(void);
 void AD7606_StartConvB(void);
+#define AD7606_isBusy() AD7606_BUSY()
+
+#endif
