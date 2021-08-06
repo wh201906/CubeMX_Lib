@@ -5,10 +5,21 @@
 #include "arm_math.h"
 
 // bigger -> more precise -> takes longer time
-#define MYFFT_LENGTH 1024
+#define MYFFT_LENGTH 4096
 
-// use hanning window
-#define MYFFT_USE_HANNING 1
+// use window, slower, more memory cost
+#define MYFFT_USE_WINDOW 1
+
+#if MYFFT_USE_WINDOW
+
+void MyFFT_NoWindow(void);
+void MyFFT_HannWindow(void);
+void MyFFT_HammingWindow(void);
+void MyFFT_FlattopWindow(void);
+void MyFFT_BlackmanWindow(void);
+void MyFFT_TriangWindow(void);
+
+#endif
 
 // init before use
 void MyFFT_Init(double sampleRate);
@@ -21,10 +32,19 @@ void MyFFT_CalcInPlace(float32_t *data);
 // get raw FFT result
 // input length: MYFFT_LENGTH
 // output length: MYFFT_LENGTH / 2 (without symmetric part)
-void MyFFT_Calc(float32_t *input, float32_t *output); 
+void MyFFT_Calc(float32_t *input, float32_t *output);
 
 // get the freq which has the highest amplitude, based on the given sampleRate
+// the len should be half of the FFT_LENGTH
 double MyFFT_GetPeakFreq(float32_t *data, uint16_t len);
+
+// get THD
+// the len should be half of the FFT_LENGTH
+// MyFFT_THD(data, len, 1) to skip DC
+// For windows which have wider lobe, set offset bigger than 1
+// offset: skip first n data
+// nThre: maximum harmony
+double MyFFT_THD(float32_t *data, uint16_t len, uint16_t offset, uint8_t nThre);
 
 void MyFFT_SetSampleRate(double sampleRate);
 

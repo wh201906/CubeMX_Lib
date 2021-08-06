@@ -42,6 +42,7 @@ uint8_t SoftI2C_Read(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, u
 uint8_t SoftI2C_Write(SoftI2C_Port *port, uint16_t deviceAddr, uint8_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
 uint8_t SoftI2C_16Read(SoftI2C_Port *port, uint16_t deviceAddr, uint16_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
 uint8_t SoftI2C_16Write(SoftI2C_Port *port, uint16_t deviceAddr, uint16_t memAddr, uint8_t *dataBuf, uint32_t dataSize);
+uint16_t SoftI2C_SearchAddr(SoftI2C_Port *port, uint16_t start, uint16_t end, uint16_t *buf);
 
 // Low Layer
 void SoftI2C_Start(SoftI2C_Port *port);

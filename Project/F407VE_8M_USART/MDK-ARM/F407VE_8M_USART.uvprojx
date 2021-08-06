@@ -444,11 +444,6 @@
               <FilePath>..\..\..\Module\GRIDKEY\gridkey.c</FilePath>
             </File>
             <File>
-              <FileName>softi2c1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\I2C\softi2c1.c</FilePath>
-            </File>
-            <File>
               <FileName>myusart1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\USART\myusart1.c</FilePath>
