@@ -34,6 +34,8 @@
 #include "MPU/MD6.12/core/mpl/fast_no_motion.h"
 #include "MPU/MD6.12/core/mpl/fast_no_motion.h"
 #include "MPU/MD6.12/core/mllite/data_builder.h"
+#include "MPU/MD6.12/core/mllite/ml_math_func.h"
+#include "MPU/MD6.12/core/driver/eMPL/inv_mpu_dmp_motion_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +45,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ACCEL_ON        (0x01)
+#define GYRO_ON         (0x02)
+#define COMPASS_ON      (0x04)
+#define DEFAULT_MPU_HZ (20)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,6 +63,35 @@ MyUARTHandle uart1;
 uint8_t uartBuf1[100];
 uint16_t i2cAddr[10];
 extern SoftI2C_Port MPU6050_Port;
+
+struct platform_data_s {
+    signed char orientation[9];
+};
+static struct platform_data_s gyro_pdata = {
+    .orientation = { 1, 0, 0,
+                     0, 1, 0,
+                     0, 0, 1}
+};
+struct rx_s {
+    unsigned char header[3];
+    unsigned char cmd;
+};
+struct hal_s {
+    unsigned char lp_accel_mode;
+    unsigned char sensors;
+    unsigned char dmp_on;
+    unsigned char wait_for_tap;
+    volatile unsigned char new_gyro;
+    unsigned char motion_int_mode;
+    unsigned long no_dmp_hz;
+    unsigned long next_pedo_ms;
+    unsigned long next_temp_ms;
+    unsigned long next_compass_ms;
+    unsigned int report;
+    unsigned short dmp_features;
+    struct rx_s rx;
+};
+static struct hal_s hal = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,6 +116,12 @@ int main(void)
   uint8_t data;
   uint8_t accel_fsr,  new_temp = 0;
   uint16_t gyro_rate, gyro_fsr;
+  int16_t gyro[3], accel[3];
+  int32_t quat[4];
+  
+  uint32_t sensor_timestamp;
+  int16_t sensors;
+  uint8_t more;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -132,13 +173,34 @@ int main(void)
   printf("mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL): %d\r\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
   printf("inv_start_mpl(): %d\r\n", inv_start_mpl());
   printf("mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL): %d\r\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
-  printf("mpu_set_sample_rate(): %d\r\n", mpu_set_sample_rate(20));
+  printf("mpu_set_sample_rate(): %d\r\n", mpu_set_sample_rate(DEFAULT_MPU_HZ));
   mpu_get_sample_rate(&gyro_rate);
   mpu_get_gyro_fsr(&gyro_fsr);
   mpu_get_accel_fsr(&accel_fsr);
   printf("gyro_rate: %u\r\ngyro_fsr: %u\r\naccel_fsr: %u\r\n", gyro_rate, gyro_fsr, accel_fsr);
   inv_set_gyro_sample_rate(1000000L / gyro_rate);
   inv_set_accel_sample_rate(1000000L / gyro_rate);
+  inv_set_gyro_orientation_and_scale(inv_orientation_matrix_to_scalar(gyro_pdata.orientation), (long)gyro_fsr<<15);
+  inv_set_accel_orientation_and_scale(inv_orientation_matrix_to_scalar(gyro_pdata.orientation), (long)accel_fsr<<15);
+  hal.sensors = ACCEL_ON | GYRO_ON;
+  hal.dmp_on = 0;
+  hal.report = 0;
+  hal.rx.cmd = 0;
+  hal.next_pedo_ms = 0;
+  hal.next_compass_ms = 0;
+  hal.next_temp_ms = 0;
+  // get_tick_count(&timestamp);
+  printf("dmp_load_motion_driver_firmware(): %d\r\n", dmp_load_motion_driver_firmware());
+  printf("dmp_set_orientation(): %d\r\n", dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_pdata.orientation)));
+  // dmp_register_tap_cb(tap_cb);
+  // dmp_register_android_orient_cb(android_orient_cb);
+  hal.dmp_features = DMP_FEATURE_6X_LP_QUAT |
+        DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO |
+        DMP_FEATURE_GYRO_CAL;
+  printf("dmp_enable_feature(): %d\r\n", dmp_enable_feature(hal.dmp_features));
+  printf("dmp_set_fifo_rate(): %d\r\n", dmp_set_fifo_rate(DEFAULT_MPU_HZ));
+  printf("mpu_set_dmp_state(): %d\r\n", mpu_set_dmp_state(1));
+  hal.dmp_on = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -148,6 +210,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(100);
+    mpu_get_gyro_reg(gyro, NULL);
+    mpu_get_accel_reg(accel, NULL);
+    printf("Raw:\r\n");
+    printf("gyro: %d, %d, %d\r\n", gyro[0], gyro[1], gyro[2]);
+    printf("accel: %d, %d, %d\r\n", accel[0], accel[1], accel[2]);
+    dmp_read_fifo(gyro, accel, quat, &sensor_timestamp, &sensors, &more);
+    if(!more)
+      continue;
+    printf("DMP:\r\n");
+    printf("gyro: %d, %d, %d\r\n", gyro[0], gyro[1], gyro[2]);
+    printf("accel: %d, %d, %d\r\n", accel[0], accel[1], accel[2]);
+    printf("quat: %d, %d, %d, %d\r\n", quat[0], quat[1], quat[2], quat[3]);
+    printf("sensors: 0x%x\r\n", sensors);
   }
   /* USER CODE END 3 */
 }
