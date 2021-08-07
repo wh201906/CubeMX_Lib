@@ -40,25 +40,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef ANDROID
-#ifdef NDK_BUILD
-#include "log_macros.h"
-#else
-#include <utils/Log.h>		/* For the LOG macro */
-#endif
-#endif
-
-#ifdef __KERNEL__
-#include <linux/kernel.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if defined ANDROID_JELLYBEAN
-#define LOG ALOG
-#define LOG_ERRROR ANDROID_LOG_ERROR
 #endif
 
 /* --------------------------------------------------------------------- */
@@ -294,31 +277,16 @@ extern "C" {
  * Log macro that allows you to specify a number for the priority.
  */
 #ifndef MPL_LOG_PRI
-#ifdef ANDROID
-#define MPL_LOG_PRI(priority, tag, fmt, ...) \
-	LOG(priority, tag, fmt, ##__VA_ARGS__)
-#elif defined __KERNEL__
-#define MPL_LOG_PRI(priority, tag, fmt, ...) \
-	pr_debug(MPL_##priority tag fmt, ##__VA_ARGS__)
-#else
 #define MPL_LOG_PRI(priority, tag, fmt, ...) \
 	_MLPrintLog(MPL_##priority, tag, fmt, ##__VA_ARGS__)
-#endif
 #endif
 
 /*
  * Log macro that allows you to pass in a varargs ("args" is a va_list).
  */
 #ifndef MPL_LOG_PRI_VA
-#ifdef ANDROID
-#define MPL_LOG_PRI_VA(priority, tag, fmt, args) \
-	android_vprintLog(priority, NULL, tag, fmt, args)
-#elif defined __KERNEL__
-/* not allowed in the Kernel because there is no dev_dbg that takes a va_list */
-#else
 #define MPL_LOG_PRI_VA(priority, tag, fmt, args) \
 	_MLPrintVaLog(priority, NULL, tag, fmt, args)
-#endif
 #endif
 
 /* --------------------------------------------------------------------- */

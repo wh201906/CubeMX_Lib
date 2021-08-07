@@ -122,10 +122,6 @@ typedef uint64_t  __u64;
 #include <sys/types.h>
 #endif
 
-#if defined EMPL_TARGET_MSP430
-#include <USB_Common/types.h>
-#endif
-
 #ifndef __cplusplus
 #ifndef __KERNEL__
 #ifndef EMPL_TARGET_UC3L0
