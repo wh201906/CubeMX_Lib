@@ -16,7 +16,7 @@
  */
 
 #undef MPL_LOG_NDEBUG
-#define MPL_LOG_NDEBUG 0 /* Use 0 to turn on MPL_LOGV output */
+#define MPL_LOG_NDEBUG 1 /* Use 0 to turn on MPL_LOGV output */
 
 #include <string.h>
 

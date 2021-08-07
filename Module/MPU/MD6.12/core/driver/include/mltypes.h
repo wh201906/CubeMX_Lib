@@ -105,22 +105,7 @@ typedef unsigned long inv_time_t;
 typedef unsigned long long inv_time_t;
 #endif
 
-#if defined EMPL || (!defined __GNUC__ && !defined __KERNEL__)
-typedef int8_t   __s8;
-typedef int16_t  __s16;
-typedef int32_t  __s32;
-
-typedef uint8_t   __u8;
-typedef uint16_t  __u16;
-typedef uint32_t  __u32;
-
-#ifndef EMPL_NO_64BIT
-typedef int64_t  __s64;
-typedef uint64_t  __u64;
-#endif
-#elif !defined __KERNEL__
-#include <sys/types.h>
-#endif
+typedef uint32_t size_t;
 
 #ifndef __cplusplus
 #ifndef __KERNEL__

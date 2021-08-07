@@ -36,6 +36,19 @@
  * fabsf(float x)
  * min(int a, int b)
  */
+#include "main.h"
+#include "MPU/mpu6050.h"
+#include "DELAY/delay.h"
+#include "I2C/softi2c.h"
+
+extern SoftI2C_Port MPU6050_Port;
+
+#define i2c_write(__slave_addr__, __reg_addr__, __length__, __data__) (!SoftI2C_Write(&MPU6050_Port, (__slave_addr__), (__reg_addr__), (__data__), (__length__)))
+#define i2c_read(__slave_addr__, __reg_addr__, __length__, __data__) (!SoftI2C_Read(&MPU6050_Port, (__slave_addr__), (__reg_addr__), (__data__), (__length__)))
+#define delay_ms(__num_ms__) Delay_ms(__num_ms__)
+#define min(a,b) ((a<b)?a:b)
+// get_ms() is defined in mpuxxxx.c
+
 #if defined EMPL_TARGET_STM32F4
 #include "i2c.h"   
 #include "main.h"
@@ -610,7 +623,7 @@ int mpu_reg_dump(void)
             continue;
         if (i2c_read(st.hw->addr, ii, 1, &data))
             return -1;
-        log_i("%#5x: %#5x\r\n", ii, data);
+        // log_i("%#5x: %#5x\r\n", ii, data);
     }
     return 0;
 }
@@ -706,7 +719,7 @@ int mpu_init(struct int_param_s *int_param)
 
 #ifndef EMPL_TARGET_STM32F4    
     if (int_param)
-        reg_int_cb(int_param);
+        ;// reg_int_cb(int_param);
 #endif
 
 #ifdef AK89xx_SECONDARY

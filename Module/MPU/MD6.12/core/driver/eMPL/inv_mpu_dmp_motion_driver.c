@@ -32,6 +32,18 @@
  * delay_ms(unsigned long num_ms)
  * get_ms(unsigned long *count)
  */
+#include "main.h"
+#include "MPU/mpu6050.h"
+#include "DELAY/delay.h"
+#include "I2C/softi2c.h"
+
+extern SoftI2C_Port MPU6050_Port;
+
+#define i2c_write(__slave_addr__, __reg_addr__, __length__, __data__) (!SoftI2C_Write(&MPU6050_Port, (__slave_addr__), (__reg_addr__), (__data__), (__length__)))
+#define i2c_read(__slave_addr__, __reg_addr__, __length__, __data__) (!SoftI2C_Read(&MPU6050_Port, (__slave_addr__), (__reg_addr__), (__data__), (__length__)))
+#define delay_ms(__num_ms__) Delay_ms(__num_ms__)
+// get_ms() is defined in mpuxxxx.c
+
 #if defined EMPL_TARGET_STM32F4
 #include "i2c.h"   
 #include "main.h"
@@ -603,7 +615,7 @@ int dmp_set_accel_bias(long *bias)
 
     mpu_get_accel_sens(&accel_sens);
     accel_sf = (long long)accel_sens << 15;
-    __no_operation();
+    __nop();
 
     accel_bias_body[0] = bias[dmp.orient & 3];
     if (dmp.orient & 4)

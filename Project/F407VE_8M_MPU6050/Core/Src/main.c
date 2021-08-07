@@ -25,6 +25,15 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "MPU/mpu6050.h"
+#include "MPU/MD6.12/core/driver/eMPL/inv_mpu.h"
+#include "MPU/MD6.12/core/mllite/mpl.h"
+#include "MPU/MD6.12/core/mpl/quaternion_supervisor.h"
+#include "MPU/MD6.12/core/mpl/gyro_tc.h"
+#include "MPU/MD6.12/core/eMPL-hal/eMPL_outputs.h"
+#include "MPU/MD6.12/core/mpl/fast_no_motion.h"
+#include "MPU/MD6.12/core/mpl/fast_no_motion.h"
+#include "MPU/MD6.12/core/mpl/fast_no_motion.h"
+#include "MPU/MD6.12/core/mllite/data_builder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +56,7 @@
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
 uint16_t i2cAddr[10];
-SoftI2C_Port mpuPort;
+extern SoftI2C_Port MPU6050_Port;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,6 +79,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t i, tmp;
   uint8_t data;
+  uint8_t accel_fsr,  new_temp = 0;
+  uint16_t gyro_rate, gyro_fsr;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,14 +105,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  SoftI2C_SetPort(&mpuPort, GPIOE, 2, GPIOE, 3);
-  SoftI2C_Init(&mpuPort,100000,SI2C_ADDR_7b);
+  SoftI2C_SetPort(&MPU6050_Port, GPIOE, 2, GPIOE, 3);
+  SoftI2C_Init(&MPU6050_Port,100000,SI2C_ADDR_7b);
   printf("MPU Test\r\n");
   
   // find available device
   printf("available address: \r\n");
   Delay_ms(1000);
-  tmp = SoftI2C_SearchAddr(&mpuPort, 0x00, 0xFF, i2cAddr);
+  tmp = SoftI2C_SearchAddr(&MPU6050_Port, 0x00, 0xFF, i2cAddr);
   for(i = 0; i < tmp; i++)
   {
     printf("0x%x ", i2cAddr[i]);
@@ -109,8 +120,25 @@ int main(void)
   printf("\r\n");
   
   // read whoami register
-  SoftI2C_Read(&mpuPort, MPU6050_I2C_ADDR, 0x75, &data, 1);
+  SoftI2C_Read(&MPU6050_Port, MPU6050_I2C_ADDR, 0x75, &data, 1);
   printf("whoami: 0x%x\r\n", data);
+  printf("mpu_init(): %d\r\n", mpu_init(NULL));
+  printf("inv_init_mpl(): %d\r\n", inv_init_mpl());
+  printf("inv_enable_quaternion(): %d\r\n", inv_enable_quaternion());
+  // printf("inv_enable_9x_sensor_fusion(): %d\r\n", inv_enable_9x_sensor_fusion());
+  printf("inv_enable_fast_nomot(): %d\r\n", inv_enable_fast_nomot());
+  printf("inv_enable_gyro_tc(): %d\r\n", inv_enable_gyro_tc());
+  printf("inv_enable_eMPL_outputs(): %d\r\n", inv_enable_eMPL_outputs());
+  printf("mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL): %d\r\n", mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+  printf("inv_start_mpl(): %d\r\n", inv_start_mpl());
+  printf("mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL): %d\r\n", mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL));
+  printf("mpu_set_sample_rate(): %d\r\n", mpu_set_sample_rate(20));
+  mpu_get_sample_rate(&gyro_rate);
+  mpu_get_gyro_fsr(&gyro_fsr);
+  mpu_get_accel_fsr(&accel_fsr);
+  printf("gyro_rate: %u\r\ngyro_fsr: %u\r\naccel_fsr: %u\r\n", gyro_rate, gyro_fsr, accel_fsr);
+  inv_set_gyro_sample_rate(1000000L / gyro_rate);
+  inv_set_accel_sample_rate(1000000L / gyro_rate);
   /* USER CODE END 2 */
 
   /* Infinite loop */
