@@ -43,11 +43,18 @@ uint8_t myftoa_FD(double val, char *str, uint8_t precision)
   int64_t part;
   uint8_t len, i;
   double round = 0.5;
-
+  
+  // handle negative number
+  // if -1 < val < 0, myitoa() will consider it as a non-negative number(0 as integer part)
+  if(val<0)
+  {
+    *(str++) = '-';
+    val = -val;
+  }
   // for rounding
   for (i = 0; i < precision; i++)
     round /= 10;
-  val = (val < 0 ? val - round : val + round);
+  val += round;
 
   // for integer part
   part = val;
@@ -62,7 +69,7 @@ uint8_t myftoa_FD(double val, char *str, uint8_t precision)
     return len;
   }
   str[len++] = '.';
-  val = (val < 0 ? part - val : val - part);
+  val -= part;
   for (i = 0; i < precision; i++) // print decimal part from left to right
   {
     val *= 10;

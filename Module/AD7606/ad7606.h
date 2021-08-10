@@ -1,6 +1,10 @@
 #ifndef _AD7606_H_
 #define _AD7606_H_
 
+// serial mode driver
+// pull up PAR/SEL/BYTE SEL Pin,
+// pull down DB15
+
 #include "main.h"
 
 #define AD7606_RST_GPIO GPIOB
