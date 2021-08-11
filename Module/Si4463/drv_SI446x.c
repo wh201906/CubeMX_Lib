@@ -28,7 +28,11 @@ void SI446x_Wait_Cts(void)
 {
   uint8_t l_Cts;
   uint16_t l_ReadCtsTimes = 0;
-
+  
+  // expected T for single read:
+  // 2(bytes)*8(edges)*2(pos/negpulse)*50ns = 1.6us
+  // max state change time: 15ms
+  // wait for 9375 times
   do
   {
     SI4463_CSN(0); //SPI片选
@@ -39,7 +43,7 @@ void SI446x_Wait_Cts(void)
 
     SI4463_CSN(1); //取消SPI片选
 
-    if (1000 == l_ReadCtsTimes++)
+    if (9375 == l_ReadCtsTimes++)
     {
       SI446x_Init();
       break;
@@ -289,10 +293,10 @@ uint8_t SI446x_Get_Property_1(SI446X_PROPERTY Group_Num)
 void SI446x_Reset(void)
 {
   SI4463_SDN(1); //关设备
-  Delay_us(20);  //延时 等待设备完全断电
+  Delay_us(11);  //延时 等待设备完全断电
   SI4463_SDN(0); //开设备
   SI4463_CSN(1); //取消SPI片选
-  Delay_us(35);
+  Delay_us(1);
 }
 
 /**
@@ -693,6 +697,7 @@ void SI446x_Gpio_Init(void)
 void SI446x_Init(void)
 {
   SI446x_Gpio_Init();
+  Delay_us(1);
   SI446x_Reset();
   SI446x_Power_Up(30000000);
   SI446x_Config_Init();

@@ -554,11 +554,6 @@
               <FilePath>..\..\..\Module\Si4463\drv_spi.c</FilePath>
             </File>
             <File>
-              <FileName>drv_SI4463.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\Si4463\drv_SI4463.c</FilePath>
-            </File>
-            <File>
               <FileName>util.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
@@ -572,6 +567,11 @@
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\KEY\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_SI446x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\Si4463\drv_SI446x.c</FilePath>
             </File>
           </Files>
         </Group>
