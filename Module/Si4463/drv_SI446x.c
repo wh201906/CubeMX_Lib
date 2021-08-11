@@ -24,7 +24,7 @@ const static uint8_t config_table[] = RADIO_CONFIGURATION_DATA_ARRAY;
   * @note  :无
   * @retval:无
   */
-void SI446x_Wait_Cts(void)
+uint8_t SI446x_Wait_Cts(void)
 {
   uint8_t l_Cts;
   uint16_t l_ReadCtsTimes = 0;
@@ -44,12 +44,9 @@ void SI446x_Wait_Cts(void)
     SI4463_CSN(1); //取消SPI片选
 
     if (9375 == l_ReadCtsTimes++)
-    {
-      SI446x_Init();
-      break;
-    }
-
+      return 0; // timeout
   } while (l_Cts != 0xFF); //直到读CTS的返回值等于0xFF
+  return 1; // CTS Received
 }
 
 /**
@@ -60,9 +57,10 @@ void SI446x_Wait_Cts(void)
   * @note  :无
   * @retval:无
   */
-void SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber)
+uint8_t SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber)
 {
-  SI446x_Wait_Cts(); //查询CTS状态
+  if(!SI446x_Wait_Cts())
+    return 0;
 
   SI4463_CSN(0); //SPI片选
 
@@ -73,6 +71,7 @@ void SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber)
   }
 
   SI4463_CSN(1); //取消SPI片选
+  return 1;
 }
 
 /**
@@ -104,9 +103,10 @@ void SI446x_Power_Up(uint32_t Xo_Freq)
   * @note  :无
   * @retval:无
   */
-void SI446x_Read_Response(uint8_t *pRead, uint8_t Length)
+uint8_t SI446x_Read_Response(uint8_t *pRead, uint8_t Length)
 {
-  SI446x_Wait_Cts(); //查询CTS状态
+  if(!SI446x_Wait_Cts())
+    return 0;
   SI4463_CSN(0);     //SPI片选
 
   drv_spi_read_write_byte(READ_CMD_BUFF); //发送读命令
@@ -117,6 +117,7 @@ void SI446x_Read_Response(uint8_t *pRead, uint8_t Length)
   }
 
   SI4463_CSN(1); //SPI取消片选
+  return 1;
 }
 
 /**
@@ -493,7 +494,8 @@ uint8_t SI446x_Read_Packet(uint8_t *pRxData)
 {
   uint8_t length = 0, i = 0;
 
-  SI446x_Wait_Cts();
+  if(!SI446x_Wait_Cts())
+    return 0;
   SI4463_CSN(0);
 
   drv_spi_read_write_byte(READ_RX_FIFO); //读FIFO命令

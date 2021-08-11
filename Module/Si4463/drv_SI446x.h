@@ -425,10 +425,10 @@ typedef enum
 
 } SI446X_PROPERTY;
 
-void SI446x_Wait_Cts(void);
-void SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber);
+uint8_t SI446x_Wait_Cts(void);
+uint8_t SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber);
 void SI446x_Power_Up(uint32_t Xo_Freq);
-void SI446x_Read_Response(uint8_t *pRead, uint8_t Length);
+uint8_t SI446x_Read_Response(uint8_t *pRead, uint8_t Length);
 uint8_t SI446x_Nop(void);
 void SI446x_Get_Part_Informatoin(uint8_t *pRead);
 void SI446x_Get_Fun_Informatoin(uint8_t *pRead);
