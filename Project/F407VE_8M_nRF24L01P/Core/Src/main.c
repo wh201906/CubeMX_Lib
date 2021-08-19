@@ -24,7 +24,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "nRF24L01P/drv_nRF24L01.h"
+#include "KEY/key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+MyUARTHandle uart1;
+uint8_t uartBuf1[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,7 +67,10 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint32_t i;
+  uint8_t tmp=0;
+  uint8_t mode = 0, lastMode = 0;
+  uint8_t RxBuffer[32] = {0}, TxBuffer[32] = "hello0";
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -88,7 +93,29 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  Delay_Init(168);
+  MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  Key_Init();
+  Delay_ms(500);
+  printf("nRF24L01P Test\r\n");
+  drv_spi_init();
+  NRF24L01_Gpio_Init( );
+  i = NRF24L01_check();
+  printf("NRF24L01_check: %d\r\n", i);
+  RF24L01_Init();
+  RF24L01_Set_Mode(MODE_RX);
+  printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+  
+  for(i = 0; i < 6; i++)
+  {
+    if(Key_ScanRaw() != 0xFF)
+    {
+      mode = !mode;
+      printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode); // LED
+    }
+    Delay_ms(500);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +125,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if(Key_ScanRaw() != 0xFF)
+    {
+      mode = !mode;
+      printf("mode: %s\r\n", mode ? "Tx" : "Rx");
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
+    }
+    if(lastMode!=mode)
+      RF24L01_Set_Mode(mode?MODE_TX:MODE_RX);
+    lastMode = mode;
+    if(mode)
+    { 
+      printf("Tx: %d\r\n", NRF24L01_TxPacket("hellotest", 9));
+      Delay_ms(500);
+    }
+    else
+    {
+      if((i=NRF24L01_RxPacket(RxBuffer))!=0)
+        MyUART_Write(&uart1, RxBuffer,6);
+    }
   }
   /* USER CODE END 3 */
 }
