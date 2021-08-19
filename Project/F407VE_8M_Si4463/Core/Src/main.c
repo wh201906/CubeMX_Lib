@@ -24,8 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "Si4463/drv_spi.h"
-#include "Si4463/drv_SI446x.h"
+#include "Si4463/SI446x.h"
 #include "KEY/key.h"
 /* USER CODE END Includes */
 
@@ -99,7 +98,6 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   Key_Init();
   printf("Si4463 Test\r\n");
-  drv_spi_init();
   SI446x_Init();
   printf("mode: %s\r\n", mode ? "Tx" : "Rx");
   fail = 0;
@@ -131,7 +129,7 @@ int main(void)
     }
     if(mode)
     {
-      SI446x_Send_Packet("hello",5,0,0);
+      SI446x_Send_Packet("0123456789ABCDEF9876543210abcdef0246813579fedcba1357902468FEDCBA",64,0,0);
     }
     else
     {

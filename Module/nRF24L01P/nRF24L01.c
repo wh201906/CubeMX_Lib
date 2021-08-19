@@ -1,18 +1,3 @@
-/**
-  ******************************************************************************
-  * @author  泽耀科技 ASHINING
-  * @version V3.0
-  * @date    2016-10-08
-  * @brief   NRF24L01配置C文件
-  ******************************************************************************
-  * @attention
-  *
-  * 官网	:	http://www.ashining.com
-  * 淘宝	:	https://shop105912646.taobao.com
-  * 阿里巴巴:	https://cdzeyao.1688.com
-  ******************************************************************************
-  */
-
 #include "nRF24L01.h"
 #include "UTIL/mygpio.h"
 #include "DELAY/delay.h"
@@ -623,8 +608,6 @@ void NRF24L01_GPIO_Init(void)
   MyGPIO_Init(NRF24L01_IRQ_PORT, NRF24L01_IRQ_PIN, 1);
 
   NRF24L01_CS(1);
-
-  NRF24L01_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0; // 50ns, to meet select hold time
 }
 
 /**
@@ -635,6 +618,7 @@ void NRF24L01_GPIO_Init(void)
   */
 uint8_t NRF24L01_Init(void)
 {
+  NRF24L01_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0; // 50ns, to meet select hold time
   NRF24L01_GPIO_Init();
   if (!NRF24L01_Check())
     return 0;

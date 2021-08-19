@@ -1,23 +1,7 @@
-/**
-  ******************************************************************************
-  * @author  泽耀科技 ASHINING
-  * @version V3.0
-  * @date    2016-10-08
-  * @brief   SI446x配置H文件
-  ******************************************************************************
-  * @attention
-  *
-  * 官网	:	http://www.ashining.com
-  * 淘宝	:	https://shop105912646.taobao.com
-  * 阿里巴巴:	https://cdzeyao.1688.com
-  ******************************************************************************
-  */
-
-#ifndef __DRV_SI4463_H__
-#define __DRV_SI4463_H__
+#ifndef __SI4463_H__
+#define __SI4463_H__
 
 #include "main.h"
-#include "drv_spi.h"
 #include "Si446x_Config_30M_915.h"
 
 enum
@@ -29,6 +13,22 @@ enum
 #define PACKET_LENGTH 0 //0-64, 0:动态长度 1:固定长度
 
 /** SI4463硬件接口IO定义 */
+#define SI4463_CLK_PORT GPIOD
+#define SI4463_CLK_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_CLK_PIN GPIO_PIN_11
+
+#define SI4463_MISO_PORT GPIOD
+#define SI4463_MISO_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_MISO_PIN GPIO_PIN_12
+
+#define SI4463_MOSI_PORT GPIOD
+#define SI4463_MOSI_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_MOSI_PIN GPIO_PIN_13
+
+#define SI4463_NSS_PORT GPIOD
+#define SI4463_NSS_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_NSS_PIN GPIO_PIN_14
+
 #define SI4463_SDN_PORT GPIOD
 #define SI4463_SDN_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
 #define SI4463_SDN_PIN GPIO_PIN_15
@@ -54,8 +54,12 @@ enum
 #define SI4463_GPIO3_PIN GPIO_PIN_2
 
 //IO操作函数定义
+#define SI4463_NSS(__PINSTATE__) (SI4463_NSS_PORT->BSRR = (uint32_t)(SI4463_NSS_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SI4463_CLK(__PINSTATE__) (SI4463_CLK_PORT->BSRR = (uint32_t)(SI4463_CLK_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SI4463_MOSI(__PINSTATE__) (SI4463_MOSI_PORT->BSRR = (uint32_t)(SI4463_MOSI_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define SI4463_MISO() (!!(SI4463_MISO_PORT->IDR & SI4463_MISO_PIN))
 #define SI4463_SDN(__PINSTATE__) (SI4463_SDN_PORT->BSRR = (uint32_t)(SI4463_SDN_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
-#define SI4463_CSN(__PINSTATE__) SI4463_NSS(__PINSTATE__)
+#define SI4463_IRQ() (!!(SI4463_IRQ_PORT->IDR & SI4463_IRQ_PIN))
 
 /** SI4463 命令定义 */
 typedef enum
@@ -438,7 +442,7 @@ void SI446x_Set_Property(SI446X_PROPERTY Group_Num, uint8_t Num_Props, uint8_t *
 void SI446x_Set_Property_1(SI446X_PROPERTY Group_Num, uint8_t Start_Prop);
 uint8_t SI446x_Get_Property_1(SI446X_PROPERTY Group_Num);
 void SI446x_Reset(void);
-void SI446x_Config_Gpio(uint8_t Gpio_0, uint8_t Gpio_1, uint8_t Gpio_2, uint8_t Gpio_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config);
+void SI446x_Config_GPIO(uint8_t GPIO_0, uint8_t GPIO_1, uint8_t GPIO_2, uint8_t GPIO_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config);
 void SI446x_Write_TxFifo(uint8_t *pWriteData, uint8_t Length);
 void SI446x_Reset_RxFifo(void);
 void SI446x_Reset_TxFifo(void);
@@ -451,8 +455,11 @@ void SI446x_Get_Fifo_Information(uint8_t *pReadData);
 void SI446x_Change_Status(uint8_t NextStatus);
 uint8_t SI446x_Get_Device_Status(void);
 void SI446x_Set_Power(uint8_t PowerLevel);
-void SI446x_Gpio_Init(void);
+void SI446x_GPIO_Init(void);
 void SI446x_Config_Init(void);
 void SI446x_Init(void);
+
+uint8_t SI446x_ReadWriteByte_Raw(uint8_t TxByte);
+void SI446x_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint16_t Length);
 
 #endif

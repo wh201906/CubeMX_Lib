@@ -1,22 +1,11 @@
-/**
-  ******************************************************************************
-  * @author  泽耀科技 ASHINING
-  * @version V3.0
-  * @date    2016-10-08
-  * @brief   SI4463配置C文件
-  ******************************************************************************
-  * @attention
-  *
-  * 官网	:	http://www.ashining.com
-  * 淘宝	:	https://shop105912646.taobao.com
-  * 阿里巴巴:	https://cdzeyao.1688.com
-  ******************************************************************************
-  */
-
-#include "drv_SI446x.h"
+#include "SI446x.h"
 #include "DELAY/delay.h"
+#include "UTIL/mygpio.h"
 
 const static uint8_t config_table[] = RADIO_CONFIGURATION_DATA_ARRAY;
+uint16_t Si4463_delayTicks;
+
+#define Si4463_Delay() Delay_ticks(Si4463_delayTicks)
 
 /**
   * @brief :SI446x等待CTS状态
@@ -28,25 +17,25 @@ uint8_t SI446x_Wait_Cts(void)
 {
   uint8_t l_Cts;
   uint16_t l_ReadCtsTimes = 0;
-  
+
   // expected T for single read:
   // 2(bytes)*8(edges)*2(pos/negpulse)*50ns = 1.6us
   // max state change time: 15ms
   // wait for 9375 times
   do
   {
-    SI4463_CSN(0); //SPI片选
+    SI4463_NSS(0); //SPI片选
 
     //读CTS状态
-    drv_spi_read_write_byte(READ_CMD_BUFF);
-    l_Cts = drv_spi_read_write_byte(0xFF);
+    SI446x_ReadWriteByte_Raw(READ_CMD_BUFF);
+    l_Cts = SI446x_ReadWriteByte_Raw(0xFF);
 
-    SI4463_CSN(1); //取消SPI片选
+    SI4463_NSS(1); //取消SPI片选
 
     if (9375 == l_ReadCtsTimes++)
-      return 0; // timeout
+      return 0;            // timeout
   } while (l_Cts != 0xFF); //直到读CTS的返回值等于0xFF
-  return 1; // CTS Received
+  return 1;                // CTS Received
 }
 
 /**
@@ -59,18 +48,18 @@ uint8_t SI446x_Wait_Cts(void)
   */
 uint8_t SI446x_Write_Cmds(uint8_t *pCmd, uint8_t CmdNumber)
 {
-  if(!SI446x_Wait_Cts())
+  if (!SI446x_Wait_Cts())
     return 0;
 
-  SI4463_CSN(0); //SPI片选
+  SI4463_NSS(0); //SPI片选
 
   while (CmdNumber--)
   {
-    drv_spi_read_write_byte(*pCmd); //发送命令
+    SI446x_ReadWriteByte_Raw(*pCmd); //发送命令
     pCmd++;
   }
 
-  SI4463_CSN(1); //取消SPI片选
+  SI4463_NSS(1); //取消SPI片选
   return 1;
 }
 
@@ -105,18 +94,18 @@ void SI446x_Power_Up(uint32_t Xo_Freq)
   */
 uint8_t SI446x_Read_Response(uint8_t *pRead, uint8_t Length)
 {
-  if(!SI446x_Wait_Cts())
+  if (!SI446x_Wait_Cts())
     return 0;
-  SI4463_CSN(0);     //SPI片选
+  SI4463_NSS(0); //SPI片选
 
-  drv_spi_read_write_byte(READ_CMD_BUFF); //发送读命令
+  SI446x_ReadWriteByte_Raw(READ_CMD_BUFF); //发送读命令
   while (Length--)
   {
-    *pRead = drv_spi_read_write_byte(0xFF); //交换数据
+    *pRead = SI446x_ReadWriteByte_Raw(0xFF); //交换数据
     pRead++;
   }
 
-  SI4463_CSN(1); //SPI取消片选
+  SI4463_NSS(1); //SPI取消片选
   return 1;
 }
 
@@ -130,11 +119,11 @@ uint8_t SI446x_Nop(void)
 {
   uint8_t l_Cts;
 
-  SI4463_CSN(0); //SPI片选
+  SI4463_NSS(0); //SPI片选
 
-  l_Cts = drv_spi_read_write_byte(NOP); //空操作命令
+  l_Cts = SI446x_ReadWriteByte_Raw(NOP); //空操作命令
 
-  SI4463_CSN(1); //SPI取消片选
+  SI4463_NSS(1); //SPI取消片选
 
   return l_Cts;
 }
@@ -296,7 +285,7 @@ void SI446x_Reset(void)
   SI4463_SDN(1); //关设备
   Delay_us(11);  //延时 等待设备完全断电
   SI4463_SDN(0); //开设备
-  SI4463_CSN(1); //取消SPI片选
+  SI4463_NSS(1); //取消SPI片选
   Delay_us(1);
 }
 
@@ -306,15 +295,15 @@ void SI446x_Reset(void)
   * @note  :无
   * @retval:无
   */
-void SI446x_Config_Gpio(uint8_t Gpio_0, uint8_t Gpio_1, uint8_t Gpio_2, uint8_t Gpio_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config)
+void SI446x_Config_GPIO(uint8_t GPIO_0, uint8_t GPIO_1, uint8_t GPIO_2, uint8_t GPIO_3, uint8_t Irq, uint8_t Sdo, uint8_t Gen_Config)
 {
   uint8_t l_Cmd[10] = {0};
 
   l_Cmd[0] = GPIO_PIN_CFG;
-  l_Cmd[1] = Gpio_0;
-  l_Cmd[2] = Gpio_1;
-  l_Cmd[3] = Gpio_2;
-  l_Cmd[4] = Gpio_3;
+  l_Cmd[1] = GPIO_0;
+  l_Cmd[2] = GPIO_1;
+  l_Cmd[3] = GPIO_2;
+  l_Cmd[4] = GPIO_3;
   l_Cmd[5] = Irq;
   l_Cmd[6] = Sdo;
   l_Cmd[7] = Gen_Config;
@@ -365,7 +354,7 @@ void SI446x_Config_Init(void)
   //4463 的GDO2 GDO3控制射频开关 33 32
   // 发射：GDO2 = 0, GDO3 = 1
   // 接收：GDO2 = 1, GDO3 = 0
-  SI446x_Config_Gpio(0, 0, 33 | 0x40, 32 | 0x40, 0, 0, 0);
+  SI446x_Config_GPIO(0, 0, 33 | 0x40, 32 | 0x40, 0, 0, 0);
 }
 
 /**
@@ -378,13 +367,13 @@ void SI446x_Config_Init(void)
   */
 void SI446x_Write_TxFifo(uint8_t *pWriteData, uint8_t Length)
 {
-  SI4463_CSN(0);
-  drv_spi_read_write_byte(WRITE_TX_FIFO); //写命令
+  SI4463_NSS(0);
+  SI446x_ReadWriteByte_Raw(WRITE_TX_FIFO); //写命令
   while (Length--)
   {
-    drv_spi_read_write_byte(*pWriteData++); //写数据
+    SI446x_ReadWriteByte_Raw(*pWriteData++); //写数据
   }
-  SI4463_CSN(1);
+  SI4463_NSS(1);
 }
 
 /**
@@ -434,23 +423,23 @@ void SI446x_Send_Packet(uint8_t *pTxData, uint8_t Length, uint8_t Channel, uint8
 
   SI446x_Reset_TxFifo(); //清空TX FIFO
 
-  SI4463_CSN(0);
+  SI4463_NSS(0);
 
-  drv_spi_read_write_byte(WRITE_TX_FIFO); //写TX FIFO命令
+  SI446x_ReadWriteByte_Raw(WRITE_TX_FIFO); //写TX FIFO命令
 
 #if PACKET_LENGTH == 0 //动态数据长度
 
   tx_len++;
-  drv_spi_read_write_byte(Length);
+  SI446x_ReadWriteByte_Raw(Length);
 
 #endif
 
   while (Length--)
   {
-    drv_spi_read_write_byte(*pTxData++); //写数据到TX FIFO
+    SI446x_ReadWriteByte_Raw(*pTxData++); //写数据到TX FIFO
   }
 
-  SI4463_CSN(1);
+  SI4463_NSS(1);
 
   l_Cmd[0] = START_TX;
   l_Cmd[1] = Channel;
@@ -494,15 +483,15 @@ uint8_t SI446x_Read_Packet(uint8_t *pRxData)
 {
   uint8_t length = 0, i = 0;
 
-  if(!SI446x_Wait_Cts())
+  if (!SI446x_Wait_Cts())
     return 0;
-  SI4463_CSN(0);
+  SI4463_NSS(0);
 
-  drv_spi_read_write_byte(READ_RX_FIFO); //读FIFO命令
+  SI446x_ReadWriteByte_Raw(READ_RX_FIFO); //读FIFO命令
 
 #if PACKET_LENGTH == 0
 
-  length = drv_spi_read_write_byte(0xFF); //读数据长度
+  length = SI446x_ReadWriteByte_Raw(0xFF); //读数据长度
 
 #else
 
@@ -513,10 +502,10 @@ uint8_t SI446x_Read_Packet(uint8_t *pRxData)
 
   while (length--)
   {
-    *pRxData++ = drv_spi_read_write_byte(0xFF); //读数据
+    *pRxData++ = SI446x_ReadWriteByte_Raw(0xFF); //读数据
   }
 
-  SI4463_CSN(1); //返回数据个数
+  SI4463_NSS(1); //返回数据个数
 
   return i;
 }
@@ -648,11 +637,15 @@ void SI446x_Set_Power(uint8_t PowerLevel)
   * @note  :无
   * @retval:无
   */
-void SI446x_Gpio_Init(void)
+void SI446x_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   //打开引脚端口时钟
+  SI4463_CLK_CLKEN();
+  SI4463_MISO_CLKEN();
+  SI4463_MOSI_CLKEN();
+  SI4463_NSS_CLKEN();
   SI4463_SDN_CLKEN();
   SI4463_IRQ_CLKEN();
   SI4463_GPIO0_CLKEN();
@@ -662,32 +655,21 @@ void SI446x_Gpio_Init(void)
 
   //SDN 引脚配置为推挽输出
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
-  GPIO_InitStruct.Pin = SI4463_SDN_PIN;
-  HAL_GPIO_Init(SI4463_SDN_PORT, &GPIO_InitStruct);
+  MyGPIO_Init(SI4463_CLK_PORT, SI4463_CLK_PIN, 0);
+  MyGPIO_Init(SI4463_MOSI_PORT, SI4463_MOSI_PIN, 0);
+  MyGPIO_Init(SI4463_NSS_PORT, SI4463_NSS_PIN, 1);
+  MyGPIO_Init(SI4463_SDN_PORT, SI4463_SDN_PIN, 0);
 
-  //IRQ GPIO0~GPIO3输入 可做外部信号中断输入 Demo程序采用查询方式 未配置成中断
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-
-  GPIO_InitStruct.Pin = SI4463_IRQ_PIN;
-  HAL_GPIO_Init(SI4463_IRQ_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = SI4463_GPIO0_PIN;
-  HAL_GPIO_Init(SI4463_GPIO0_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = SI4463_GPIO1_PIN;
-  HAL_GPIO_Init(SI4463_GPIO1_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = SI4463_GPIO2_PIN;
-  HAL_GPIO_Init(SI4463_GPIO2_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = SI4463_GPIO3_PIN;
-  HAL_GPIO_Init(SI4463_GPIO3_PORT, &GPIO_InitStruct);
-
-  HAL_GPIO_WritePin(SI4463_SDN_PORT, SI4463_SDN_PIN, 0);
+  MyGPIO_Init(SI4463_MISO_PORT, SI4463_MISO_PIN, 0);
+  MyGPIO_Init(SI4463_IRQ_PORT, SI4463_IRQ_PIN, 1);
+  MyGPIO_Init(SI4463_GPIO0_PORT, SI4463_GPIO0_PIN, 1);
+  MyGPIO_Init(SI4463_GPIO1_PORT, SI4463_GPIO1_PIN, 1);
+  MyGPIO_Init(SI4463_GPIO2_PORT, SI4463_GPIO2_PIN, 1);
+  MyGPIO_Init(SI4463_GPIO3_PORT, SI4463_GPIO3_PIN, 1);
 }
 
 /**
@@ -698,7 +680,8 @@ void SI446x_Gpio_Init(void)
   */
 void SI446x_Init(void)
 {
-  SI446x_Gpio_Init();
+  Si4463_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0; // 50ns, to meet select hold time
+  SI446x_GPIO_Init();
   Delay_us(1);
   SI446x_Reset();
   SI446x_Power_Up(30000000);
@@ -708,4 +691,58 @@ void SI446x_Init(void)
   while (SI446x_Get_Device_Status() != 6)
     ;
   SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
+}
+
+/**
+  * @brief :SPI收发一个字节
+  * @param :
+  *			@TxByte: 发送的数据字节
+  * @note  :非堵塞式，一旦等待超时，函数会自动退出
+  * @retval:接收到的字节
+  */
+uint8_t SI446x_ReadWriteByte_Raw(uint8_t TxByte)
+{
+  uint8_t i = 0, RxByte = 0;
+
+  SI4463_CLK(0);
+
+  for (i = 0; i < 8; i++) //一个字节8byte需要循环8次
+  {
+    SI4463_MOSI(!!(TxByte & 0x80));
+    TxByte <<= 1;
+
+    SI4463_CLK(1);
+    Si4463_Delay();
+
+    RxByte <<= 1;
+    RxByte |= SI4463_MISO();
+
+    SI4463_CLK(0);
+    Si4463_Delay();
+  }
+
+  return RxByte; //返回接收到的字节
+}
+
+/**
+  * @brief :SPI收发字符串
+  * @param :
+  *			@ReadBuffer: 接收数据缓冲区地址
+  *			@WriteBuffer:发送字节缓冲区地址
+  *			@Length:字节长度
+  * @note  :非堵塞式，一旦等待超时，函数会自动退出
+  * @retval:无
+  */
+void SI446x_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint16_t Length)
+{
+  SI4463_NSS(0);
+
+  while (Length--)
+  {
+    *ReadBuffer = SI446x_ReadWriteByte_Raw(*WriteBuffer); //收发数据
+    ReadBuffer++;
+    WriteBuffer++; //读写地址加1
+  }
+
+  SI4463_NSS(1);
 }

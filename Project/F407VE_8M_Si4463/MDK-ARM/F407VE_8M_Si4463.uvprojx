@@ -549,11 +549,6 @@
               <FilePath>..\..\..\Module\DELAY\delay.c</FilePath>
             </File>
             <File>
-              <FileName>drv_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\Si4463\drv_spi.c</FilePath>
-            </File>
-            <File>
               <FileName>util.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
@@ -569,9 +564,9 @@
               <FilePath>..\..\..\Module\KEY\key.c</FilePath>
             </File>
             <File>
-              <FileName>drv_SI446x.c</FileName>
+              <FileName>SI446x.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\Module\Si4463\drv_SI446x.c</FilePath>
+              <FilePath>..\..\..\Module\Si4463\SI446x.c</FilePath>
             </File>
           </Files>
         </Group>
