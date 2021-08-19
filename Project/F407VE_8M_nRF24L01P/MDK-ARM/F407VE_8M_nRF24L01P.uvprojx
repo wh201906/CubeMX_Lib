@@ -559,19 +559,14 @@
               <FilePath>..\..\..\Module\UTIL\util.c</FilePath>
             </File>
             <File>
-              <FileName>drv_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\nRF24L01P\drv_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>drv_nRF24L01.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\Module\nRF24L01P\drv_nRF24L01.c</FilePath>
-            </File>
-            <File>
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\KEY\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>nRF24L01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\nRF24L01P\nRF24L01.c</FilePath>
             </File>
           </Files>
         </Group>

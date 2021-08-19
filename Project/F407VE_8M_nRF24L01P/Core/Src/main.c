@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "nRF24L01P/drv_nRF24L01.h"
+#include "nRF24L01P/nRF24L01.h"
 #include "KEY/key.h"
 /* USER CODE END Includes */
 
@@ -70,7 +70,7 @@ int main(void)
   uint32_t i;
   uint8_t tmp=0;
   uint8_t mode = 0, lastMode = 0;
-  uint8_t RxBuffer[32] = {0}, TxBuffer[32] = "hello0";
+  uint8_t RxBuffer[33] = {0};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,12 +98,8 @@ int main(void)
   Key_Init();
   Delay_ms(500);
   printf("nRF24L01P Test\r\n");
-  drv_spi_init();
-  NRF24L01_Gpio_Init( );
-  i = NRF24L01_check();
-  printf("NRF24L01_check: %d\r\n", i);
-  RF24L01_Init();
-  RF24L01_Set_Mode(MODE_RX);
+  printf("NRF24L01_Init: %d\r\n", NRF24L01_Init());
+  NRF24L01_Set_Mode(MODE_RX);
   printf("mode: %s\r\n", mode ? "Tx" : "Rx");
   
   for(i = 0; i < 6; i++)
@@ -132,11 +128,11 @@ int main(void)
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
     }
     if(lastMode!=mode)
-      RF24L01_Set_Mode(mode?MODE_TX:MODE_RX);
+      NRF24L01_Set_Mode(mode?MODE_TX:MODE_RX);
     lastMode = mode;
     if(mode)
     { 
-      printf("Tx: %d\r\n", NRF24L01_TxPacket("hellotest", 9));
+      printf("Tx: %d\r\n", NRF24L01_TxPacket("0123456789ABCDEF9876543210abcdef", 32));
       Delay_ms(500);
     }
     else

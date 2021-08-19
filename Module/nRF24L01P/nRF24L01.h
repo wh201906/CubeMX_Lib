@@ -13,10 +13,10 @@
   ******************************************************************************
   */
 
-#ifndef __DRV_RF24L01_H__
-#define __DRV_RF24L01_H__
+#ifndef __DRV_NRF24L01_H__
+#define __DRV_NRF24L01_H__
 
-#include "drv_spi.h"
+#include "main.h"
 
 /** 配置和选项定义 */
 #define DYNAMIC_PACKET 1    //1:动态数据包, 0:固定
@@ -25,6 +25,22 @@
 #define INIT_ADDR 0x34, 0x43, 0x10, 0x10, 0x01
 
 /** RF24L01硬件接口定义 */
+#define NRF24L01_CLK_PORT GPIOB
+#define NRF24L01_CLK_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
+#define NRF24L01_CLK_PIN GPIO_PIN_3
+
+#define NRF24L01_MISO_PORT GPIOB
+#define NRF24L01_MISO_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
+#define NRF24L01_MISO_PIN GPIO_PIN_4
+
+#define NRF24L01_MOSI_PORT GPIOB
+#define NRF24L01_MOSI_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
+#define NRF24L01_MOSI_PIN GPIO_PIN_5
+
+#define NRF24L01_CS_PORT GPIOB
+#define NRF24L01_CS_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
+#define NRF24L01_CS_PIN GPIO_PIN_7
+
 #define NRF24L01_CE_PORT GPIOB
 #define NRF24L01_CE_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define NRF24L01_CE_PIN GPIO_PIN_6
@@ -33,10 +49,12 @@
 #define NRF24L01_IRQ_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define NRF24L01_IRQ_PIN GPIO_PIN_8
 
-/** 口线操作函数定义 */
+#define NRF24L01_CLK(__PINSTATE__) (NRF24L01_CLK_PORT->BSRR = (uint32_t)(NRF24L01_CLK_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define NRF24L01_MOSI(__PINSTATE__) (NRF24L01_MOSI_PORT->BSRR = (uint32_t)(NRF24L01_MOSI_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
+#define NRF24L01_MISO() (!!(NRF24L01_MISO_PORT->IDR & NRF24L01_MISO_PIN))
+#define NRF24L01_CS(__PINSTATE__) (NRF24L01_CS_PORT->BSRR = (uint32_t)(NRF24L01_CS_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define NRF24L01_CE(__PINSTATE__) (NRF24L01_CE_PORT->BSRR = (uint32_t)(NRF24L01_CE_PIN) << ((__PINSTATE__) ? (0u) : (16u)))
 #define NRF24L01_IRQ() (!!(NRF24L01_IRQ_PORT->IDR & NRF24L01_IRQ_PIN))
-#define NRF24L01_CS(__PINSTATE__) NRF24L01_NSS(__PINSTATE__)
 
 typedef enum ModeType
 {
@@ -74,7 +92,7 @@ typedef enum PowerType
 #define W_ACK_PLOAD 0xA8
 #define WR_TX_PLOAD_NACK 0xB0
 //SPI(NRF24L01)寄存器地址
-#define CONFIG 0x00     //配置寄存器地址，bit0:1接收模式,0发射模式;bit1:电选择;bit2:CRC模式;bit3:CRC使能;
+#define CONFIG 0x00     //配置寄存器地址，bit0:1接收模式,0发射模式;bit1:电选择;bit2:CRC模式;bit3:CRC使能; \
                         //bit4:中断MAX_RT(达到最大重发次数中断)使能;bit5:中断TX_DS使能;bit6:中断RX_DR使能
 #define EN_AA 0x01      //使能自动应答功能 bit0~5 对应通道0~5
 #define EN_RXADDR 0x02  //接收地址允许 bit0~5 对应通道0~5
@@ -82,7 +100,7 @@ typedef enum PowerType
 #define SETUP_RETR 0x04 //建立自动重发;bit0~3:自动重发计数器;bit4~7:自动重发延时 250*x+86us
 #define RF_CH 0x05      //RF通道,bit0~6工作通道频率
 #define RF_SETUP 0x06   //RF寄存器，bit3:传输速率( 0:1M 1:2M);bit1~2:发射功率;bit0:噪声放大器增益
-#define STATUS 0x07     //状态寄存器;bit0:TX FIFO满标志;bit1~3:接收数据通道号(最大:6);bit4:达到最多次重发次数
+#define STATUS 0x07     //状态寄存器;bit0:TX FIFO满标志;bit1~3:接收数据通道号(最大:6);bit4:达到最多次重发次数 \
                         //bit5:数据发送完成中断;bit6:接收数据中断
 #define MAX_TX 0x10     //达到最大发送次数中断
 #define TX_OK 0x20      //TX发送完成中断
@@ -103,7 +121,7 @@ typedef enum PowerType
 #define RX_PW_P3 0x14        //接收数据通道3有效数据宽度(1~32字节),设置为0则非法
 #define RX_PW_P4 0x15        //接收数据通道4有效数据宽度(1~32字节),设置为0则非法
 #define RX_PW_P5 0x16        //接收数据通道5有效数据宽度(1~32字节),设置为0则非法
-#define NRF_FIFO_STATUS 0x17 //FIFO状态寄存器;bit0:RX FIFO寄存器空标志;bit1:RX FIFO满标志;bit2~3保留
+#define NRF_FIFO_STATUS 0x17 //FIFO状态寄存器;bit0:RX FIFO寄存器空标志;bit1:RX FIFO满标志;bit2~3保留 \
                              //bit4:TX FIFO 空标志;bit5:TX FIFO满标志;bit6:1,循环发送上一数据包.0,不循环
 #define DYNPD 0x1C
 #define FEATRUE 0x1D
@@ -193,7 +211,7 @@ void NRF24L01_Reuse_Tx_Payload(void);
 void NRF24L01_Nop(void);
 uint8_t NRF24L01_Read_Status_Register(void);
 uint8_t NRF24L01_Clear_IRQ_Flag(uint8_t IRQ_Source);
-uint8_t RF24L01_Read_IRQ_Status(void);
+uint8_t NRF24L01_Read_IRQ_Status(void);
 uint8_t NRF24L01_Read_Top_Fifo_Width(void);
 uint8_t NRF24L01_Read_Rx_Payload(uint8_t *pRxBuf);
 void NRF24L01_Write_Tx_Payload_Ack(uint8_t *pTxBuf, uint8_t len);
@@ -203,12 +221,15 @@ void NRF24L01_Set_TxAddr(uint8_t *pAddr, uint8_t len);
 void NRF24L01_Set_RxAddr(uint8_t PipeNum, uint8_t *pAddr, uint8_t Len);
 void NRF24L01_Set_Speed(nRf24l01SpeedType Speed);
 void NRF24L01_Set_Power(nRf24l01PowerType Power);
-void RF24LL01_Write_Hopping_Point(uint8_t FreqPoint);
-void RF24L01_Set_Mode(nRf24l01ModeType Mode);
-uint8_t NRF24L01_check(void);
+void NRF24L01_Write_Hopping_Point(uint8_t FreqPoint);
+void NRF24L01_Set_Mode(nRf24l01ModeType Mode);
+uint8_t NRF24L01_Check(void);
 uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length);
 uint8_t NRF24L01_RxPacket(uint8_t *rxbuf);
-void NRF24L01_Gpio_Init(void);
-void RF24L01_Init(void);
+void NRF24L01_GPIO_Init(void);
+uint8_t NRF24L01_Init(void);
+
+uint8_t NRF24L01_ReadWriteByte_Raw(uint8_t TxByte);
+void NRF24L01_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint32_t Length);
 
 #endif

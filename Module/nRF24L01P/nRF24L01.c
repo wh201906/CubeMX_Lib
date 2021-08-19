@@ -13,10 +13,13 @@
   ******************************************************************************
   */
 
-#include "drv_nRF24L01.h"
+#include "nRF24L01.h"
 #include "UTIL/mygpio.h"
+#include "DELAY/delay.h"
 
-const char *g_ErrorString = "RF24L01 is not find !...";
+uint16_t NRF24L01_delayTicks;
+
+#define NRF24L01_Delay() Delay_ticks(NRF24L01_delayTicks)
 
 /**
   * @brief :NRF24L01读寄存器
@@ -31,8 +34,8 @@ uint8_t NRF24L01_Read_Reg(uint8_t RegAddr)
 
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(NRF_READ_REG | RegAddr); //读命令 地址
-  btmp = drv_spi_read_write_byte(0xFF);            //读数据
+  NRF24L01_ReadWriteByte_Raw(NRF_READ_REG | RegAddr); //读命令 地址
+  btmp = NRF24L01_ReadWriteByte_Raw(0xFF);            //读数据
 
   NRF24L01_CS(1); //取消片选
 
@@ -54,10 +57,10 @@ void NRF24L01_Read_Buf(uint8_t RegAddr, uint8_t *pBuf, uint8_t len)
 
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(NRF_READ_REG | RegAddr); //读命令 地址
+  NRF24L01_ReadWriteByte_Raw(NRF_READ_REG | RegAddr); //读命令 地址
   for (btmp = 0; btmp < len; btmp++)
   {
-    *(pBuf + btmp) = drv_spi_read_write_byte(0xFF); //读数据
+    *(pBuf + btmp) = NRF24L01_ReadWriteByte_Raw(0xFF); //读数据
   }
   NRF24L01_CS(1); //取消片选
 }
@@ -72,8 +75,8 @@ void NRF24L01_Write_Reg(uint8_t RegAddr, uint8_t Value)
 {
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(NRF_WRITE_REG | RegAddr); //写命令 地址
-  drv_spi_read_write_byte(Value);                   //写数据
+  NRF24L01_ReadWriteByte_Raw(NRF_WRITE_REG | RegAddr); //写命令 地址
+  NRF24L01_ReadWriteByte_Raw(Value);                   //写数据
 
   NRF24L01_CS(1); //取消片选
 }
@@ -93,10 +96,10 @@ void NRF24L01_Write_Buf(uint8_t RegAddr, uint8_t *pBuf, uint8_t len)
 
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(NRF_WRITE_REG | RegAddr); //写命令 地址
+  NRF24L01_ReadWriteByte_Raw(NRF_WRITE_REG | RegAddr); //写命令 地址
   for (i = 0; i < len; i++)
   {
-    drv_spi_read_write_byte(*(pBuf + i)); //写数据
+    NRF24L01_ReadWriteByte_Raw(*(pBuf + i)); //写数据
   }
 
   NRF24L01_CS(1); //取消片选
@@ -112,7 +115,7 @@ void NRF24L01_Flush_Tx_Fifo(void)
 {
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(FLUSH_TX); //清TX FIFO命令
+  NRF24L01_ReadWriteByte_Raw(FLUSH_TX); //清TX FIFO命令
 
   NRF24L01_CS(1); //取消片选
 }
@@ -127,7 +130,7 @@ void NRF24L01_Flush_Rx_Fifo(void)
 {
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(FLUSH_RX); //清RX FIFO命令
+  NRF24L01_ReadWriteByte_Raw(FLUSH_RX); //清RX FIFO命令
 
   NRF24L01_CS(1); //取消片选
 }
@@ -142,7 +145,7 @@ void NRF24L01_Reuse_Tx_Payload(void)
 {
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(REUSE_TX_PL); //重新使用上一包命令
+  NRF24L01_ReadWriteByte_Raw(REUSE_TX_PL); //重新使用上一包命令
 
   NRF24L01_CS(1); //取消片选
 }
@@ -157,7 +160,7 @@ void NRF24L01_Nop(void)
 {
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(NOP); //空操作命令
+  NRF24L01_ReadWriteByte_Raw(NOP); //空操作命令
 
   NRF24L01_CS(1); //取消片选
 }
@@ -174,7 +177,7 @@ uint8_t NRF24L01_Read_Status_Register(void)
 
   NRF24L01_CS(0); //片选
 
-  Status = drv_spi_read_write_byte(NRF_READ_REG + STATUS); //读状态寄存器
+  Status = NRF24L01_ReadWriteByte_Raw(NRF_READ_REG + STATUS); //读状态寄存器
 
   NRF24L01_CS(1); //取消片选
 
@@ -195,10 +198,10 @@ uint8_t NRF24L01_Clear_IRQ_Flag(uint8_t IRQ_Source)
   IRQ_Source &= (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT); //中断标志处理
   btmp = NRF24L01_Read_Status_Register();                    //读状态寄存器
 
-  NRF24L01_CS(0);                                  //片选
-  drv_spi_read_write_byte(NRF_WRITE_REG + STATUS); //写状态寄存器命令
-  drv_spi_read_write_byte(IRQ_Source | btmp);      //清相应中断标志
-  NRF24L01_CS(1);                                  //取消片选
+  NRF24L01_CS(0);                                     //片选
+  NRF24L01_ReadWriteByte_Raw(NRF_WRITE_REG + STATUS); //写状态寄存器命令
+  NRF24L01_ReadWriteByte_Raw(IRQ_Source | btmp);      //清相应中断标志
+  NRF24L01_CS(1);                                     //取消片选
 
   return (NRF24L01_Read_Status_Register()); //返回状态寄存器状态
 }
@@ -209,7 +212,7 @@ uint8_t NRF24L01_Clear_IRQ_Flag(uint8_t IRQ_Source)
   * @note  :无
   * @retval:中断状态
   */
-uint8_t RF24L01_Read_IRQ_Status(void)
+uint8_t NRF24L01_Read_IRQ_Status(void)
 {
   return (NRF24L01_Read_Status_Register() & ((1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT))); //返回中断状态
 }
@@ -226,8 +229,8 @@ uint8_t NRF24L01_Read_Top_Fifo_Width(void)
 
   NRF24L01_CS(0); //片选
 
-  drv_spi_read_write_byte(R_RX_PL_WID); //读FIFO中数据宽度命令
-  btmp = drv_spi_read_write_byte(0xFF); //读数据
+  NRF24L01_ReadWriteByte_Raw(R_RX_PL_WID); //读FIFO中数据宽度命令
+  btmp = NRF24L01_ReadWriteByte_Raw(0xFF); //读数据
 
   NRF24L01_CS(1); //取消片选
 
@@ -248,12 +251,12 @@ uint8_t NRF24L01_Read_Rx_Payload(uint8_t *pRxBuf)
   PipeNum = (NRF24L01_Read_Reg(STATUS) >> 1) & 0x07; //读接收状态
   Width = NRF24L01_Read_Top_Fifo_Width();            //读接收数据个数
 
-  NRF24L01_CS(0);                       //片选
-  drv_spi_read_write_byte(RD_RX_PLOAD); //读有效数据命令
+  NRF24L01_CS(0);                          //片选
+  NRF24L01_ReadWriteByte_Raw(RD_RX_PLOAD); //读有效数据命令
 
   for (PipeNum = 0; PipeNum < Width; PipeNum++)
   {
-    *(pRxBuf + PipeNum) = drv_spi_read_write_byte(0xFF); //读数据
+    *(pRxBuf + PipeNum) = NRF24L01_ReadWriteByte_Raw(0xFF); //读数据
   }
   NRF24L01_CS(1);           //取消片选
   NRF24L01_Flush_Rx_Fifo(); //清空RX FIFO
@@ -276,12 +279,12 @@ void NRF24L01_Write_Tx_Payload_Ack(uint8_t *pTxBuf, uint8_t len)
 
   NRF24L01_Flush_Tx_Fifo(); //清TX FIFO
 
-  NRF24L01_CS(0);                       //片选
-  drv_spi_read_write_byte(WR_TX_PLOAD); //发送命令
+  NRF24L01_CS(0);                          //片选
+  NRF24L01_ReadWriteByte_Raw(WR_TX_PLOAD); //发送命令
 
   for (btmp = 0; btmp < length; btmp++)
   {
-    drv_spi_read_write_byte(*(pTxBuf + btmp)); //发送数据
+    NRF24L01_ReadWriteByte_Raw(*(pTxBuf + btmp)); //发送数据
   }
   NRF24L01_CS(1); //取消片选
 }
@@ -301,11 +304,11 @@ void NRF24L01_Write_Tx_Payload_NoAck(uint8_t *pTxBuf, uint8_t len)
     return; //数据长度大于32 或者等于0 不执行
   }
 
-  NRF24L01_CS(0);                            //片选
-  drv_spi_read_write_byte(WR_TX_PLOAD_NACK); //发送命令
+  NRF24L01_CS(0);                               //片选
+  NRF24L01_ReadWriteByte_Raw(WR_TX_PLOAD_NACK); //发送命令
   while (len--)
   {
-    drv_spi_read_write_byte(*pTxBuf); //发送数据
+    NRF24L01_ReadWriteByte_Raw(*pTxBuf); //发送数据
     pTxBuf++;
   }
   NRF24L01_CS(1); //取消片选
@@ -325,11 +328,11 @@ void NRF24L01_Write_Tx_Payload_InAck(uint8_t *pData, uint8_t len)
 
   len = (len > 32) ? 32 : len; //数据长度大于32个则只写32个字节
 
-  NRF24L01_CS(0);                       //片选
-  drv_spi_read_write_byte(W_ACK_PLOAD); //命令
+  NRF24L01_CS(0);                          //片选
+  NRF24L01_ReadWriteByte_Raw(W_ACK_PLOAD); //命令
   for (btmp = 0; btmp < len; btmp++)
   {
-    drv_spi_read_write_byte(*(pData + btmp)); //写数据
+    NRF24L01_ReadWriteByte_Raw(*(pData + btmp)); //写数据
   }
   NRF24L01_CS(1); //取消片选
 }
@@ -434,7 +437,7 @@ void NRF24L01_Set_Power(nRf24l01PowerType Power)
   * @note  :值不大于127
   * @retval:无
   */
-void RF24LL01_Write_Hopping_Point(uint8_t FreqPoint)
+void NRF24L01_Write_Hopping_Point(uint8_t FreqPoint)
 {
   NRF24L01_Write_Reg(RF_CH, FreqPoint & 0x7F);
 }
@@ -445,7 +448,7 @@ void RF24LL01_Write_Hopping_Point(uint8_t FreqPoint)
   * @note  :无
   * @retval:无
   */
-uint8_t NRF24L01_check(void)
+uint8_t NRF24L01_Check(void)
 {
   uint8_t i;
   uint8_t buf[5] = {0XA5, 0XA5, 0XA5, 0XA5, 0XA5};
@@ -474,7 +477,7 @@ uint8_t NRF24L01_check(void)
   * @note  :无
   * @retval:无
   */
-void RF24L01_Set_Mode(nRf24l01ModeType Mode)
+void NRF24L01_Set_Mode(nRf24l01ModeType Mode)
 {
   uint8_t controlreg = 0;
   controlreg = NRF24L01_Read_Reg(CONFIG);
@@ -511,7 +514,7 @@ uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
   uint16_t l_MsTimes = 0;
 
   NRF24L01_CS(0); //片选
-  drv_spi_read_write_byte(FLUSH_TX);
+  NRF24L01_ReadWriteByte_Raw(FLUSH_TX);
   NRF24L01_CS(1);
 
   NRF24L01_CE(0);
@@ -522,9 +525,9 @@ uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
     Delay_ms(10);
     if (500 == l_MsTimes++) //500ms还没有发送成功，重新初始化设备
     {
-      NRF24L01_Gpio_Init();
-      RF24L01_Init();
-      RF24L01_Set_Mode(MODE_TX);
+      NRF24L01_GPIO_Init();
+      NRF24L01_Init();
+      NRF24L01_Set_Mode(MODE_TX);
       break;
     }
   }
@@ -557,7 +560,7 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
   uint8_t l_Status = 0, l_RxLength = 0, l_100MsTimes = 0;
 
   NRF24L01_CS(0); //片选
-  drv_spi_read_write_byte(FLUSH_RX);
+  NRF24L01_ReadWriteByte_Raw(FLUSH_RX);
   NRF24L01_CS(1);
 
   while (0 != NRF24L01_IRQ())
@@ -566,9 +569,9 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
 
     if (30 == l_100MsTimes++) //3s没接收过数据，重新初始化模块
     {
-      NRF24L01_Gpio_Init();
-      RF24L01_Init();
-      RF24L01_Set_Mode(MODE_RX);
+      NRF24L01_GPIO_Init();
+      NRF24L01_Init();
+      NRF24L01_Set_Mode(MODE_RX);
       break;
     }
   }
@@ -593,27 +596,35 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
   * @note  :无
   * @retval:无
   */
-void NRF24L01_Gpio_Init(void)
+void NRF24L01_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   //打开引脚端口时钟
+  NRF24L01_CLK_CLKEN();
+  NRF24L01_MISO_CLKEN();
+  NRF24L01_MOSI_CLKEN();
+  NRF24L01_CS_CLKEN();
   NRF24L01_CE_CLKEN();
   NRF24L01_IRQ_CLKEN();
 
-  //SDN 引脚配置为推挽输出
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
+  MyGPIO_Init(NRF24L01_CLK_PORT, NRF24L01_CLK_PIN, 0);
+  MyGPIO_Init(NRF24L01_MOSI_PORT, NRF24L01_MOSI_PIN, 0);
+  MyGPIO_Init(NRF24L01_CS_PORT, NRF24L01_CS_PIN, 1);
   MyGPIO_Init(NRF24L01_CE_PORT, NRF24L01_CE_PIN, 0);
 
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  MyGPIO_Init(NRF24L01_MISO_PORT, NRF24L01_MISO_PIN, 0);
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-
   MyGPIO_Init(NRF24L01_IRQ_PORT, NRF24L01_IRQ_PIN, 1);
 
   NRF24L01_CS(1);
+
+  NRF24L01_delayTicks = Delay_GetSYSFreq() * 0.000000050 + 1.0; // 50ns, to meet select hold time
 }
 
 /**
@@ -622,8 +633,11 @@ void NRF24L01_Gpio_Init(void)
   * @note  :无
   * @retval:无
   */
-void RF24L01_Init(void)
+uint8_t NRF24L01_Init(void)
 {
+  NRF24L01_GPIO_Init();
+  if (!NRF24L01_Check())
+    return 0;
   uint8_t addr[5] = {INIT_ADDR};
 
   NRF24L01_CE(1);
@@ -654,4 +668,59 @@ void RF24L01_Init(void)
 
   NRF24L01_Set_TxAddr(&addr[0], 5);    //设置TX地址
   NRF24L01_Set_RxAddr(0, &addr[0], 5); //设置RX地址
+  return 1;
+}
+
+/**
+  * @brief :SPI收发一个字节
+  * @param :
+  *			@TxByte: 发送的数据字节
+  * @note  :非堵塞式，一旦等待超时，函数会自动退出
+  * @retval:接收到的字节
+  */
+uint8_t NRF24L01_ReadWriteByte_Raw(uint8_t TxByte)
+{
+  uint8_t i = 0, RxByte = 0;
+
+  NRF24L01_CLK(0);
+
+  for (i = 0; i < 8; i++) //一个字节8byte需要循环8次
+  {
+    NRF24L01_MOSI(!!(TxByte & 0x80));
+    TxByte <<= 1;
+
+    NRF24L01_CLK(1);
+    NRF24L01_Delay();
+
+    RxByte <<= 1;
+    RxByte |= NRF24L01_MISO();
+
+    NRF24L01_CLK(0);
+    NRF24L01_Delay();
+  }
+
+  return RxByte; //返回接收到的字节
+}
+
+/**
+  * @brief :SPI收发字符串
+  * @param :
+  *			@ReadBuffer: 接收数据缓冲区地址
+  *			@WriteBuffer:发送字节缓冲区地址
+  *			@Length:字节长度
+  * @note  :非堵塞式，一旦等待超时，函数会自动退出
+  * @retval:无
+  */
+void NRF24L01_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint32_t Length)
+{
+  NRF24L01_CS(0);
+
+  while (Length--)
+  {
+    *ReadBuffer = NRF24L01_ReadWriteByte_Raw(*WriteBuffer); //收发数据
+    ReadBuffer++;
+    WriteBuffer++; //读写地址加1
+  }
+
+  NRF24L01_CS(1);
 }
