@@ -608,7 +608,6 @@ void NRF24L01_Gpio_Init(void)
 
   MyGPIO_Init(NRF24L01_CE_PORT, NRF24L01_CE_PIN, 0);
 
-  //IRQ GPIO0~GPIO3输入 可做外部信号中断输入 Demo程序采用查询方式 未配置成中断
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
 
@@ -625,7 +624,6 @@ void NRF24L01_Gpio_Init(void)
   */
 void RF24L01_Init(void)
 {
-  printf("24Init\r\n");
   uint8_t addr[5] = {INIT_ADDR};
 
   NRF24L01_CE(1);

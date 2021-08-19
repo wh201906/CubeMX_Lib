@@ -142,7 +142,7 @@ int main(void)
     else
     {
       if((i=NRF24L01_RxPacket(RxBuffer))!=0)
-        MyUART_Write(&uart1, RxBuffer,6);
+        MyUART_Write(&uart1, RxBuffer,i);
     }
   }
   /* USER CODE END 3 */
