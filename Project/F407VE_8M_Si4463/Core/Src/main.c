@@ -150,6 +150,7 @@ int main(void)
     if(mode)
     {
       SI446x_Send_Packet("0123456789ABCDEF9876543210abcdef0246813579fedcba1357902468FEDCBA",64,0,0);
+      Delay_ms(1000);
     }
     else
     {
@@ -164,8 +165,8 @@ int main(void)
       g_SI4463ItStatus[7],
       g_SI4463ItStatus[8],
       SI446x_Get_Device_Status());
+      Delay_ms(250);
     }
-    Delay_ms(500);
 
   }
   /* USER CODE END 3 */

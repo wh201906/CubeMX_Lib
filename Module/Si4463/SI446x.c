@@ -774,10 +774,6 @@ void SI446x_Read_Packet_IT(void)
   if (Si4463_RxITHandler != NULL)
     Si4463_RxITHandler(length, RxData);
   
-  SI446x_Change_Status(6);
-  status = SI446x_Get_Device_Status();
-  while (status != 6)
-    status = SI446x_Get_Device_Status();
   SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
 }
 
@@ -786,7 +782,7 @@ void SI446x_Clear_RxIT(void)
   uint8_t l_Cmd[3] = {0};
 
   l_Cmd[0] = GET_PH_STATUS;
-  l_Cmd[1] = 0x00; // PACKET_RX
+  l_Cmd[1] = 0x10; // PACKET_RX
 
   SI446x_Write_Cmds(l_Cmd, 2);
   SI446x_Read_Response(l_Cmd, 3);
