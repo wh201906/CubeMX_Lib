@@ -57,7 +57,10 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void RxHandler(uint8_t len, uint8_t* data)
+{
+  MyUART_Write(&uart1, data, len);
+}
 /* USER CODE END 0 */
 
 /**
@@ -71,7 +74,7 @@ int main(void)
   uint8_t g_SI4463RxBuffer[64] = {0};
   uint32_t i, fail;
   uint8_t status;
-  uint8_t mode = 0;
+  uint8_t mode = 0, lastmode = 1;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,7 +101,10 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   Key_Init();
   printf("Si4463 Test\r\n");
+  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
   SI446x_Init();
+  SI446x_RegisterRxITHandler(&RxHandler);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
   printf("mode: %s\r\n", mode ? "Tx" : "Rx");
   fail = 0;
   
@@ -127,6 +133,20 @@ int main(void)
       printf("mode: %s\r\n", mode ? "Tx" : "Rx");
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
     }
+    if(lastmode != mode)
+    {
+      // on switch logic
+      if(mode) // tx
+      {
+        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+      }
+      else
+      {
+        HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+        SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 0);
+      }
+    }
+    lastmode = mode;
     if(mode)
     {
       SI446x_Send_Packet("0123456789ABCDEF9876543210abcdef0246813579fedcba1357902468FEDCBA",64,0,0);
@@ -134,28 +154,16 @@ int main(void)
     else
     {
       SI446x_Interrupt_Status(g_SI4463ItStatus);
-      if (g_SI4463ItStatus[3] & (0x01 << 4))
-      {
-        i = SI446x_Read_Packet(g_SI4463RxBuffer);
-        if (i != 0)
-        {
-          MyUART_Write(&uart1, g_SI4463RxBuffer, i);
-        }
-        SI446x_Change_Status(6);
-        status = SI446x_Get_Device_Status();
-        while (status != 6)
-          status = SI446x_Get_Device_Status();
-        SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
-      }
-      else
-      {
-        fail++;
-        if(fail >= 6)
-        {
-          fail = 0;
-          SI446x_Init();
-        }
-      }
+      printf("%x %x %x %x %x %x %x %x|%x\r\n", 
+      g_SI4463ItStatus[1],
+      g_SI4463ItStatus[2],
+      g_SI4463ItStatus[3],
+      g_SI4463ItStatus[4],
+      g_SI4463ItStatus[5],
+      g_SI4463ItStatus[6],
+      g_SI4463ItStatus[7],
+      g_SI4463ItStatus[8],
+      SI446x_Get_Device_Status());
     }
     Delay_ms(500);
 

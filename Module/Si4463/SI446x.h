@@ -4,12 +4,6 @@
 #include "main.h"
 #include "Si446x_Config_30M_915.h"
 
-enum
-{
-  TX_MODE_1 = 0, //发送模式1，发送固定的字符串
-  TX_MODE_2      //发送模式2，发送串口接收到的数据
-};
-
 #define PACKET_LENGTH 0 //0-64, 0:动态长度 1:固定长度
 
 /** SI4463硬件接口IO定义 */
@@ -33,9 +27,9 @@ enum
 #define SI4463_SDN_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
 #define SI4463_SDN_PIN GPIO_PIN_15
 
-#define SI4463_IRQ_PORT GPIOF
-#define SI4463_IRQ_CLKEN() __HAL_RCC_GPIOF_CLK_ENABLE()
-#define SI4463_IRQ_PIN GPIO_PIN_14
+#define SI4463_IRQ_PORT GPIOD
+#define SI4463_IRQ_CLKEN() __HAL_RCC_GPIOD_CLK_ENABLE()
+#define SI4463_IRQ_PIN GPIO_PIN_10
 
 #define SI4463_GPIO0_PORT GPIOF
 #define SI4463_GPIO0_CLKEN() __HAL_RCC_GPIOF_CLK_ENABLE()
@@ -462,4 +456,7 @@ void SI446x_Init(void);
 uint8_t SI446x_ReadWriteByte_Raw(uint8_t TxByte);
 void SI446x_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint16_t Length);
 
+void SI446x_Read_Packet_IT(void); // put it in the EXTI IRQHandler
+void SI446x_Clear_RxIT(void);
+void SI446x_RegisterRxITHandler(void (*handler)(uint8_t len, uint8_t *data)); // the parameter is a function pointer
 #endif

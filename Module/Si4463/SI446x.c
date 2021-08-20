@@ -4,6 +4,7 @@
 
 const static uint8_t config_table[] = RADIO_CONFIGURATION_DATA_ARRAY;
 uint16_t Si4463_delayTicks;
+void (*Si4463_RxITHandler)(uint8_t len, uint8_t *data);
 
 #define Si4463_Delay() Delay_ticks(Si4463_delayTicks)
 
@@ -745,4 +746,60 @@ void SI446x_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint16_t Le
   }
 
   SI4463_NSS(1);
+}
+
+void SI446x_Read_Packet_IT(void)
+{
+  uint8_t RxData[65];
+  uint8_t status;
+  uint8_t length = 0, i = 0;
+
+  SI4463_NSS(0);
+  SI446x_ReadWriteByte_Raw(READ_RX_FIFO); //读FIFO命令
+
+#if PACKET_LENGTH == 0
+  length = SI446x_ReadWriteByte_Raw(0xFF); //读数据长度
+  if (length > 64)
+  {
+    length = 64;
+  }
+#else
+  length = PACKET_LENGTH;
+#endif
+  for (i = 0; i < length; i++)
+    RxData[i] = SI446x_ReadWriteByte_Raw(0xFF); //读数据
+  SI446x_Clear_RxIT();
+  SI4463_NSS(1);
+
+  if (Si4463_RxITHandler != NULL)
+    Si4463_RxITHandler(length, RxData);
+  
+  SI446x_Change_Status(6);
+  status = SI446x_Get_Device_Status();
+  while (status != 6)
+    status = SI446x_Get_Device_Status();
+  SI446x_Start_Rx(0, 0, PACKET_LENGTH, 0, 0, 3);
+}
+
+void SI446x_Clear_RxIT(void)
+{
+  uint8_t l_Cmd[3] = {0};
+
+  l_Cmd[0] = GET_PH_STATUS;
+  l_Cmd[1] = 0x00; // PACKET_RX
+
+  SI446x_Write_Cmds(l_Cmd, 2);
+  SI446x_Read_Response(l_Cmd, 3);
+}
+
+void SI446x_RegisterRxITHandler(void (*handler)(uint8_t len, uint8_t *data))
+{
+  Si4463_RxITHandler = handler;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin != SI4463_IRQ_PIN || SI4463_IRQ())
+    return;
+  SI446x_Read_Packet_IT();
 }
