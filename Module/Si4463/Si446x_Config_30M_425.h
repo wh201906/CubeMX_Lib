@@ -94,7 +94,7 @@
 //   INT_CTL_MODEM_ENABLE - Enable individual interrupt sources within the Modem Interrupt Group in order to generate a HW interrupt at the NIRQ output pin. In order to fully enable a HW interrupt, it is necessary to enable both the individual interrupt source (within this property) as well as the corresponding interrupt group (e.g., set INT_CTL_ENABLE:MODEM_INT_STATUS_EN ). Note that even if an interrupt source is not enabled to generate a HW NIRQ interrupt, the given interrupt event still may occur inside the chip and may be monitored by polling a GPIO pin, or via the GET_INT_STATUS or GET_MODEM_STATUS commands.
 //   INT_CTL_CHIP_ENABLE - Enable individual interrupt sources within the Chip Interrupt Group in order to generate a HW interrupt at the NIRQ output pin. In order to fully enable a HW interrupt, it is necessary to enable both the individual interrupt source (within this property) as well as the corresponding interrupt group (e.g., set INT_CTL_ENABLE:CHIP_INT_STATUS_EN). Note that even if an interrupt source is not enabled to generate a HW NIRQ interrupt, the given interrupt event still may occur inside the chip and may be monitored by polling a GPIO pin, or via the GET_INT_STATUS or GET_CHIP_STATUS commands.
 */
-#define RF_INT_CTL_ENABLE_4 0x11, 0x01, 0x04, 0x00, 0x07, 0x00, 0x00, 0x00
+#define RF_INT_CTL_ENABLE_4 0x11, 0x01, 0x04, 0x00, 0x07, 0x10, 0x00, 0x00
 
 /*
 // Set properties:           RF_FRR_CTL_A_MODE_4
