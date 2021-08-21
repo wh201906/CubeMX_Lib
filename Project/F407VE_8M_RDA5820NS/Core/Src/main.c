@@ -66,7 +66,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t str[50];
+  double freq;
+  uint16_t tmpreg;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -92,8 +94,7 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   printf("RDA5820 Test\r\n");
-  RDA5820_Init(GPIOE, 4, GPIOE, 5);
-  printf("ID: 0x%x", RDA5820_ReadID());
+  printf("ID: 0x%x\r\n", RDA5820_Init(GPIOE, 4, GPIOE, 5));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,6 +104,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
+    {
+      freq = myatof(str);
+      printf("Freq: %f\r\n", freq);
+      RDA5820_SetFreq(freq);
+    }
+    RDA5820_ReadReg(0x0A, &tmpreg);
+    printf("Seek/Tune Complete: %d ", !!(tmpreg & 0x4000));
+    RDA5820_ReadReg(0x0B, &tmpreg);
+    printf("RSSI: %d ", tmpreg>>9);
+    printf("isStation: %d ", !!(tmpreg & 0x0100));
+    printf("isFMReady: %d ", !!(tmpreg & 0x0080));
+    printf("\r\n");
+    Delay_ms(500);
   }
   /* USER CODE END 3 */
 }
