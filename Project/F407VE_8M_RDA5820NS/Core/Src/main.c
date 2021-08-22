@@ -95,6 +95,7 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   printf("RDA5820 Test\r\n");
   printf("ID: 0x%x\r\n", RDA5820_Init(GPIOE, 4, GPIOE, 5));
+  freq = 87.5;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -104,20 +105,36 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // search test
+    
+    RDA5820_SetFreq(freq);
+    Delay_ms(1000);
+    RDA5820_ReadReg(0x0B, &tmpreg);
+    printf("%f,%d\r\n",freq, tmpreg>>9);
+    freq+=0.1;
+    if(freq>=99.2)
+      freq=87.5;
+    
+    
+    // manual frequency
+    /*
     if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
     {
       freq = myatof(str);
       printf("Freq: %f\r\n", freq);
       RDA5820_SetFreq(freq);
     }
-    RDA5820_ReadReg(0x0A, &tmpreg);
-    printf("Seek/Tune Complete: %d ", !!(tmpreg & 0x4000));
     RDA5820_ReadReg(0x0B, &tmpreg);
-    printf("RSSI: %d ", tmpreg>>9);
-    printf("isStation: %d ", !!(tmpreg & 0x0100));
-    printf("isFMReady: %d ", !!(tmpreg & 0x0080));
+    printf("RSSI: %d, ", tmpreg>>9);
+    RDA5820_ReadReg(0x0A, &tmpreg);
+    printf("Seek/Tune Complete: %d, ", !!(tmpreg & 0x4000));
+    
+    printf("Ch: %d, ", tmpreg & 0x1FF);
+    RDA5820_ReadReg(0x03, &tmpreg);
+    printf("Band: %d, Space: %d, ", (tmpreg>>2)&0x3, tmpreg & 0x3);
     printf("\r\n");
     Delay_ms(500);
+    */
   }
   /* USER CODE END 3 */
 }
