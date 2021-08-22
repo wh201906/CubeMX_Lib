@@ -31,8 +31,25 @@ uint32_t SI4703_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SD
   SoftI2C_SetPort(&SI4703_port, SCL_GPIO, SCL_PinID, SDA_GPIO, SDA_PinID);
   SoftI2C_Init(&SI4703_port, 400000, SI2C_ADDR_7b);
   SI4703_Reset();
-  SI4703_GetReg(0x09); // read all
-  return SI4703_ReadID();
+
+  SI4703_GetReg(SI4703_READALL); // read all
+  SI4703_regs[SI4703_TEST1] = 0x8100;
+  SI4703_regs[SI4703_CONF1] = 0x2000;
+  SI4703_SetReg(SI4703_TEST1);
+  Delay_ms(500);
+  SI4703_GetReg(SI4703_READALL);
+  SI4703_regs[SI4703_PWR] = 0x4001;
+  SI4703_regs[SI4703_CONF1] |= (1 << 12); //Enable RDS
+
+  SI4703_regs[SI4703_CONF1] |= (1 << 11); //50kHz Europe setup
+  SI4703_regs[SI4703_CONF2] |= (1 << 4);  //100kHz channel spacing for Europe
+
+  SI4703_regs[SI4703_CONF2] &= 0xFFF0; //Clear volume bits
+  SI4703_regs[SI4703_CONF2] |= 0x000F; //Set volume
+  SI4703_SetReg(SI4703_CONF2);
+
+  Delay_ms(110);
+  return ((uint32_t)SI4703_regs[0] << 16 | SI4703_regs[1]); // ReadID()
 }
 
 uint8_t SI4703_GetReg(uint8_t reg)
@@ -96,7 +113,7 @@ uint8_t SI4703_SetReg(uint8_t reg)
 
 uint32_t SI4703_ReadID(void)
 {
-  if (!SI4703_GetReg(0x01))
+  if (!SI4703_GetReg(SI4703_CHIPID))
     return 0;
   return ((uint32_t)SI4703_regs[0] << 16 | SI4703_regs[1]);
 }
