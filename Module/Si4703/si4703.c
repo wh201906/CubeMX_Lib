@@ -51,35 +51,47 @@ uint8_t SI4703_GetReg(uint8_t reg)
   if (!SoftI2C_SendAddr(&SI4703_port, SI4703_ADDR, SI2C_READ))
     return 0;
 
-  for (i = 1; i <= reg && i <= 6; i++)
+  for (i = 1; i < reg; i++)
   {
     bH = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_ACK);
     bL = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_ACK);
-    SI4703_regs[i + 9] = ((uint16_t)bH << 8) | bL;
+    SI4703_regs[i + (i >= 7 ? -7 : +9)] = ((uint16_t)bH << 8) | bL;
   }
-  for (; i <= reg; i++)
-  {
-    bH = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_ACK);
-    bL = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_ACK);
-    SI4703_regs[i - 7] = ((uint16_t)bH << 8) | bL;
-  }
+  bH = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_ACK);
+  bL = SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_NACK);
+  SI4703_regs[i + (i >= 7 ? -7 : +9)] = ((uint16_t)bH << 8) | bL;
+  SoftI2C_Stop(&SI4703_port);
+
   // according to the AN230, the last acknowledge can be ACK or NACK
   // however, if the last acknowledge is ACK and the I2C is configured as Open-Drain,
   // the MCU cannot make a proper STOP signal(SDA is forced LOW by Si4703)
   // In all, last NACK is necessary.
 
-  SoftI2C_ReadByte_ACK(&SI4703_port, SI2C_NACK);
-  SoftI2C_Stop(&SI4703_port);
-  Delay_us(1);
-
   return 1;
 }
 
-uint8_t SI4703_WriteReg(uint8_t reg, uint16_t data)
+uint8_t SI4703_SetReg(uint8_t reg)
 {
-  // doesn't work
-  uint8_t tmp[2] = {data >> 8, data & 0xFF};
-  return SoftI2C_Write(&SI4703_port, SI4703_ADDR, reg, tmp, 2);
+  uint8_t bH, bL;
+  uint8_t i;
+
+  if (reg <= 0x01 || reg >= 0x0A) // read only registers
+    return 0;
+  reg -= 1;
+
+  SoftI2C_Start(&SI4703_port);
+  if (!SoftI2C_SendAddr(&SI4703_port, SI4703_ADDR, SI2C_WRITE))
+    return 0;
+  for (i = 1; i <= reg; i++)
+  {
+    if (!SoftI2C_SendByte_ACK(&SI4703_port, (SI4703_regs[i + 1] & 0xFF00) >> 8, SI2C_ACK))
+      return 0;
+    if (!SoftI2C_SendByte_ACK(&SI4703_port, SI4703_regs[i + 1] & 0x00FF, SI2C_ACK))
+      return 0;
+  }
+  SoftI2C_Stop(&SI4703_port);
+
+  return 1;
 }
 
 uint32_t SI4703_ReadID(void)

@@ -68,7 +68,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint8_t str[50];
   double freq;
-  uint16_t tmpreg;
+  uint16_t tmpreg, i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,6 +95,18 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   printf("Si4703 Test\r\n");
   printf("ID: 0x%x\r\n", SI4703_Init(GPIOE, 4, GPIOE, 5));
+  extern uint16_t SI4703_regs[16];
+  printf("0x02 Init: 0x%x\r\n", SI4703_regs[0x02]);
+  SI4703_regs[0x02] = 0x8000;
+  SI4703_SetReg(0x02);
+  printf("0x02 Set: 0x%x\r\n", SI4703_regs[0x02]);
+  SI4703_regs[0x02] = 0x0000;
+  printf("0x02 Clean: 0x%x\r\n", SI4703_regs[0x02]);
+  SI4703_GetReg(0x02);
+  printf("0x02 Get: 0x%x\r\n", SI4703_regs[0x02]);
+  
+  for(i = 0; i < 16; i++) // test passed
+    SI4703_GetReg(i);
 
   /* USER CODE END 2 */
 
