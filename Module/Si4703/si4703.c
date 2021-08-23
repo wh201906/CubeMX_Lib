@@ -33,19 +33,19 @@ uint32_t SI4703_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SD
   SI4703_Reset();
 
   SI4703_GetReg(SI4703_READALL); // read all
-  SI4703_regs[SI4703_TEST1] = 0x8100;
-  SI4703_regs[SI4703_CONF1] = 0x2000;
-  SI4703_SetReg(SI4703_TEST1);
-  Delay_ms(510); // wait oscillator
+  SI4703_regs[SI4703_TEST1] |= SI4703_TEST1_XOSCEN;
+  SI4703_regs[SI4703_CONF1] |= SI4703_CONF1_STCIEN;
+  SI4703_SetReg(SI4703_TEST1); // contain CONF1
+  Delay_ms(510);               // wait oscillator
   SI4703_GetReg(SI4703_READALL);
-  SI4703_regs[SI4703_PWR] = 0x4001;
-  SI4703_regs[SI4703_CONF1] |= (1 << 12); //Enable RDS
+  SI4703_regs[SI4703_PWR] = SI4703_PWR_DMUTE | SI4703_PWR_ENABLE;
+  SI4703_regs[SI4703_CONF1] |= SI4703_CONF1_RDS; //Enable RDS
 
-  SI4703_regs[SI4703_CONF1] |= (1 << 11); //50kHz Europe setup
-  SI4703_regs[SI4703_CONF2] |= (1 << 4);  //100kHz channel spacing for Europe
+  SI4703_regs[SI4703_CONF1] |= SI4703_CONF1_DE_50;     //50kHz Europe setup
+  SI4703_regs[SI4703_CONF2] |= SI4703_CONF2_SPACE_100; //100kHz channel spacing for Europe
 
-  SI4703_regs[SI4703_CONF2] &= 0xFFF0; //Clear volume bits
-  SI4703_regs[SI4703_CONF2] |= 0x0001; //Set volume
+  SI4703_regs[SI4703_CONF2] &= ~SI4703_CONF2_VOLUME_MASK; //Clear volume bits
+  SI4703_regs[SI4703_CONF2] |= 0x0001;                    //Set volume
   SI4703_SetReg(SI4703_CONF2);
 
   Delay_ms(120);          // wait power up
@@ -115,7 +115,7 @@ uint32_t SI4703_ReadID(void)
 {
   if (!SI4703_GetReg(SI4703_CHIPID))
     return 0;
-  return ((uint32_t)SI4703_regs[0] << 16 | SI4703_regs[1]);
+  return ((uint32_t)SI4703_regs[SI4703_DEVICEID] << 16 | SI4703_regs[SI4703_CHIPID]);
 }
 
 void SI4703_Reset(void)
@@ -136,15 +136,18 @@ uint8_t SI4703_SetFreq(double freq)
   CH = (freq - 87.5) / 0.1 + 0.5;
 
   SI4703_GetReg(SI4703_CH);
-  SI4703_regs[SI4703_CH] &= 0xFC00;
-  SI4703_regs[SI4703_CH] |= CH & 0x03FF;
-  SI4703_regs[SI4703_CH] |= 0x8000;
+  SI4703_regs[SI4703_CH] &= ~SI4703_CH_CHAN_MASK;
+  SI4703_regs[SI4703_CH] |= CH & SI4703_CH_CHAN_MASK;
+  SI4703_regs[SI4703_CH] |= SI4703_CH_TUNE;
   SI4703_SetReg(SI4703_CH);
 
   for (timeout = 0; timeout < 100; timeout++)
   {
+    // Note:
+    // When using the integrated internal oscillator, the Si4702/03-C19 seek/tune performance may be affected by data activity on the SDIO(SDA) bus.
+    // So, if the integrated oscillator is used, don't polling STATUS register for the tune status, use interrupt on GPIO2 or a fixed delay instead.
     SI4703_GetReg(SI4703_STATUS);
-    if (SI4703_regs[SI4703_STATUS] & 0x4000)
+    if (SI4703_regs[SI4703_STATUS] & SI4703_STATUS_STC)
       break;
     Delay_ms(1);
   }
@@ -152,7 +155,7 @@ uint8_t SI4703_SetFreq(double freq)
     return 0;
 
   SI4703_GetReg(SI4703_CH);
-  SI4703_regs[SI4703_CH] &= 0x7FFF; //Clear the tune after a tune has completed
+  SI4703_regs[SI4703_CH] &= ~SI4703_CH_TUNE; //Clear the tune after a tune has completed
   SI4703_SetReg(SI4703_CH);
   return 1;
 }
@@ -160,7 +163,7 @@ uint8_t SI4703_SetFreq(double freq)
 void SI4703_SetVolume(uint8_t volume) // 0~30 or 0~15, depending on the firmware
 {
   uint8_t ext = 0;
-  if ((SI4703_regs[SI4703_CHIPID] & 0x003F) < 16) // firmware doesn't support Extended Volume Range.
+  if ((SI4703_regs[SI4703_CHIPID] & SI4703_CHIPID_FIRMWARE_MASK) < 16) // firmware doesn't support Extended Volume Range.
   {
     if (volume > 15)
       volume = 15;
@@ -180,9 +183,16 @@ void SI4703_SetVolume(uint8_t volume) // 0~30 or 0~15, depending on the firmware
   }
 
   SI4703_GetReg(SI4703_CONF3);
-  SI4703_regs[SI4703_CONF2] &= 0xFFF0;
-  SI4703_regs[SI4703_CONF2] |= volume & 0xF;
-  SI4703_regs[SI4703_CONF3] &= 0xFEFF;
-  SI4703_regs[SI4703_CONF3] |= ext << 8;
+  SI4703_regs[SI4703_CONF2] &= ~SI4703_CONF2_VOLUME_MASK;
+  SI4703_regs[SI4703_CONF2] |= volume & SI4703_CONF2_VOLUME_MASK;
+  SI4703_regs[SI4703_CONF3] &= ~SI4703_CONF3_VOLEXT;
+  SI4703_regs[SI4703_CONF3] |= ext ? SI4703_CONF3_VOLEXT : 0;
   SI4703_SetReg(SI4703_CONF3);
+}
+
+uint8_t SI4703_ReadRSSI(void)
+{
+  if (!SI4703_GetReg(SI4703_STATUS))
+    return 0;
+  return (SI4703_regs[SI4703_STATUS] & SI4703_STATUS_RSSI_MASK);
 }

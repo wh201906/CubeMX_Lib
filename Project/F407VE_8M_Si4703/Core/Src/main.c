@@ -112,6 +112,8 @@ int main(void)
       {
         freq = myatof(str + 1);
         printf("SetFreq: %d, %f\r\n", SI4703_SetFreq(freq), freq);
+        Delay_ms(1);
+        printf("RSSI: %d\r\n", SI4703_ReadRSSI());
       }
       else if(str[0] == 'v' || str[0] == 'V')
       {
