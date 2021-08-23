@@ -121,6 +121,48 @@ int main(void)
         SI4703_SetVolume(tmp);
         printf("Set volume to %d\r\n", tmp);
       }
+      else if(str[0] == 'r' || str[0] == 'R')
+      {
+        printf("RSSI: %d\r\n", SI4703_ReadRSSI());
+      }
+      else if(str[0] == 'b' || str[0] == 'B')
+      {
+        tmp = myatoi(str + 1);
+        if(tmp == 0)
+        {
+          SI4703_SetBand(SI4703_CONF2_BAND_875_108);
+          printf("Set band to 87.5~108\r\n");
+        }
+        else if(tmp == 1)
+        {
+          SI4703_SetBand(SI4703_CONF2_BAND_76_108);
+          printf("Set band to 76~108\r\n");
+        }
+        else if(tmp == 2)
+        {
+          SI4703_SetBand(SI4703_CONF2_BAND_76_90);
+          printf("Set band to 76~90\r\n");
+        }
+      }
+      else if(str[0] == 's' || str[0] == 'S')
+      {
+        tmp = myatoi(str + 1);
+        if(tmp == 200)
+        {
+          SI4703_SetSpace(SI4703_CONF2_SPACE_200);
+          printf("Set channel space to 200kHz\r\n");
+        }
+        else if(tmp == 100)
+        {
+          SI4703_SetSpace(SI4703_CONF2_SPACE_100);
+          printf("Set channel space to 100kHz\r\n");
+        }
+        else if(tmp == 50)
+        {
+          SI4703_SetSpace(SI4703_CONF2_SPACE_50);
+          printf("Set channel space to 50kHz\r\n");
+        }
+      }
     }
     Delay_ms(200);
   }

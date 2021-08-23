@@ -135,7 +135,23 @@ uint8_t SI4703_SetFreq(double freq)
   uint16_t CH;
   CH = (freq - 87.5) / 0.1 + 0.5;
 
-  SI4703_GetReg(SI4703_CH);
+  SI4703_GetReg(SI4703_CONF2);
+
+  if ((SI4703_regs[SI4703_CONF2] & SI4703_CONF2_BAND_MASK) == SI4703_CONF2_BAND_875_108)
+    freq -= 87.5;
+  else
+    freq -= 76;
+  if (freq < 0)
+    return 0;
+
+  CH = (SI4703_regs[SI4703_CONF2] & SI4703_CONF2_SPACE_MASK);
+  if (CH == SI4703_CONF2_SPACE_200)
+    CH = freq / 0.2 + 0.5;
+  else if (CH == SI4703_CONF2_SPACE_100)
+    CH = freq / 0.1 + 0.5;
+  else
+    CH = freq / 0.05 + 0.5;
+
   SI4703_regs[SI4703_CH] &= ~SI4703_CH_CHAN_MASK;
   SI4703_regs[SI4703_CH] |= CH & SI4703_CH_CHAN_MASK;
   SI4703_regs[SI4703_CH] |= SI4703_CH_TUNE;
@@ -195,4 +211,20 @@ uint8_t SI4703_ReadRSSI(void)
   if (!SI4703_GetReg(SI4703_STATUS))
     return 0;
   return (SI4703_regs[SI4703_STATUS] & SI4703_STATUS_RSSI_MASK);
+}
+
+void SI4703_SetBand(uint8_t band)
+{
+  SI4703_GetReg(SI4703_CONF2);
+  SI4703_regs[SI4703_CONF2] &= ~SI4703_CONF2_BAND_MASK;
+  SI4703_regs[SI4703_CONF2] |= band & SI4703_CONF2_BAND_MASK;
+  SI4703_SetReg(SI4703_CONF2);
+}
+
+void SI4703_SetSpace(uint8_t space)
+{
+  SI4703_GetReg(SI4703_CONF2);
+  SI4703_regs[SI4703_CONF2] &= ~SI4703_CONF2_SPACE_MASK;
+  SI4703_regs[SI4703_CONF2] |= space & SI4703_CONF2_SPACE_MASK;
+  SI4703_SetReg(SI4703_CONF2);
 }
