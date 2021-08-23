@@ -36,7 +36,7 @@ uint32_t SI4703_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SD
   SI4703_regs[SI4703_TEST1] = 0x8100;
   SI4703_regs[SI4703_CONF1] = 0x2000;
   SI4703_SetReg(SI4703_TEST1);
-  Delay_ms(500);
+  Delay_ms(510); // wait oscillator
   SI4703_GetReg(SI4703_READALL);
   SI4703_regs[SI4703_PWR] = 0x4001;
   SI4703_regs[SI4703_CONF1] |= (1 << 12); //Enable RDS
@@ -45,11 +45,11 @@ uint32_t SI4703_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SD
   SI4703_regs[SI4703_CONF2] |= (1 << 4);  //100kHz channel spacing for Europe
 
   SI4703_regs[SI4703_CONF2] &= 0xFFF0; //Clear volume bits
-  SI4703_regs[SI4703_CONF2] |= 0x000F; //Set volume
+  SI4703_regs[SI4703_CONF2] |= 0x0001; //Set volume
   SI4703_SetReg(SI4703_CONF2);
 
-  Delay_ms(110);
-  return ((uint32_t)SI4703_regs[0] << 16 | SI4703_regs[1]); // ReadID()
+  Delay_ms(120);          // wait power up
+  return SI4703_ReadID(); // the chipID will be changed after power up, containing the firmware version
 }
 
 uint8_t SI4703_GetReg(uint8_t reg)
@@ -131,8 +131,58 @@ void SI4703_Reset(void)
 
 uint8_t SI4703_SetFreq(double freq)
 {
+  uint8_t timeout;
+  uint16_t CH;
+  CH = (freq - 87.5) / 0.1 + 0.5;
+
+  SI4703_GetReg(SI4703_CH);
+  SI4703_regs[SI4703_CH] &= 0xFC00;
+  SI4703_regs[SI4703_CH] |= CH & 0x03FF;
+  SI4703_regs[SI4703_CH] |= 0x8000;
+  SI4703_SetReg(SI4703_CH);
+
+  for (timeout = 0; timeout < 100; timeout++)
+  {
+    SI4703_GetReg(SI4703_STATUS);
+    if (SI4703_regs[SI4703_STATUS] & 0x4000)
+      break;
+    Delay_ms(1);
+  }
+  if (timeout >= 100)
+    return 0;
+
+  SI4703_GetReg(SI4703_CH);
+  SI4703_regs[SI4703_CH] &= 0x7FFF; //Clear the tune after a tune has completed
+  SI4703_SetReg(SI4703_CH);
+  return 1;
 }
 
-uint8_t SI4703_SetVolume(uint8_t volume)
+void SI4703_SetVolume(uint8_t volume) // 0~30 or 0~15, depending on the firmware
 {
+  uint8_t ext = 0;
+  if ((SI4703_regs[SI4703_CHIPID] & 0x003F) < 16) // firmware doesn't support Extended Volume Range.
+  {
+    if (volume > 15)
+      volume = 15;
+  }
+  else
+  {
+    if (volume > 15)
+    {
+      if (volume > 30)
+        volume = 30;
+      volume++;
+    }
+    else
+    {
+      ext = 1;
+    }
+  }
+
+  SI4703_GetReg(SI4703_CONF3);
+  SI4703_regs[SI4703_CONF2] &= 0xFFF0;
+  SI4703_regs[SI4703_CONF2] |= volume & 0xF;
+  SI4703_regs[SI4703_CONF3] &= 0xFEFF;
+  SI4703_regs[SI4703_CONF3] |= ext << 8;
+  SI4703_SetReg(SI4703_CONF3);
 }

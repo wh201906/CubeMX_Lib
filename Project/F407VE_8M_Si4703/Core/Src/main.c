@@ -68,7 +68,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint8_t str[50];
   double freq;
-  uint16_t tmpreg, i;
+  uint16_t tmp, i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,7 +95,8 @@ int main(void)
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   printf("Si4703 Test\r\n");
   printf("ID: 0x%x\r\n", SI4703_Init(GPIOE, 4, GPIOE, 5));
-
+  printf("SetFreq: %d\r\n", SI4703_SetFreq(102.7));
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,6 +106,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
+    {
+      if(str[0] == 'f' || str[0] == 'F')
+      {
+        freq = myatof(str + 1);
+        printf("SetFreq: %d, %f\r\n", SI4703_SetFreq(freq), freq);
+      }
+      else if(str[0] == 'v' || str[0] == 'V')
+      {
+        tmp = myatoi(str + 1);
+        SI4703_SetVolume(tmp);
+        printf("Set volume to %d\r\n", tmp);
+      }
+    }
+    Delay_ms(200);
   }
   /* USER CODE END 3 */
 }

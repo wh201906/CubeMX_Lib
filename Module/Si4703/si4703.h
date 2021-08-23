@@ -31,6 +31,6 @@ uint8_t SI4703_SetReg(uint8_t reg);
 void SI4703_Reset(void);
 uint32_t SI4703_ReadID(void); // DeviceID+ChipID
 uint8_t SI4703_SetFreq(double freq);
-uint8_t SI4703_SetVolume(uint8_t volume);
+void SI4703_SetVolume(uint8_t volume);
 
 #endif
