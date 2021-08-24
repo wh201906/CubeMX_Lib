@@ -151,58 +151,6 @@ void NRF24L01_Nop(void)
 }
 
 /**
-  * @brief :NRF24L01读状态寄存器
-  * @param :无
-  * @note  :无
-  * @retval:RF24L01状态
-  */
-uint8_t NRF24L01_Read_Status_Register(void)
-{
-  uint8_t Status;
-
-  NRF24L01_CS(0); //片选
-
-  Status = NRF24L01_ReadWriteByte_Raw(NRF_READ_REG + STATUS); //读状态寄存器
-
-  NRF24L01_CS(1); //取消片选
-
-  return Status;
-}
-
-/**
-  * @brief :NRF24L01清中断
-  * @param :
-           @IRQ_Source:中断源
-  * @note  :无
-  * @retval:清除后状态寄存器的值
-  */
-uint8_t NRF24L01_Clear_IRQ_Flag(uint8_t IRQ_Source)
-{
-  uint8_t btmp = 0;
-
-  IRQ_Source &= (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT); //中断标志处理
-  btmp = NRF24L01_Read_Status_Register();                    //读状态寄存器
-
-  NRF24L01_CS(0);                                     //片选
-  NRF24L01_ReadWriteByte_Raw(NRF_WRITE_REG + STATUS); //写状态寄存器命令
-  NRF24L01_ReadWriteByte_Raw(IRQ_Source | btmp);      //清相应中断标志
-  NRF24L01_CS(1);                                     //取消片选
-
-  return (NRF24L01_Read_Status_Register()); //返回状态寄存器状态
-}
-
-/**
-  * @brief :读RF24L01中断状态
-  * @param :无
-  * @note  :无
-  * @retval:中断状态
-  */
-uint8_t NRF24L01_Read_IRQ_Status(void)
-{
-  return (NRF24L01_Read_Status_Register() & ((1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT))); //返回中断状态
-}
-
-/**
   * @brief :读FIFO中数据宽度
   * @param :无
   * @note  :无
@@ -505,7 +453,7 @@ uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
   NRF24L01_CE(0);
   NRF24L01_Write_Buf(WR_TX_PLOAD, txbuf, Length); //写数据到TX BUF 32字节  TX_PLOAD_WIDTH
   NRF24L01_CE(1);                                 //启动发送
-  while (0 != NRF24L01_IRQ())
+  while (!NRF24L01_IsIRQ(NRF24L01_TX_DS))
   {
     Delay_ms(10);
     if (500 == l_MsTimes++) //500ms还没有发送成功，重新初始化设备
@@ -516,10 +464,9 @@ uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
       break;
     }
   }
-  l_Status = NRF24L01_Read_Reg(STATUS); //读状态寄存器
+  l_Status = NRF24L01_Read_Reg(STATUS);                //读状态寄存器
+  NRF24L01_ClearIRQ(NRF24L01_TX_DS | NRF24L01_MAX_RT); //清除TX_DS或MAX_RT中断标志
   printf("Status: %u\r\n", l_Status);
-  NRF24L01_Write_Reg(STATUS, l_Status); //清除TX_DS或MAX_RT中断标志
-
   if (l_Status & MAX_TX) //达到最大重发次数
   {
     NRF24L01_Write_Reg(FLUSH_TX, 0xff); //清除TX FIFO寄存器
@@ -548,7 +495,7 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
   NRF24L01_ReadWriteByte_Raw(FLUSH_RX);
   NRF24L01_CS(1);
 
-  while (0 != NRF24L01_IRQ())
+  while (!NRF24L01_IsIRQ(NRF24L01_RX_DR))
   {
     Delay_ms(100);
 
@@ -560,11 +507,10 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
       break;
     }
   }
-
   l_Status = NRF24L01_Read_Reg(STATUS); //读状态寄存器
+  NRF24L01_ClearIRQ(NRF24L01_RX_DR);
   printf("Status: %u\r\n", l_Status);
-  NRF24L01_Write_Reg(STATUS, l_Status); //清中断标志
-  if (l_Status & RX_OK)                 //接收到数据
+  if (l_Status & RX_OK) //接收到数据
   {
     l_RxLength = NRF24L01_Read_Reg(R_RX_PL_WID);       //读取接收到的数据个数
     NRF24L01_Read_Buf(RD_RX_PLOAD, rxbuf, l_RxLength); //接收到数据
@@ -625,7 +571,7 @@ uint8_t NRF24L01_Init(void)
   uint8_t addr[5] = {INIT_ADDR};
 
   NRF24L01_CE(1);
-  NRF24L01_Clear_IRQ_Flag(IRQ_ALL);
+  NRF24L01_ClearIRQ(NRF24L01_IRQ_MASK);
 #if DYNAMIC_PACKET == 1
 
   NRF24L01_Write_Reg(DYNPD, (1 << 0)); //使能通道1动态数据长度
@@ -639,12 +585,11 @@ uint8_t NRF24L01_Init(void)
 
 #endif //DYNAMIC_PACKET
 
-  NRF24L01_Write_Reg(CONFIG, /*( 1<<MASK_RX_DR ) |*/ //接收中断
-                                 (1 << EN_CRC) |     //使能CRC 1个字节
-                                 (1 << PWR_UP));     //开启设备
-  NRF24L01_Write_Reg(EN_AA, (1 << ENAA_P0));         //通道0自动应答
-  NRF24L01_Write_Reg(EN_RXADDR, (1 << ERX_P0));      //通道0接收
-  NRF24L01_Write_Reg(SETUP_AW, AW_5BYTES);           //地址宽度 5个字节
+  NRF24L01_Write_Reg(CONFIG, (1 << EN_CRC) |     //使能CRC 1个字节
+                                 (1 << PWR_UP)); //开启设备
+  NRF24L01_Write_Reg(EN_AA, (1 << ENAA_P0));     //通道0自动应答
+  NRF24L01_Write_Reg(EN_RXADDR, (1 << ERX_P0));  //通道0接收
+  NRF24L01_Write_Reg(SETUP_AW, AW_5BYTES);       //地址宽度 5个字节
   NRF24L01_Write_Reg(SETUP_RETR, ARD_4000US |
                                      (REPEAT_CNT & 0x0F)); //重复等待时间 250us
   NRF24L01_Write_Reg(RF_CH, 60);                           //初始化通道
@@ -707,4 +652,45 @@ void NRF24L01_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint32_t 
   }
 
   NRF24L01_CS(1);
+}
+
+// EnableIRQ()/DisableIRQ() only affect the IRQ pin
+uint8_t NRF24L01_EnableIRQ(uint8_t irq)
+{
+  uint8_t config;
+  config = NRF24L01_Read_Reg(CONFIG);
+  irq &= NRF24L01_IRQ_MASK;
+  config &= ~irq; // set 0 to enable
+  NRF24L01_Write_Reg(CONFIG, config);
+  return (config == NRF24L01_Read_Reg(CONFIG));
+}
+
+uint8_t NRF24L01_DisableIRQ(uint8_t irq)
+{
+  uint8_t config;
+  config = NRF24L01_Read_Reg(CONFIG);
+  irq &= NRF24L01_IRQ_MASK;
+  config |= irq; // set 1 to disable
+  NRF24L01_Write_Reg(CONFIG, config);
+  return (config == NRF24L01_Read_Reg(CONFIG));
+}
+
+uint8_t NRF24L01_ClearIRQ(uint8_t irq)
+{
+  uint8_t status;
+  status = NRF24L01_Read_Reg(STATUS);
+  irq &= NRF24L01_IRQ_MASK;
+  status |= irq; // set 1 to clear
+  NRF24L01_Write_Reg(STATUS, status);
+  return (status == NRF24L01_Read_Reg(STATUS));
+}
+
+uint8_t NRF24L01_ReadIRQ(void)
+{
+  return (NRF24L01_Read_Reg(STATUS) & NRF24L01_IRQ_MASK);
+}
+
+uint8_t NRF24L01_IsIRQ(uint8_t irq)
+{
+  return (irq == NRF24L01_ReadIRQ());
 }

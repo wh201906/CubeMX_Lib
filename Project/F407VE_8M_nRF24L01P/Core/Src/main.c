@@ -111,6 +111,7 @@ int main(void)
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode); // LED
     }
     Delay_ms(500);
+    printf("status: 0x%x\r\n", NRF24L01_Read_Reg(STATUS));
   }
   /* USER CODE END 2 */
 
@@ -128,7 +129,14 @@ int main(void)
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode);
     }
     if(lastMode!=mode)
+    {
       NRF24L01_Set_Mode(mode?MODE_TX:MODE_RX);
+      if(mode)
+      {
+        NRF24L01_DisableIRQ(NRF24L01_TX_DS); // disable test passed
+        NRF24L01_EnableIRQ(NRF24L01_TX_DS); // enable test passed
+      }
+    }
     lastMode = mode;
     if(mode)
     { 

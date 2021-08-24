@@ -113,9 +113,6 @@ typedef enum PowerType
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //位定义
-#define MASK_RX_DR 6
-#define MASK_TX_DS 5
-#define MASK_MAX_RT 4
 #define EN_CRC 3
 #define CRCO 2
 #define PWR_UP 1
@@ -159,9 +156,6 @@ typedef enum PowerType
 #define PWR_6DB (0x02 << 1)
 #define PWR_0DB (0x03 << 1)
 
-#define RX_DR 6
-#define TX_DS 5
-#define MAX_RT 4
 //for bit3-bit1,
 #define TX_FULL_0 0
 
@@ -184,7 +178,12 @@ typedef enum PowerType
 #define EN_DPL 2
 #define EN_ACK_PAY 1
 #define EN_DYN_ACK 0
-#define IRQ_ALL ((1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT))
+
+// Used for enable/disable/clear/read interrupt
+#define NRF24L01_RX_DR (1 << 6)
+#define NRF24L01_TX_DS (1 << 5)
+#define NRF24L01_MAX_RT (1 << 4)
+#define NRF24L01_IRQ_MASK (NRF24L01_RX_DR | NRF24L01_TX_DS | NRF24L01_MAX_RT)
 
 uint8_t NRF24L01_Read_Reg(uint8_t RegAddr);
 void NRF24L01_Read_Buf(uint8_t RegAddr, uint8_t *pBuf, uint8_t len);
@@ -195,8 +194,6 @@ void NRF24L01_Flush_Rx_Fifo(void);
 void NRF24L01_Reuse_Tx_Payload(void);
 void NRF24L01_Nop(void);
 uint8_t NRF24L01_Read_Status_Register(void);
-uint8_t NRF24L01_Clear_IRQ_Flag(uint8_t IRQ_Source);
-uint8_t NRF24L01_Read_IRQ_Status(void);
 uint8_t NRF24L01_Read_Top_Fifo_Width(void);
 uint8_t NRF24L01_Read_Rx_Payload(uint8_t *pRxBuf);
 void NRF24L01_Write_Tx_Payload_Ack(uint8_t *pTxBuf, uint8_t len);
@@ -216,5 +213,10 @@ uint8_t NRF24L01_Init(void);
 
 uint8_t NRF24L01_ReadWriteByte_Raw(uint8_t TxByte);
 void NRF24L01_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint32_t Length);
+uint8_t NRF24L01_EnableIRQ(uint8_t irq);
+uint8_t NRF24L01_DisableIRQ(uint8_t irq);
+uint8_t NRF24L01_ClearIRQ(uint8_t irq);
+uint8_t NRF24L01_ReadIRQ(void);
+uint8_t NRF24L01_IsIRQ(uint8_t irq);
 
 #endif
