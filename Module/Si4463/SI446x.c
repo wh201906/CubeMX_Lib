@@ -750,7 +750,7 @@ void SI446x_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint16_t Le
 
 void SI446x_Read_Packet_IT(void)
 {
-  uint8_t RxData[65];
+  uint8_t RxData[65]; // maybe 128 in mixed FIFO?
   uint8_t status;
   uint8_t length = 0, i = 0;
 

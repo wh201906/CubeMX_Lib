@@ -57,7 +57,10 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void RxHandler(uint8_t len, uint8_t* data)
+{
+  MyUART_Write(&uart1, data, len);
+}
 /* USER CODE END 0 */
 
 /**
@@ -69,7 +72,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t i;
   uint8_t tmp=0;
-  uint8_t mode = 0, lastMode = 0;
+  uint8_t mode = 0, lastMode = 1;
   uint8_t RxBuffer[33] = {0};
   /* USER CODE END 1 */
 
@@ -96,10 +99,16 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   Key_Init();
-  Delay_ms(500);
   printf("nRF24L01P Test\r\n");
+  HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
   printf("NRF24L01_Init: %d\r\n", NRF24L01_Init());
+  NRF24L01_RegisterRxITHandler(&RxHandler);
+  printf("Status: 0x%x\r\n", NRF24L01_ReadStatus());
   NRF24L01_Set_Mode(MODE_RX);
+  printf("Status: 0x%x\r\n", NRF24L01_ReadStatus());
+  NRF24L01_DisableIRQ(NRF24L01_IRQ_MASK); // disable all interrupt
+  NRF24L01_EnableIRQ(NRF24L01_RX_DR);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
   printf("mode: %s\r\n", mode ? "Tx" : "Rx");
   
   for(i = 0; i < 6; i++)
@@ -111,7 +120,7 @@ int main(void)
       HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, !mode); // LED
     }
     Delay_ms(500);
-    printf("status: 0x%x\r\n", NRF24L01_Read_Reg(STATUS));
+    printf("Status: 0x%x\r\n", NRF24L01_ReadStatus());
   }
   /* USER CODE END 2 */
 
@@ -133,8 +142,11 @@ int main(void)
       NRF24L01_Set_Mode(mode?MODE_TX:MODE_RX);
       if(mode)
       {
-        NRF24L01_DisableIRQ(NRF24L01_TX_DS); // disable test passed
-        NRF24L01_EnableIRQ(NRF24L01_TX_DS); // enable test passed
+        HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+      }
+      else
+      {
+        HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
       }
     }
     lastMode = mode;
@@ -145,8 +157,7 @@ int main(void)
     }
     else
     {
-      if((i=NRF24L01_RxPacket(RxBuffer))!=0)
-        MyUART_Write(&uart1, RxBuffer,i);
+      Delay_ms(100);
     }
   }
   /* USER CODE END 3 */

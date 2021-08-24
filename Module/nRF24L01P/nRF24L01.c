@@ -3,6 +3,7 @@
 #include "DELAY/delay.h"
 
 uint16_t NRF24L01_delayTicks;
+void (*NRF24L01_RxITHandler)(uint8_t len, uint8_t *data);
 
 #define NRF24L01_Delay() Delay_ticks(NRF24L01_delayTicks)
 
@@ -181,8 +182,8 @@ uint8_t NRF24L01_Read_Rx_Payload(uint8_t *pRxBuf)
 {
   uint8_t Width, PipeNum;
 
-  PipeNum = (NRF24L01_Read_Reg(STATUS) >> 1) & 0x07; //读接收状态
-  Width = NRF24L01_Read_Top_Fifo_Width();            //读接收数据个数
+  PipeNum = (NRF24L01_ReadStatus() >> 1) & 0x07; //读接收状态
+  Width = NRF24L01_Read_Top_Fifo_Width();        //读接收数据个数
 
   NRF24L01_CS(0);                          //片选
   NRF24L01_ReadWriteByte_Raw(RD_RX_PLOAD); //读有效数据命令
@@ -437,8 +438,8 @@ void NRF24L01_Set_Mode(nRf24l01ModeType Mode)
   *			@Length:发送数据长度
   * @note  :无
   * @retval:
-  *			MAX_TX：达到最大重发次数
-  *			TX_OK：发送完成
+  *			NRF24L01_MAX_RT：达到最大重发次数
+  *			NRF24L01_TX_DS：发送完成
   *			0xFF:其他原因
   */
 uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
@@ -464,17 +465,16 @@ uint8_t NRF24L01_TxPacket(uint8_t *txbuf, uint8_t Length)
       break;
     }
   }
-  l_Status = NRF24L01_Read_Reg(STATUS);                //读状态寄存器
+  l_Status = NRF24L01_ReadStatus();                    //读状态寄存器
   NRF24L01_ClearIRQ(NRF24L01_TX_DS | NRF24L01_MAX_RT); //清除TX_DS或MAX_RT中断标志
-  printf("Status: %u\r\n", l_Status);
-  if (l_Status & MAX_TX) //达到最大重发次数
+  if (l_Status & NRF24L01_MAX_RT)                      //达到最大重发次数
   {
     NRF24L01_Write_Reg(FLUSH_TX, 0xff); //清除TX FIFO寄存器
-    return MAX_TX;
+    return NRF24L01_MAX_RT;
   }
-  if (l_Status & TX_OK) //发送完成
+  if (l_Status & NRF24L01_TX_DS) //发送完成
   {
-    return TX_OK;
+    return NRF24L01_TX_DS;
   }
 
   return 0xFF; //其他原因发送失败
@@ -507,14 +507,13 @@ uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
       break;
     }
   }
-  l_Status = NRF24L01_Read_Reg(STATUS); //读状态寄存器
-  NRF24L01_ClearIRQ(NRF24L01_RX_DR);
-  printf("Status: %u\r\n", l_Status);
-  if (l_Status & RX_OK) //接收到数据
+  l_Status = NRF24L01_ReadStatus(); //读状态寄存器
+  if (l_Status & NRF24L01_RX_DR)    //接收到数据
   {
     l_RxLength = NRF24L01_Read_Reg(R_RX_PL_WID);       //读取接收到的数据个数
     NRF24L01_Read_Buf(RD_RX_PLOAD, rxbuf, l_RxLength); //接收到数据
     NRF24L01_Write_Reg(FLUSH_RX, 0xff);                //清除RX FIFO
+    NRF24L01_ClearIRQ(NRF24L01_RX_DR);
     return l_RxLength;
   }
 
@@ -678,19 +677,57 @@ uint8_t NRF24L01_DisableIRQ(uint8_t irq)
 uint8_t NRF24L01_ClearIRQ(uint8_t irq)
 {
   uint8_t status;
-  status = NRF24L01_Read_Reg(STATUS);
+  status = NRF24L01_ReadStatus();
   irq &= NRF24L01_IRQ_MASK;
   status |= irq; // set 1 to clear
   NRF24L01_Write_Reg(STATUS, status);
-  return (status == NRF24L01_Read_Reg(STATUS));
+  return ((~irq & status) == NRF24L01_ReadStatus());
 }
 
 uint8_t NRF24L01_ReadIRQ(void)
 {
-  return (NRF24L01_Read_Reg(STATUS) & NRF24L01_IRQ_MASK);
+  return (NRF24L01_ReadStatus() & NRF24L01_IRQ_MASK);
 }
 
 uint8_t NRF24L01_IsIRQ(uint8_t irq)
 {
   return (irq == NRF24L01_ReadIRQ());
+}
+
+void NRF24L01_RxPacket_IT(void)
+{
+  uint8_t RxData[33];
+  uint8_t status;
+  uint8_t length = 0, i = 0;
+
+  length = NRF24L01_Read_Reg(R_RX_PL_WID);        //读取接收到的数据个数
+  NRF24L01_Read_Buf(RD_RX_PLOAD, RxData, length); //接收到数据
+  NRF24L01_Write_Reg(FLUSH_RX, 0xff);             //清除RX FIFO
+  NRF24L01_ClearIRQ(NRF24L01_RX_DR);
+
+  if (NRF24L01_RxITHandler != NULL)
+    NRF24L01_RxITHandler(length, RxData);
+}
+
+void NRF24L01_RegisterRxITHandler(void (*handler)(uint8_t len, uint8_t *data))
+{
+  NRF24L01_RxITHandler = handler;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin != NRF24L01_IRQ_PIN || NRF24L01_IRQ())
+    return;
+  NRF24L01_RxPacket_IT();
+}
+
+uint8_t NRF24L01_ReadStatus(void)
+{
+  uint8_t status;
+
+  NRF24L01_CS(0);
+  status = NRF24L01_ReadWriteByte_Raw(0xFF); // any command will shift out the status register
+  NRF24L01_CS(1);
+
+  return status;
 }

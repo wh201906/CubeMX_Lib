@@ -87,9 +87,6 @@ typedef enum PowerType
 #define RF_SETUP 0x06   //RF寄存器，bit3:传输速率( 0:1M 1:2M);bit1~2:发射功率;bit0:噪声放大器增益
 #define STATUS 0x07     //状态寄存器;bit0:TX FIFO满标志;bit1~3:接收数据通道号(最大:6);bit4:达到最多次重发次数 \
                         //bit5:数据发送完成中断;bit6:接收数据中断
-#define MAX_TX 0x10     //达到最大发送次数中断
-#define TX_OK 0x20      //TX发送完成中断
-#define RX_OK 0x40      //接收到数据中断
 
 #define OBSERVE_TX 0x08      //发送检测寄存器,bit7~4:数据包丢失计数器;bit3~0:重发计数器
 #define CD 0x09              //载波检测寄存器,bit0:载波检测
@@ -212,11 +209,17 @@ void NRF24L01_GPIO_Init(void);
 uint8_t NRF24L01_Init(void);
 
 uint8_t NRF24L01_ReadWriteByte_Raw(uint8_t TxByte);
+
 void NRF24L01_ReadWrite_Raw(uint8_t *ReadBuffer, uint8_t *WriteBuffer, uint32_t Length);
 uint8_t NRF24L01_EnableIRQ(uint8_t irq);
 uint8_t NRF24L01_DisableIRQ(uint8_t irq);
 uint8_t NRF24L01_ClearIRQ(uint8_t irq);
 uint8_t NRF24L01_ReadIRQ(void);
 uint8_t NRF24L01_IsIRQ(uint8_t irq);
+
+void NRF24L01_RxPacket_IT(void);                                                // put it in the EXTI IRQHandler
+void NRF24L01_RegisterRxITHandler(void (*handler)(uint8_t len, uint8_t *data)); // the parameter is a function pointer
+
+uint8_t NRF24L01_ReadStatus(void);
 
 #endif
