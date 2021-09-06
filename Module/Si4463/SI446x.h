@@ -2,7 +2,7 @@
 #define __SI4463_H__
 
 #include "main.h"
-#include "config/433_200k_sniff_80.h"
+#include "config/315_OOK_direct_2.5k.h"
 
 #define PACKET_LENGTH 0 //0-64, 0:动态长度 1:固定长度
 
