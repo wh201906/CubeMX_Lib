@@ -35,7 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RECVLEN 100
+#define RECVLEN 16
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,7 +51,8 @@ uint8_t uartBuf1[100];
 uint8_t rId = 0;
 uint16_t dId = 0;
 uint8_t remoteBuf[4];
-uint8_t decodeBuf[RECVLEN];
+uint64_t decodeBuf[RECVLEN];
+uint8_t lastData = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,19 +65,45 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  uint8_t tmp;
+  uint8_t data, tmp;
   if (GPIO_Pin != SI4463_GPIO0_PIN || !SI4463_GPIO0_R())
     return;
   remoteBuf[rId++] = SI4463_GPIO1_R();
   rId %= 4;
-  tmp = remoteBuf[rId]<<3 | remoteBuf[(rId+1)%4]<<2 |remoteBuf[(rId+2)%4]<<1 |remoteBuf[(rId+3)%4];
-  tmp &= 0xF;
-  if(tmp == 0xE || tmp == 0x8 || tmp == 0x0)
+  if(rId == 0)
   {
-    decodeBuf[dId++] = tmp;
-    dId%=RECVLEN;
-  }
-    
+    data = remoteBuf[0] << 3 | remoteBuf[1] << 2 | remoteBuf[2] << 1 | remoteBuf[3];
+    data &= 0xF;
+    if(lastData == 0x0 && data != 0x0 && data != 0x8 && data != 0xE) // alignment
+    {
+      if(data == 0x1) // 0000 0001 xxxx->0000 1xxx
+      {
+        remoteBuf[0] = 1;
+        rId = 1;
+      }
+      else if(data == 0x2 || data == 0x3) // 0000 001x xxxx->0000 1xxx
+      {
+        remoteBuf[0] = 1;
+        remoteBuf[1] = remoteBuf[3];
+        rId = 2;
+      }
+      else if(data == 0x4 || data == 0x7) // 0000 01xx xxxx->0000 1xxx
+      {
+        remoteBuf[0] = 1;
+        remoteBuf[1] = remoteBuf[2];
+        remoteBuf[2] = remoteBuf[3];
+        rId = 3;
+      }
+      return;
+    }
+    lastData = data;
+    tmp = dId % 16;
+    if(tmp == 0)
+      decodeBuf[dId / 16] = 0;
+    decodeBuf[dId / 16] |= (uint64_t)data << ((dId % 16) * 4);
+    dId++;
+    dId %= RECVLEN * 16;
+  } 
 }
 /* USER CODE END 0 */
 
@@ -88,6 +115,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t i;
+  uint8_t curr;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -128,11 +156,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(1000);
-    for(i = 1; i<=RECVLEN; i++)
+    uint8_t* ptr = decodeBuf; // %x is not compatible with uint64_t
+    for(i = 1; i <= RECVLEN * 8; i++)
     {
-      printf("%x", decodeBuf[i-1]);
+      curr = *(ptr++);
+      printf("%x%x", curr&0xF, curr>>4);
       if(i % 4 == 0)
-        putchar(' ');
+        printf(" ");
       if(i % 16 == 0)
         printf("\r\n");
     }
