@@ -10,7 +10,7 @@ uint16_t RDA5820_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *S
   RDA5820_WriteReg(0x02, 0x0002); // soft reset
   Delay_ms(50);
   RDA5820_WriteReg(0x02, 0xC001); // audio output on, mute off, power up
-  Delay_ms(600); // wait for oscillator
+  Delay_ms(600);                  // wait for oscillator
   // magic Rx init sequence
   // RDA5820_WriteReg(0x03, 0x0000);
   // RDA5820_WriteReg(0x04, 0x0400);
@@ -23,13 +23,13 @@ uint16_t RDA5820_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *S
   // RDA5820_WriteReg(0x27, 0xBB6C);
   // RDA5820_WriteReg(0x5C, 0x175C);
   // another magic Rx init sequence
-	// RDA5820_WriteReg(0x05, 0x888F);  //LNAP  0x884F --LNAN
-	// RDA5820_WriteReg(0x06, 0x6000);
-	// RDA5820_WriteReg(0x13, 0x80E1);
-	// RDA5820_WriteReg(0x14, 0x2A11);
-	// RDA5820_WriteReg(0x1C, 0x22DE);
-	// RDA5820_WriteReg(0x21, 0x0020);
-	// RDA5820_WriteReg(0x03, 0x1B90);
+  // RDA5820_WriteReg(0x05, 0x888F);  //LNAP  0x884F --LNAN
+  // RDA5820_WriteReg(0x06, 0x6000);
+  // RDA5820_WriteReg(0x13, 0x80E1);
+  // RDA5820_WriteReg(0x14, 0x2A11);
+  // RDA5820_WriteReg(0x1C, 0x22DE);
+  // RDA5820_WriteReg(0x21, 0x0020);
+  // RDA5820_WriteReg(0x03, 0x1B90);
   return RDA5820_ReadID();
 }
 
@@ -119,7 +119,7 @@ uint8_t RDA5820_SetFreq(double freq) //50~115, in MHz, maximum precision
   reg &= 0x20;                               //keep direct mode bit
   reg |= (chSp | band | 0x10 | (chNb << 6)); // tune
   RDA5820_WriteReg(0x03, reg);
-  printf("chNb, band, chSp, 50: %d, %d, %d, %d\r\n", chNb, band>>2, chSp, mode50);
+  printf("chNb, band, chSp, 50: %d, %d, %d, %d\r\n", chNb, band >> 2, chSp, mode50);
   return 1; //TODO: Get tune status
 }
 
@@ -131,4 +131,39 @@ uint8_t RDA5820_SetVolume(uint8_t volume) // 4bit, 0~15
   reg &= 0xFFF0;
   reg |= (volume & 0xF);
   return RDA5820_WriteReg(0x05, reg);
+}
+
+uint8_t RDA5820_test(int freq)
+{
+  uint16_t temp;
+  uint8_t spc = 0, band = 0;
+  uint16_t fbtm, chan;
+  RDA5820_ReadReg(0x03, &temp);
+  temp &= 0X001F;
+  band = (temp >> 2) & 0x03; //得到频带
+  spc = temp & 0x03;         //得到分辨率
+  if (spc == 0)
+    spc = 10;
+  else if (spc == 1)
+    spc = 20;
+  else
+    spc = 5;
+  if (band == 0)
+    fbtm = 8700;
+  else if (band == 1 || band == 2)
+    fbtm = 7600;
+  else
+  {
+    RDA5820_ReadReg(0x53, &fbtm);
+    fbtm *= 10;
+  }
+  if (freq < fbtm)
+    return 0;
+  chan = (freq - fbtm) / spc; //得到CHAN应该写入的值
+  chan &= 0X3FF;              //取低10位
+  temp |= chan << 6;
+  temp |= 1 << 4; //TONE ENABLE
+  RDA5820_WriteReg(0x03, temp);
+  Delay_ms(1000);
+  return 1;
 }

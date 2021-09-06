@@ -107,22 +107,24 @@ int main(void)
     /* USER CODE BEGIN 3 */
     // search test
     
-    RDA5820_SetFreq(freq);
-    Delay_ms(1000);
-    RDA5820_ReadReg(0x0B, &tmpreg);
-    printf("%f,%d\r\n",freq, tmpreg>>9);
-    freq+=0.1;
-    if(freq>=99.2)
-      freq=87.5;
+    // RDA5820_SetFreq(freq);
+    // Delay_ms(1000);
+    // RDA5820_ReadReg(0x0B, &tmpreg);
+    // printf("%f,%d\r\n",freq, tmpreg>>9);
+    // freq+=0.1;
+    // if(freq>=99.2)
+    //   freq=87.5;
     
     
     // manual frequency
-    /*
+  
     if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
     {
-      freq = myatof(str);
+      freq = myatof(str); // freq*10
+      freq /= 10.0;
       printf("Freq: %f\r\n", freq);
-      RDA5820_SetFreq(freq);
+      //RDA5820_SetFreq(freq);
+      RDA5820_test(freq * 100);
     }
     RDA5820_ReadReg(0x0B, &tmpreg);
     printf("RSSI: %d, ", tmpreg>>9);
@@ -133,8 +135,8 @@ int main(void)
     RDA5820_ReadReg(0x03, &tmpreg);
     printf("Band: %d, Space: %d, ", (tmpreg>>2)&0x3, tmpreg & 0x3);
     printf("\r\n");
-    Delay_ms(500);
-    */
+    Delay_ms(1000);
+    
   }
   /* USER CODE END 3 */
 }
