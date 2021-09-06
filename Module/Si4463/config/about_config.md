@@ -10,3 +10,5 @@ crystal tolerance: 10ppm
 Modulation type: OOK  
 Data rate: xxx  
 Rxdata rate error: 1%~10%  
+GPIO0 is the clk  
+GPIO1 is the data  

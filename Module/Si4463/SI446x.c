@@ -793,9 +793,10 @@ void SI446x_RegisterRxITHandler(void (*handler)(uint8_t len, uint8_t *data))
   Si4463_RxITHandler = handler;
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if (GPIO_Pin != SI4463_IRQ_PIN || SI4463_IRQ())
-    return;
-  SI446x_Read_Packet_IT();
-}
+// Used for IRQ based receive
+// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+// {
+//   if (GPIO_Pin != SI4463_IRQ_PIN || SI4463_IRQ())
+//     return;
+//   SI446x_Read_Packet_IT();
+// }
