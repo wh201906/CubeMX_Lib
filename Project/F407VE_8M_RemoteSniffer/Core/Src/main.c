@@ -35,7 +35,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RECVLEN 16
+#define RECVLEN 32
+#define TRIGTHRE 4
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,6 +54,8 @@ uint16_t dId = 0;
 uint8_t remoteBuf[4];
 uint64_t decodeBuf[RECVLEN];
 uint8_t lastData = 0;
+uint8_t trigCnt = 0;
+uint8_t triggered = 0; // 0:untriggered, 1:triggered, 2:triggered with output
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,18 +77,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     data = remoteBuf[0] << 3 | remoteBuf[1] << 2 | remoteBuf[2] << 1 | remoteBuf[3];
     data &= 0xF;
-    if(lastData == 0x0 && data != 0x0 && data != 0x8 && data != 0xE) // alignment
+    if(lastData == 0x0) // alignment
     {
       if(data == 0x1) // 0000 0001 xxxx->0000 1xxx
       {
         remoteBuf[0] = 1;
         rId = 1;
+        return;
       }
       else if(data == 0x2 || data == 0x3) // 0000 001x xxxx->0000 1xxx
       {
         remoteBuf[0] = 1;
         remoteBuf[1] = remoteBuf[3];
         rId = 2;
+        return;
       }
       else if(data == 0x4 || data == 0x7) // 0000 01xx xxxx->0000 1xxx
       {
@@ -93,17 +98,67 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         remoteBuf[1] = remoteBuf[2];
         remoteBuf[2] = remoteBuf[3];
         rId = 3;
+        return;
       }
-      return;
+      lastData = data;
     }
-    lastData = data;
+    else if(lastData == 0xF)
+    {
+      if(data == 0x1 || data == 0xD) // 1111 0001/1111 1101->1111 1000 1xxx/1111 1110 1xxx
+      {
+        data = (data & 0xF) >> 1 | 0x8;
+        remoteBuf[0] = 1;
+        rId = 1;
+      }
+      else if(data == 0xA || data == 0xB) // 1111 101x->1111 1110 1xxx
+      {
+        data = 0xE;
+        remoteBuf[0] = 1;
+        remoteBuf[1] = remoteBuf[3];
+        rId = 2;
+      }
+      else if(data == 0x4 || data == 0x7) // 1111 01xx->1111 1110 1xxx
+      {
+        data = 0xE;
+        remoteBuf[0] = 1;
+        remoteBuf[1] = remoteBuf[2];
+        remoteBuf[2] = remoteBuf[3];
+        rId = 3;
+      }
+      else if(data == 0xC) // 1111 1100 01xx->1111 1000 1xxx
+      {
+        data = 0x8;
+        remoteBuf[0] = 1;
+        remoteBuf[1] = remoteBuf[2];
+        remoteBuf[2] = remoteBuf[3];
+        rId = 3;
+      }
+      lastData = data;
+    }
+    // TODO:(need post process/overwrite)
+    // 1111 1110 001x->1111 1000 1xxx(lastData=0xF, data=0xE, nextData=0x2/0x3)
+    else
+    {
+      lastData = data;
+    }
     tmp = dId % 16;
     if(tmp == 0)
       decodeBuf[dId / 16] = 0;
     decodeBuf[dId / 16] |= (uint64_t)data << ((dId % 16) * 4);
     dId++;
     dId %= RECVLEN * 16;
-  } 
+  }
+  if((data == 0x8 || data == 0xE) && trigCnt <= TRIGTHRE)
+  {
+    trigCnt++;
+  }
+  if(triggered == 0 && trigCnt > TRIGTHRE) // trigger threshold
+  {
+    trigCnt = 0;
+    triggered = 1;
+  }
+  if(dId == 0 && triggered == 2)
+    triggered = 0;
 }
 /* USER CODE END 0 */
 
@@ -155,7 +210,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(1000);
+    Delay_ms(200);
+    if(triggered != 1)
+      continue;
     uint8_t* ptr = decodeBuf; // %x is not compatible with uint64_t
     for(i = 1; i <= RECVLEN * 8; i++)
     {
@@ -167,6 +224,7 @@ int main(void)
         printf("\r\n");
     }
     printf("\r\n-------------------------\r\n");
+    triggered = 2;
   }
   /* USER CODE END 3 */
 }
