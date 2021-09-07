@@ -10,5 +10,8 @@ crystal tolerance: 10ppm
 Modulation type: OOK  
 Data rate: xxx  
 Rxdata rate error: 1%~10%  
-GPIO0 is the clk  
-GPIO1 is the data  
+GPIO0 is the RxClk  
+GPIO1 is the RxData  
+GPIO2 is the TxData(INPUT)  
+GPIO3 is the TxClk  
+Switch between Direct Rx and Direct Tx template to apply each other's settings.  
