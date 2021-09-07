@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "Si4463/SI446x.h"
 #include "KEY/key.h"
+#include "UTIL/mygpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,7 +60,7 @@ uint16_t trigCnt = 0;
 uint8_t trigSt = 0; // 0: untriggered, 1: acquire, 2: stop
 uint8_t threCnt = 0;
 char hexTable[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-uint8_t testCnt = 0;
+uint16_t testCnt = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,9 +129,9 @@ uint8_t halfByte(uint8_t* start, uint32_t offset) // offset in bits
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-  uint64_t buf[2] = {0x1171711171717777, 0x7111117700000001};
-  SI4463_GPIO2_W(halfByte(buf, testCnt++) & 1);
-  testCnt %= 128;
+  uint64_t buf[2] = {0x8b8b888b8b8bbbb8, 0x0000000b88888bb8};
+  SI4463_GPIO1_W(halfByte(buf, testCnt++) & 1);
+  testCnt %= 124;
 }
 
 uint32_t pt2262(uint8_t* start, uint8_t* end, uint32_t offset) // offset in bits
@@ -158,6 +159,28 @@ uint32_t pt2262(uint8_t* start, uint8_t* end, uint32_t offset) // offset in bits
       break;
   }
   return i;
+}
+
+void Set_GPIO(uint8_t isRx)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  uint8_t seq[8] = {0x13, 0x11, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00};
+  
+  if(isRx)
+  {
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    seq[2] = 0x14;
+  }
+  else
+  {
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  }
+  SI446x_Write_Cmds(seq, 8);
+  SI446x_Read_Response(seq, 8);
+  
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 
+  MyGPIO_Init(SI4463_GPIO1_PORT, SI4463_GPIO1_PIN, 1);   
 }
 /* USER CODE END 0 */
 
@@ -204,9 +227,10 @@ int main(void)
   SI446x_Init();
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   
-  SI446x_Start_Tx(0, 0, PACKET_LENGTH);
-  HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_4);
-  //__HAL_TIM_ENABLE_IT(&htim3, TIM_IT_UPDATE);
+  //Set_GPIO(0);
+  //SI446x_Start_Tx(0, 0, PACKET_LENGTH);
+  //HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_4);
+  //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   /* USER CODE END 2 */
 
   /* Infinite loop */
