@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -60,7 +59,6 @@ uint16_t trigCnt = 0;
 uint8_t trigSt = 0; // 0: untriggered, 1: acquire, 2: stop
 uint8_t threCnt = 0;
 char hexTable[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-uint16_t testCnt = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -127,13 +125,6 @@ uint8_t halfByte(uint8_t* start, uint32_t offset) // offset in bits
   return b;
 }
 
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-  uint64_t buf[2] = {0x8b8b888b8b8bbbb8, 0x0000000b88888bb8};
-  SI4463_GPIO1_W(halfByte(buf, testCnt++) & 1);
-  testCnt %= 124;
-}
-
 uint32_t pt2262(uint8_t* start, uint8_t* end, uint32_t offset) // offset in bits
 {
   uint8_t curr;
@@ -182,6 +173,26 @@ void Set_GPIO(uint8_t isRx)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH; 
   MyGPIO_Init(SI4463_GPIO1_PORT, SI4463_GPIO1_PIN, 1);   
 }
+
+void SendTest(uint16_t delayus)
+{
+  uint16_t i, j;
+  uint64_t buf[2] = {0x8b8b888b8b8bbbb8, 0x0000000b88888bb8};
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+  Set_GPIO(0);
+  SI446x_Start_Tx(0, 0, PACKET_LENGTH);
+  Delay_ms(120);
+  for(i = 0; i < 5; i++)
+  {
+    for(j = 0; j < 124; j++)
+    {
+      SI4463_GPIO1_W(halfByte(buf, j) & 1);
+      Delay_us(delayus);
+    }
+  }
+  Delay_ms(1);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+}
 /* USER CODE END 0 */
 
 /**
@@ -217,7 +228,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
@@ -225,10 +235,11 @@ int main(void)
   printf("Si4463 Remote Sniffer Test\r\n");
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   SI446x_Init();
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  //HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   
-  //Set_GPIO(0);
-  //SI446x_Start_Tx(0, 0, PACKET_LENGTH);
+  Delay_ms(2000);
+  
+  SendTest(460);
   //HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_4);
   //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   /* USER CODE END 2 */
