@@ -1,7 +1,7 @@
 #include "node.h"
 
 uint64_t updateTimes = 0;
-uint8_t nodeBuf[20]; // [0]:source [1]:target [2:]:payload
+uint8_t nodeBuf[100]; // [0]:source [1]:target [2:]:payload
 
 void Node_PacketHead(uint8_t target)
 {
@@ -28,7 +28,7 @@ uint64_t Node_GetDelay(uint8_t target)
   {
     if(!Node_ReadUntil(nodeBuf, '>'))
       continue;
-    if(nodeBuf[0] == target && nodeBuf[1] == NODE_ID)
+    if(nodeBuf[0] == target && nodeBuf[1] == NODE_ID && nodeBuf[2] == '1')
       break;
   }
   return (Node_getCurrTick() - start);
@@ -36,7 +36,7 @@ uint64_t Node_GetDelay(uint8_t target)
 
 void Node_AckDelay(void)
 {
-  if(nodeBuf[3] == '1')
+  if(nodeBuf[2] == '1')
   {
     Node_PacketHead(nodeBuf[0]);
     Node_Write("1>", 2);
