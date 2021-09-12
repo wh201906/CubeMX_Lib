@@ -17,10 +17,10 @@ void Node_EventLoop(void)
   }
 }
 
-uint64_t Node_GetDelay(uint8_t target)
+uint64_t Node_GetLatency(uint8_t target)
 {
   uint64_t start;
-  start = Node_getCurrTick();
+  start = Node_GetTicks();
   MyUART_ClearBuffer(NODE_UART);
   Node_PacketHead(target);
   Node_Write("1>", 2);
@@ -31,7 +31,10 @@ uint64_t Node_GetDelay(uint8_t target)
     if(nodeBuf[0] == target && nodeBuf[1] == NODE_ID && nodeBuf[2] == '1')
       break;
   }
-  return (Node_getCurrTick() - start);
+  uint64_t test = Node_GetTicks();
+  if(test - start > 20000)
+  printf("%llu,%llu\n", start, test);
+  return (test - start);
 }
 
 void Node_AckDelay(void)
@@ -41,9 +44,4 @@ void Node_AckDelay(void)
     Node_PacketHead(nodeBuf[0]);
     Node_Write("1>", 2);
   }
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  updateTimes++;
 }

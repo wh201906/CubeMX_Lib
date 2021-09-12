@@ -68,7 +68,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint32_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,11 +97,24 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   MyUART_Init(&uart2, USART2, uartBuf2, UART2_BUF_LEN);
-  HAL_TIM_Base_Start_IT(&htim10);
+  LL_TIM_EnableIT_UPDATE(TIM10);
+  LL_TIM_EnableCounter(TIM10);
   printf("Wave Transfer\r\n");
   printf("Node: %c\r\n", NODE_ID);
 #if NODE_ID == '0'
-  printf("time: %llu\r\n", Node_GetDelay('1'));
+  uint32_t maxLatency, minLatency, currLatency;
+  uint64_t sumLatency;
+  maxLatency = minLatency = Node_GetLatency('1');
+  for(i = 0; i < 30000; i++)
+  {
+    currLatency = Node_GetLatency('1');
+    //printf("%u\r\n", currLatency);
+    sumLatency += currLatency;
+    maxLatency = currLatency > maxLatency ? currLatency : maxLatency;
+    minLatency = currLatency < minLatency ? currLatency : minLatency;
+  }
+  printf("Latency test from %c to 1:\r\n", NODE_ID);
+  printf("min:%u max:%u ave:%f\r\n", minLatency, maxLatency, sumLatency / 10000.0);
 #endif
 
   /* USER CODE END 2 */

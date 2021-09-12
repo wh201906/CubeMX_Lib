@@ -12,13 +12,14 @@ extern MyUARTHandle uart1, uart2;
 
 #define NODE_UART &uart2
 
-#define Node_getCurrTick() (updateTimes << 16 | TIM10->CNT)
+#define Node_GetTicks() (updateTimes << 16 | LL_TIM_GetCounter(TIM10))
 #define Node_Write(__STR__, __LEN__) MyUART_Write(NODE_UART, (__STR__), (__LEN__))
 #define Node_ReadUntil(__STR__, __ENDCHAR__) MyUART_ReadUntil(NODE_UART, (__STR__), (__ENDCHAR__))
 
 void Node_EventLoop(void);
 void Node_PacketHead(uint8_t target);
-uint64_t Node_GetDelay(uint8_t target);
+uint64_t Node_GetLatency(uint8_t target);
 void Node_AckDelay(void);
+
 
 #endif

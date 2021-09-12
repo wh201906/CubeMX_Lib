@@ -32,7 +32,6 @@ extern "C" {
 /* USER CODE END Includes */
 
 extern TIM_HandleTypeDef htim8;
-extern TIM_HandleTypeDef htim10;
 
 /* USER CODE BEGIN Private defines */
 

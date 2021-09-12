@@ -25,7 +25,6 @@
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim8;
-TIM_HandleTypeDef htim10;
 
 /* TIM8 init function */
 void MX_TIM8_Init(void)
@@ -105,19 +104,24 @@ void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 0 */
 
+  LL_TIM_InitTypeDef TIM_InitStruct = {0};
+
+  /* Peripheral clock enable */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM10);
+
+  /* TIM10 interrupt Init */
+  NVIC_SetPriority(TIM1_UP_TIM10_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+  NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+
   /* USER CODE BEGIN TIM10_Init 1 */
 
   /* USER CODE END TIM10_Init 1 */
-  htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 0;
-  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 65535;
-  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  TIM_InitStruct.Prescaler = 9;
+  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  TIM_InitStruct.Autoreload = 65535;
+  TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+  LL_TIM_Init(TIM10, &TIM_InitStruct);
+  LL_TIM_DisableARRPreload(TIM10);
   /* USER CODE BEGIN TIM10_Init 2 */
 
   /* USER CODE END TIM10_Init 2 */
@@ -137,21 +141,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE BEGIN TIM8_MspInit 1 */
 
   /* USER CODE END TIM8_MspInit 1 */
-  }
-  else if(tim_baseHandle->Instance==TIM10)
-  {
-  /* USER CODE BEGIN TIM10_MspInit 0 */
-
-  /* USER CODE END TIM10_MspInit 0 */
-    /* TIM10 clock enable */
-    __HAL_RCC_TIM10_CLK_ENABLE();
-
-    /* TIM10 interrupt Init */
-    HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
-  /* USER CODE BEGIN TIM10_MspInit 1 */
-
-  /* USER CODE END TIM10_MspInit 1 */
   }
 }
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
@@ -195,20 +184,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE BEGIN TIM8_MspDeInit 1 */
 
   /* USER CODE END TIM8_MspDeInit 1 */
-  }
-  else if(tim_baseHandle->Instance==TIM10)
-  {
-  /* USER CODE BEGIN TIM10_MspDeInit 0 */
-
-  /* USER CODE END TIM10_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_TIM10_CLK_DISABLE();
-
-    /* TIM10 interrupt Deinit */
-    HAL_NVIC_DisableIRQ(TIM1_UP_TIM10_IRQn);
-  /* USER CODE BEGIN TIM10_MspDeInit 1 */
-
-  /* USER CODE END TIM10_MspDeInit 1 */
   }
 }
 
