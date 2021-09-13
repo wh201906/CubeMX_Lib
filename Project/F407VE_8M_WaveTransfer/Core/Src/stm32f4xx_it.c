@@ -209,8 +209,8 @@ void TIM1_UP_TIM10_IRQHandler(void)
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
   if(LL_TIM_IsActiveFlag_UPDATE(TIM10))
   {
-    LL_TIM_ClearFlag_UPDATE(TIM10);
     updateTimes++;
+    LL_TIM_ClearFlag_UPDATE(TIM10);
   }
   /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
 

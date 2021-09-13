@@ -19,7 +19,7 @@ extern MyUARTHandle uart1, uart2;
 void Node_EventLoop(void);
 void Node_PacketHead(uint8_t target);
 uint64_t Node_GetLatency(uint8_t target);
-void Node_AckDelay(void);
+void Node_AckLatency(void);
 
 
 #endif

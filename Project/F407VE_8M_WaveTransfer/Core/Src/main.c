@@ -105,7 +105,7 @@ int main(void)
   uint32_t maxLatency, minLatency, currLatency;
   uint64_t sumLatency;
   maxLatency = minLatency = Node_GetLatency('1');
-  for(i = 0; i < 30000; i++)
+  for(i = 0; i < 80000; i++)
   {
     currLatency = Node_GetLatency('1');
     //printf("%u\r\n", currLatency);
