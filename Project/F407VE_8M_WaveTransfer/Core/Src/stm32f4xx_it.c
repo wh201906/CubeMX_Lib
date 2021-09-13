@@ -59,7 +59,7 @@
 
 /* USER CODE BEGIN EV */
 extern MyUARTHandle uart1, uart2;
-extern uint64_t updateTimes;
+extern volatile uint64_t updateTimes;
 
 /* USER CODE END EV */
 

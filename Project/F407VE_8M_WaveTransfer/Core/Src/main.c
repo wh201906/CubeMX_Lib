@@ -104,8 +104,9 @@ int main(void)
 #if NODE_ID == '0'
   uint32_t maxLatency, minLatency, currLatency;
   uint64_t sumLatency;
+  uint32_t testNum = 200000;
   maxLatency = minLatency = Node_GetLatency('1');
-  for(i = 0; i < 80000; i++)
+  for(i = 0; i < testNum; i++)
   {
     currLatency = Node_GetLatency('1');
     //printf("%u\r\n", currLatency);
@@ -114,7 +115,7 @@ int main(void)
     minLatency = currLatency < minLatency ? currLatency : minLatency;
   }
   printf("Latency test from %c to 1:\r\n", NODE_ID);
-  printf("min:%u max:%u ave:%f\r\n", minLatency, maxLatency, sumLatency / 10000.0);
+  printf("min:%u max:%u ave:%f\r\n", minLatency, maxLatency, sumLatency / (double)testNum);
 #endif
 
   /* USER CODE END 2 */

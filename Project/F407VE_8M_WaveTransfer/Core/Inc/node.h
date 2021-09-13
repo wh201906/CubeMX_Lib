@@ -7,7 +7,7 @@
 #define NODE_ID '0' // '0':server, '1':client1, '2':client2
 #endif
 
-extern uint64_t updateTimes;
+extern volatile uint64_t updateTimes;
 extern MyUARTHandle uart1, uart2;
 
 #define NODE_UART &uart2
