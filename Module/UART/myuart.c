@@ -228,7 +228,9 @@ void MyUART_ClearBuffer(MyUARTHandle *handle)
 void MyUART_IRQHandler(MyUARTHandle *handle)
 {
   uint32_t newTail;
-  LL_USART_ClearFlag_RXNE(handle->USARTx);
+  #if !defined(STM32H743xx) // on STM32H7, reading DR register will clear the RX flag
+    LL_USART_ClearFlag_RXNE(handle->USARTx);
+  #endif
   newTail = MyUART_TailNext(handle);
   if (newTail == handle->headPos)
   {

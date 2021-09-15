@@ -3,8 +3,8 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'F407VE_8M_WaveTransfer_1' 
- * Target:  'F407VE_8M_WaveTransfer' 
+ * Project: 'NUCLEO_H743ZI2_PAJ7620' 
+ * Target:  'NUCLEO_H743ZI2_PAJ7620' 
  */
 
 #ifndef RTE_COMPONENTS_H
@@ -14,7 +14,7 @@
 /*
  * Define the Device Header File: 
  */
-#define CMSIS_device_header "stm32f4xx.h"
+#define CMSIS_device_header "stm32h7xx.h"
 
 
 

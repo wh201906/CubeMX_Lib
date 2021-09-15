@@ -19,13 +19,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "tim.h"
+#include "eth.h"
 #include "usart.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "node.h"
+#include "PAJ7620/paj7620.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define UART2_BUF_LEN 100
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,8 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-MyUARTHandle uart1, uart2;
-uint8_t uartBuf1[100], uartBuf2[UART2_BUF_LEN];
+MyUARTHandle uart3;
+uint8_t uartBuf3[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +68,9 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t i;
+  uint8_t gesture;
+  uint16_t tmp;
+  uint8_t str[30];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,35 +91,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_TIM8_Init();
-  MX_TIM10_Init();
+  MX_ETH_Init();
+  MX_USART3_UART_Init();
+  MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
-  Delay_Init(168);
-  MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  MyUART_Init(&uart2, USART2, uartBuf2, UART2_BUF_LEN);
-  LL_TIM_EnableIT_UPDATE(TIM10);
-  LL_TIM_EnableCounter(TIM10);
-  printf("Wave Transfer\r\n");
-  printf("Node: %c\r\n", NODE_ID);
-#if NODE_ID == '0'
-  uint32_t maxLatency, minLatency, currLatency;
-  uint64_t sumLatency;
-  uint32_t testNum = 20000;
-  maxLatency = minLatency = Node_GetLatency('1');
-  for(i = 0; i < testNum; i++)
-  {
-    currLatency = Node_GetLatency('1');
-    //printf("%u\r\n", currLatency);
-    sumLatency += currLatency;
-    maxLatency = currLatency > maxLatency ? currLatency : maxLatency;
-    minLatency = currLatency < minLatency ? currLatency : minLatency;
-  }
-  printf("Latency test from %c to 1:\r\n", NODE_ID);
-  printf("min:%u max:%u ave:%f delta:%u\r\n", minLatency, maxLatency, sumLatency / (double)testNum, maxLatency - minLatency);
-#endif
-
+  Delay_Init(64);
+  MyUART_SetOStream(USART3);
+  MyUART_Init(&uart3, USART3, uartBuf3, 100);
+  printf("PAJ7620 Test\r\n");
+  printf("Init: %d\r\n", PAJ7620_Init(GPIOF, 6, GPIOF, 7));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,8 +109,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(500);
+    gesture = PAJ7620_Gesture9(600, 500);
     
-    Node_EventLoop();
+    if(gesture != 0)
+    {
+      printf("Val: 0x%x\r\n", gesture);
+      //printf("Gesture: %s", gestureText[gesture]);
+      printf("\r\n");
+    }
+    if(MyUART_ReadUntilWithZero(&uart3, str, '>'))
+      printf("%s\r\n", str);
   }
   /* USER CODE END 3 */
 }
@@ -142,21 +133,31 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
+  /** Supply configuration update enable
+  */
+  HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
   /** Configure the main internal regulator output voltage
   */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+
+  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 168;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 24;
+  RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
+  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+  RCC_OscInitStruct.PLL.PLLFRACN = 0;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -164,13 +165,17 @@ void SystemClock_Config(void)
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+                              |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
