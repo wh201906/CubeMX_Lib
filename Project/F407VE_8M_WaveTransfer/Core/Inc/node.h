@@ -21,5 +21,7 @@ void Node_PacketHead(uint8_t target);
 uint64_t Node_GetLatency(uint8_t target);
 void Node_AckLatency(void);
 
+void Node_Replay_Init(void);
+void Node_Acquire_Init(void);
 
 #endif

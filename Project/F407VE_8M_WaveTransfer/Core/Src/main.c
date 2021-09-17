@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "node.h"
+#include "PARAIO/paraio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,6 +70,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t i;
+  uint8_t buf[512];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,20 +104,9 @@ int main(void)
   printf("Wave Transfer\r\n");
   printf("Node: %c\r\n", NODE_ID);
 #if NODE_ID == '0'
-  uint32_t maxLatency, minLatency, currLatency;
-  uint64_t sumLatency;
-  uint32_t testNum = 20000;
-  maxLatency = minLatency = Node_GetLatency('1');
-  for(i = 0; i < testNum; i++)
-  {
-    currLatency = Node_GetLatency('1');
-    //printf("%u\r\n", currLatency);
-    sumLatency += currLatency;
-    maxLatency = currLatency > maxLatency ? currLatency : maxLatency;
-    minLatency = currLatency < minLatency ? currLatency : minLatency;
-  }
-  printf("Latency test from %c to 1:\r\n", NODE_ID);
-  printf("min:%u max:%u ave:%f delta:%u\r\n", minLatency, maxLatency, sumLatency / (double)testNum, maxLatency - minLatency);
+  Node_Replay_Init();
+#elif NODE_ID == '1'
+  Node_Acquire_Init();
 #endif
 
   /* USER CODE END 2 */
@@ -129,6 +120,17 @@ int main(void)
     /* USER CODE BEGIN 3 */
     
     Node_EventLoop();
+#if NODE_ID == '1'
+    ParaIO_Start_In(buf, 512);
+    while(!ParaIO_IsTranferCompleted_In())
+      ;
+    Delay_ms(200);
+    for(i = 0; i < 512; i++)
+    {
+      printf("%d\r\n", buf[i]);
+    }
+    
+#endif
   }
   /* USER CODE END 3 */
 }
