@@ -131,3 +131,17 @@ void ParaIO_Start_Out(void *srcAddr, uint32_t len)
   __HAL_TIM_ENABLE_DMA(ParaIO_TIM_Out, TIM_DMA_UPDATE);
   __HAL_TIM_ENABLE(ParaIO_TIM_Out);
 }
+
+uint8_t ParaIO_IsTranferCompleted_Out(void)
+{
+  // On F407, TIM8_UP is linked to DMA2_Stream1_Channel7
+  // TIM1_UP is linked to DMA2_Stream5_Channel6
+  return __HAL_DMA_GET_FLAG(&ParaIO_DMA_Out, DMA_FLAG_TCIF1_5) == DMA_FLAG_TCIF1_5;
+}
+
+uint8_t ParaIO_IsTranferCompleted_In(void)
+{
+  // On F407, TIM8_UP is linked to DMA2_Stream1_Channel7
+  // TIM1_UP is linked to DMA2_Stream5_Channel6
+  return __HAL_DMA_GET_FLAG(&ParaIO_DMA_In, DMA_FLAG_TCIF1_5) == DMA_FLAG_TCIF1_5;
+}

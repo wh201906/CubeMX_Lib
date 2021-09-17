@@ -19,6 +19,8 @@ void ParaIO_Init_In(TIM_HandleTypeDef *htim, uint8_t memUnitSize, uint8_t isCirc
 
 void ParaIO_Start_In(void *destAddr, uint32_t len);
 
+uint8_t ParaIO_IsTranferCompleted_In(void);
+
 void ParaIO_Init_GPIO_Out(void);
 
 void ParaIO_Init_DMA_Out(uint8_t memUnitSize, uint8_t isCircular);
@@ -26,5 +28,7 @@ void ParaIO_Init_DMA_Out(uint8_t memUnitSize, uint8_t isCircular);
 void ParaIO_Init_Out(TIM_HandleTypeDef *htim, uint8_t memUnitSize, uint8_t isCircular);
 
 void ParaIO_Start_Out(void *srcAddr, uint32_t len);
+
+uint8_t ParaIO_IsTranferCompleted_Out(void);
 
 #endif
