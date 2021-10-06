@@ -27,6 +27,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "AD9834/ad9834.h"
+#include "PARAIO/paraio.h"
+#include "arm_math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,6 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ADC_LEN 4096
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,6 +51,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
+uint16_t adcBuf[ADC_LEN];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,7 +62,67 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint16_t measure(double freq)
+{
+  uint32_t len, tmp, i;
+  uint16_t result, minVal;
+  if(freq < 150000 && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) != GPIO_PIN_SET)
+  {
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_SET);
+    Delay_ms(50);
+  }
+  else if(freq >= 150000 &&  HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) != GPIO_PIN_RESET)
+  {
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_RESET);
+    Delay_ms(50);
+  }
+  // HF: sample for 50 periods
+  tmp = 2; // 168M / ((arr + 1) * (psc + 1)) = 14M < 0.25APB2 clock speed(21M)
+  htim8.Instance->PSC = tmp;
+  tmp = 168000000 / (__HAL_TIM_GET_AUTORELOAD(&htim8) + 1) / (tmp + 1); // current sample rate
+  tmp /= (uint32_t)freq; // dot per period
+  len = tmp * 50; // dot for 50 periods
+  if(len > ADC_LEN)
+    len = ADC_LEN;
+  
+  // LF: sample for 1 period
+  // for sine wave:
+  // slope_max = max(sin'(x)) = Vpp
+  // x_step: 1 / ADC_LEN
+  // offset_max < slope_max * x_step
+  // offset_max < Vpp / ADC_LEN
+  if(tmp > ADC_LEN)
+  {
+    tmp = freq * ADC_LEN - 1; // required sample rate
+    tmp = 168000000 / tmp + 1; // (arr + 1) * (psc + 1)
+    tmp /= (__HAL_TIM_GET_AUTORELOAD(&htim8) + 1); // psc + 1
+    htim8.Instance->PSC = tmp;
+  }
+  
+  AD9834_SetFreq(freq, 0);
+  htim8.Instance->EGR = TIM_EGR_UG; // update arr and psc
+  ParaIO_Start_In(adcBuf, len);
+  while(!ParaIO_IsTranferCompleted_In())
+    ;
+//  result = adcBuf[0] & 0xFFF; // maxVal
+//  minVal = adcBuf[0] & 0xFFF;
+//  for(i = 0; i < len; i++)
+//  {
+//    adcBuf[i] &= 0xFFF;
+//    result = adcBuf[i] > result ? adcBuf[i] : result;
+//    minVal = adcBuf[i] < minVal ? adcBuf[i] : minVal;
+//  }
+//  result -= minVal;
+//  printf("m:%u\r\n", result); // manual result
+  
+  // the width of adc result is 12bit. So the MSB of uint16_t is always zero.
+  // q15 works there.
+  arm_max_q15(adcBuf, len, &result, &tmp);
+  arm_min_q15(adcBuf, len, &minVal, &tmp);
+  result -= minVal;
+  //printf("a:%u p:%u l:%u\r\n", __HAL_TIM_GET_AUTORELOAD(&htim8), htim8.Instance->PSC, len);
+  return result;
+}
 /* USER CODE END 0 */
 
 /**
@@ -68,7 +132,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  double freq;
+  double freq, freqL, freqM, freqH;
+  uint16_t i, result;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,11 +160,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  printf("Sweep Test\r\n");
+  //printf("Sweep Test\r\n");
   AD9834_Init(&hspi1);
   AD9834_SelectReg(0, 0);
   AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
-  freq = 1000;
+  
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+  ParaIO_Init_In(&htim8, 16, 0);
+  
+  freqL = 1000;
+  freqM = 150000;
+  freqH = 2000000;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,11 +180,30 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    freq += 1000;
-    if(freq > 400000)
-      freq = 1000;
-    AD9834_SetFreq(freq, 0);
-    Delay_ms(50);
+    freq = 30;
+    for(; freq < 100; freq += 10)
+    {
+      //printf("%f, %d\r\n", freq, measure(freq));
+      result = measure(freq);
+      for(i = 0; i < ADC_LEN; i++)
+        printf("%f,%d,%d\r\n", freq, adcBuf[i], result);
+    }
+    for(; freq < 1000; freq += 100)
+    {
+      //printf("%f, %d\r\n", freq, measure(freq));
+      result = measure(freq);
+      for(i = 0; i < ADC_LEN; i++)
+        printf("%d,%d,%d\r\n", (uint32_t)freq, adcBuf[i], result);
+    }
+    for(; freq <= 2000000; freq += 100000)
+    {
+      //printf("%f, %d\r\n", freq, measure(freq));
+      result = measure(freq);
+      for(i = 0; i < ADC_LEN; i++)
+        printf("%d,%d,%d\r\n", (uint32_t)freq, adcBuf[i], result);
+    }
+    
+    
   }
   /* USER CODE END 3 */
 }
