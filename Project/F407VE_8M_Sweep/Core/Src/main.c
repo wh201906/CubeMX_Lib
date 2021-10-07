@@ -39,6 +39,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ADC_LEN 4096
+#define ADC_PIPELINE_DELAY (7 + 1)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,8 +52,8 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
-uint16_t adcBuf[ADC_LEN];
-uint16_t adcBuf2[ADC_LEN];
+uint16_t adcBuf[ADC_LEN + ADC_PIPELINE_DELAY];
+uint16_t adcBuf2[ADC_LEN + ADC_PIPELINE_DELAY];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,20 +70,22 @@ int32_t phaseDetect(uint32_t len, uint8_t filter)
 {
   uint16_t mean1, mean2;
   uint32_t i, z1 = 0, z2 = 0;
+  uint16_t* bufPtr1 = adcBuf + ADC_PIPELINE_DELAY;
+  uint16_t* bufPtr2 = adcBuf2 + ADC_PIPELINE_DELAY;
   // find virtual zero, ignore the different amplitude
-  arm_mean_q15(adcBuf, len, &mean1);
-  arm_mean_q15(adcBuf2, len, &mean2);
+  arm_mean_q15(bufPtr1, len, &mean1);
+  arm_mean_q15(bufPtr2 + ADC_PIPELINE_DELAY, len, &mean2);
   // find zero-crossing
   //printf("mean1:%d\r\n", mean1);
   for(i = 0; i < len - 1; i++)
   {
-    if((adcBuf[i] - mean1 & 0x8000) && !(adcBuf[i+1] - mean1 & 0x8000)) // posedge
+    if((bufPtr1[i] - mean1 & 0x8000) && !(bufPtr1[i+1] - mean1 & 0x8000)) // posedge
     {
       // filter
       // the adcBuf contains at least 1 complete period
-      if(i > filter && adcBuf[i-filter] > adcBuf[i])
+      if(i > filter && bufPtr1[i-filter] > bufPtr1[i])
         continue;
-      else if(i < len - filter && adcBuf[i+filter] < adcBuf[i])
+      else if(i < len - filter && bufPtr1[i+filter] < bufPtr1[i])
         continue;
         
       z1 = i;
@@ -93,11 +96,11 @@ int32_t phaseDetect(uint32_t len, uint8_t filter)
   //printf("mean2:%d\r\n", mean2);
   for(i = 0; i < len - 1; i++)
   {
-    if((adcBuf2[i] - mean2 & 0x8000) && !(adcBuf2[i+1] - mean2 & 0x8000)) // posedge
+    if((bufPtr2[i] - mean2 & 0x8000) && !(bufPtr2[i+1] - mean2 & 0x8000)) // posedge
     {
-      if(i > filter && adcBuf2[i-filter] >= adcBuf2[i])
+      if(i > filter && bufPtr2[i-filter] >= bufPtr2[i])
         continue;
-      else if(i < len - filter && adcBuf2[i+filter] <= adcBuf2[i])
+      else if(i < len - filter && bufPtr2[i+filter] <= bufPtr2[i])
         continue;
       
       z2 = i;
@@ -105,7 +108,7 @@ int32_t phaseDetect(uint32_t len, uint8_t filter)
       break;
     }
   }
-  return (int32_t)z1 - (int32_t)z2;
+  return ((int32_t)z1 - (int32_t)z2 + len) % len;
 }
 
 uint32_t measure(double freq, uint16_t* amp1, uint16_t* amp2, int32_t* phase)
@@ -153,7 +156,7 @@ uint32_t measure(double freq, uint16_t* amp1, uint16_t* amp2, int32_t* phase)
   AD9834_SetFreq(freq, 0);
   Delay_us(1);
   htim8.Instance->EGR = TIM_EGR_UG; // update arr and psc
-  ParaIO_Start_In_Sync(adcBuf, len, adcBuf2, len);
+  ParaIO_Start_In_Sync(adcBuf, len + ADC_PIPELINE_DELAY, adcBuf2, len + ADC_PIPELINE_DELAY);
   while(!ParaIO_IsTranferCompleted_In2())
     ;
   
@@ -162,17 +165,19 @@ uint32_t measure(double freq, uint16_t* amp1, uint16_t* amp2, int32_t* phase)
   
   // for the second AD9226:
   // D11~D0 -> PE13~PE2
-  arm_shift_q15(adcBuf2, -2, adcBuf2, len);
+  arm_shift_q15(adcBuf2 + ADC_PIPELINE_DELAY, -2, adcBuf2 + ADC_PIPELINE_DELAY, len);
   for(i = 0; i < len; i++)
   {
     adcBuf[i] &= 0xFFF;
     adcBuf2[i] &= 0xFFF;
   }
-  arm_max_q15(adcBuf, len, &maxVal, &tmp);
-  arm_min_q15(adcBuf, len, &minVal, &tmp);
+  
+  // AD9280 has a Pipeline Delay of 7 cycles
+  arm_max_q15(adcBuf + ADC_PIPELINE_DELAY, len, &maxVal, &tmp);
+  arm_min_q15(adcBuf + ADC_PIPELINE_DELAY, len, &minVal, &tmp);
   *amp1 = maxVal - minVal;
-  arm_max_q15(adcBuf2, len, &maxVal, &tmp);
-  arm_min_q15(adcBuf2, len, &minVal, &tmp);
+  arm_max_q15(adcBuf2 + ADC_PIPELINE_DELAY, len, &maxVal, &tmp);
+  arm_min_q15(adcBuf2 + ADC_PIPELINE_DELAY, len, &minVal, &tmp);
   *amp2 = maxVal - minVal;
   *phase = phaseDetect(len, phaseFilter);
   return len;
@@ -245,18 +250,17 @@ int main(void)
     for(; freq < 200; freq += 10)
     {
       measure(freq, &amp1, &amp2, &phase);
-      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase);
+      printf("%d,%d,%d,-%f\r\n", amp1, amp2, phase, freq);
     }
     for(; freq < 5000; freq += 100)
     {
       measure(freq, &amp1, &amp2, &phase);
-      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase);
+      printf("%d,%d,%d,-%f\r\n", amp1, amp2, phase, freq);
     }
-    for(; freq <= 2000000; freq += 50000) // if the period of this loop is too long, the result will be wrong
+    for(; freq <= 2000000; freq += 50000)
     {
       measure(freq, &amp1, &amp2, &phase);
-      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase); // print more characters will cause bugs
-      //Delay_ms(1); un-comment it will cause bugs
+      printf("%d,%d,%d,-%f\r\n", amp1, amp2, phase, freq);
     }
     Delay_ms(1000);
     
