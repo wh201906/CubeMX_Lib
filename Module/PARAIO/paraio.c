@@ -50,7 +50,7 @@ void ParaIO_Init_DMA_In(uint8_t memUnitSize, uint8_t isCircular) // 8,16
   // TIM1_CH1 is linked to DMA2_Stream3_Channel6
   
   // Remember to change ParaIO_IsTranferCompleted_In()
-  ParaIO_DMA_In.Instance = DMA2_Stream1;
+  ParaIO_DMA_In.Instance = DMA2_Stream2;
   ParaIO_DMA_In.Init.Channel = DMA_CHANNEL_7;
   ParaIO_DMA_In.Init.Direction = DMA_PERIPH_TO_MEMORY;
   ParaIO_DMA_In.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -72,7 +72,7 @@ void ParaIO_Init_DMA_In(uint8_t memUnitSize, uint8_t isCircular) // 8,16
   HAL_DMA_DeInit(&ParaIO_DMA_In);
   HAL_DMA_Init(&ParaIO_DMA_In);
 
-  __HAL_LINKDMA(ParaIO_TIM_In, hdma[TIM_DMA_ID_UPDATE], ParaIO_DMA_In);
+  __HAL_LINKDMA(ParaIO_TIM_In, hdma[TIM_DMA_ID_CC1], ParaIO_DMA_In);
 
   // DMA Interrupt should be disabled in CubeMX
 }
@@ -127,7 +127,7 @@ void ParaIO_Start_In(void *destAddr, uint32_t len)
 {
   HAL_DMA_Init(&ParaIO_DMA_In); // necessary there
   HAL_DMA_Start(&ParaIO_DMA_In, (uint32_t) & (PARAIO_DATAIN_GPIO->IDR), (uint32_t)destAddr, len);
-  __HAL_TIM_ENABLE_DMA(ParaIO_TIM_In, TIM_DMA_UPDATE);
+  __HAL_TIM_ENABLE_DMA(ParaIO_TIM_In, TIM_DMA_CC1);
   __HAL_TIM_ENABLE(ParaIO_TIM_In);
 }
 
@@ -145,7 +145,7 @@ void ParaIO_Start_In_Sync(void *destAddr1, uint32_t len1, void *destAddr2, uint3
   
   HAL_DMA_Init(&ParaIO_DMA_In); // necessary there
   HAL_DMA_Start(&ParaIO_DMA_In, (uint32_t) & (PARAIO_DATAIN_GPIO->IDR), (uint32_t)destAddr1, len1);
-  __HAL_TIM_ENABLE_DMA(ParaIO_TIM_In, TIM_DMA_UPDATE);
+  __HAL_TIM_ENABLE_DMA(ParaIO_TIM_In, TIM_DMA_CC1);
   ParaIO_Start_In2(destAddr2, len2);
 }
 
@@ -224,7 +224,7 @@ uint8_t ParaIO_IsTranferCompleted_In(void)
 {
   // On F407, TIM8_UP is linked to DMA2_Stream1_Channel7
   // TIM1_UP is linked to DMA2_Stream5_Channel6
-  return __HAL_DMA_GET_FLAG(&ParaIO_DMA_In, DMA_FLAG_TCIF1_5) == DMA_FLAG_TCIF1_5;
+  return __HAL_DMA_GET_FLAG(&ParaIO_DMA_In, DMA_FLAG_TCIF2_6) == DMA_FLAG_TCIF2_6;
 }
 
 uint8_t ParaIO_IsTranferCompleted_In2(void)

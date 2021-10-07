@@ -180,10 +180,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    freq = 30;
+    freq = 200000;
     measure(freq);
     for(i = 0; i < ADC_LEN; i++)
-      printf("%d,%d,%d\r\n",(uint32_t)freq, adcBuf[i], adcBuf2[i]);
+      printf("%d,%d,%d\r\n",adcBuf[i] - adcBuf2[i], adcBuf[i], adcBuf2[i]);
 //    for(; freq < 200; freq += 10)
 //    {
 //      printf("-%f, %d\r\n", freq, measure(freq));
