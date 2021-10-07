@@ -63,10 +63,56 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t measure(double freq)
+// for LF, set filter to 200
+// for HF, reduce filter value
+int32_t phaseDetect(uint32_t len, uint8_t filter)
 {
+  uint16_t mean1, mean2;
+  uint32_t i, z1 = 0, z2 = 0;
+  // find virtual zero, ignore the different amplitude
+  arm_mean_q15(adcBuf, len, &mean1);
+  arm_mean_q15(adcBuf2, len, &mean2);
+  // find zero-crossing
+  //printf("mean1:%d\r\n", mean1);
+  for(i = 0; i < len - 1; i++)
+  {
+    if((adcBuf[i] - mean1 & 0x8000) && !(adcBuf[i+1] - mean1 & 0x8000)) // posedge
+    {
+      // filter
+      // the adcBuf contains at least 1 complete period
+      if(i > filter && adcBuf[i-filter] > adcBuf[i])
+        continue;
+      else if(i < len - filter && adcBuf[i+filter] < adcBuf[i])
+        continue;
+        
+      z1 = i;
+      //printf("i:%d,1[i]:%d,1[i+1]:%d\r\n", i, adcBuf[i] & 0xFFF, adcBuf[i+1] & 0xFFF);
+      break;
+    }
+  }
+  //printf("mean2:%d\r\n", mean2);
+  for(i = 0; i < len - 1; i++)
+  {
+    if((adcBuf2[i] - mean2 & 0x8000) && !(adcBuf2[i+1] - mean2 & 0x8000)) // posedge
+    {
+      if(i > filter && adcBuf2[i-filter] >= adcBuf2[i])
+        continue;
+      else if(i < len - filter && adcBuf2[i+filter] <= adcBuf2[i])
+        continue;
+      
+      z2 = i;
+      //printf("i:%d,2[i]:%d,2[i+1]:%d\r\n", i, adcBuf2[i] & 0xFFF, adcBuf2[i+1] & 0xFFF);
+      break;
+    }
+  }
+  return (int32_t)z1 - (int32_t)z2;
+}
+
+uint32_t measure(double freq, uint16_t* amp1, uint16_t* amp2, int32_t* phase)
+{
+  uint8_t phaseFilter = 0;
   uint32_t len, tmp, i;
-  uint16_t result, minVal;
+  uint16_t maxVal, minVal;
   if(freq < 150000 && HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) != GPIO_PIN_SET)
   {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
@@ -82,6 +128,10 @@ uint16_t measure(double freq)
   htim8.Instance->PSC = tmp;
   tmp = 168000000 / (__HAL_TIM_GET_AUTORELOAD(&htim8) + 1) / (tmp + 1); // current sample rate
   tmp /= (uint32_t)freq; // dot per period
+  
+  if(tmp > ADC_LEN / 5)
+    phaseFilter = 200;
+  
   len = tmp * 50; // dot for 50 periods
   if(len > ADC_LEN)
     len = ADC_LEN;
@@ -104,7 +154,7 @@ uint16_t measure(double freq)
   Delay_us(1);
   htim8.Instance->EGR = TIM_EGR_UG; // update arr and psc
   ParaIO_Start_In_Sync(adcBuf, len, adcBuf2, len);
-  while(!ParaIO_IsTranferCompleted_In())
+  while(!ParaIO_IsTranferCompleted_In2())
     ;
   
   // the width of adc result is 12bit. So the MSB of uint16_t is always zero.
@@ -118,11 +168,14 @@ uint16_t measure(double freq)
     adcBuf[i] &= 0xFFF;
     adcBuf2[i] &= 0xFFF;
   }
-  arm_max_q15(adcBuf, len, &result, &tmp);
+  arm_max_q15(adcBuf, len, &maxVal, &tmp);
   arm_min_q15(adcBuf, len, &minVal, &tmp);
-  result -= minVal;
-  //printf("a:%u p:%u l:%u\r\n", __HAL_TIM_GET_AUTORELOAD(&htim8), htim8.Instance->PSC, len);
-  return result;
+  *amp1 = maxVal - minVal;
+  arm_max_q15(adcBuf2, len, &maxVal, &tmp);
+  arm_min_q15(adcBuf2, len, &minVal, &tmp);
+  *amp2 = maxVal - minVal;
+  *phase = phaseDetect(len, phaseFilter);
+  return len;
 }
 /* USER CODE END 0 */
 
@@ -134,7 +187,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   double freq;
-  uint16_t i, result;
+  uint16_t i, amp1, amp2;
+  int32_t phase;
+  uint32_t tmp;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -180,22 +235,29 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    freq = 200000;
-    measure(freq);
-    for(i = 0; i < ADC_LEN; i++)
-      printf("%d,%d,%d\r\n",adcBuf[i] - adcBuf2[i], adcBuf[i], adcBuf2[i]);
-//    for(; freq < 200; freq += 10)
-//    {
-//      printf("-%f, %d\r\n", freq, measure(freq));
-//    }
-//    for(; freq < 5000; freq += 100)
-//    {
-//      printf("-%f, %d\r\n", freq, measure(freq));
-//    }
-//    for(; freq <= 2000000; freq += 50000)
-//    {
-//      printf("-%f, %d\r\n", freq, measure(freq));
-//    }
+    freq = 30;
+//    tmp = measure(freq, &amp1, &amp2, &phase);
+//    if(phase < 500 && phase > -500)
+//      continue;
+//    for(i = 0; i<tmp; i++)
+//      printf("%d,%d,%d\r\n", adcBuf[i] & 0xFFF, adcBuf2[i] & 0xFFF, phase);
+    
+    for(; freq < 200; freq += 10)
+    {
+      measure(freq, &amp1, &amp2, &phase);
+      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase);
+    }
+    for(; freq < 5000; freq += 100)
+    {
+      measure(freq, &amp1, &amp2, &phase);
+      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase);
+    }
+    for(; freq <= 2000000; freq += 50000) // if the period of this loop is too long, the result will be wrong
+    {
+      measure(freq, &amp1, &amp2, &phase);
+      printf("%d,%d,%d\r\n", amp1 & 0xFFF, amp2 & 0xFFF, phase); // print more characters will cause bugs
+      //Delay_ms(1); un-comment it will cause bugs
+    }
     Delay_ms(1000);
     
     
