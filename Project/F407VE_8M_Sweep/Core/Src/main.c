@@ -117,6 +117,8 @@ int main(void)
   ParaIO_Init_In(&htim8, 16, 0);
   ParaIO_Init_In2(&htim8, 16, 0);
   
+  calibrate(30, UBAND_THRE);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -134,46 +136,49 @@ int main(void)
 //      printf("%d,%d,%d\r\n", adcBuf[i] & 0xFFF, adcBuf2[i] & 0xFFF, phase);
     i = 0;
     j = 0;
-    for(; currFreq < LBAND_THRE; currFreq += LBAND_STEP)
+    tmp = sweep(30, UBAND_THRE, NULL);
+    
+    double mmin=amp[0];
+    double mmax=amp[0];
+    double ave=0;
+    double ep=0;
+    
+    
+    for(i = 1; i < tmp; i++)
     {
-      measure(currFreq, &amp1, &amp2, &phase);
-      freq[i] = currFreq;
-      amp[i] = 100.0 * amp2 / amp1;
-      ph[i] = phase;
-      i++;
-      //printf("%d,%d,%f,%d,-%f\r\n", amp1, amp2, 100.0 * amp2 / amp1, phase, currFreq);
+      mmin = amp[i] < mmin ? amp[i] : mmin;
+      mmax = amp[i] > mmax ? amp[i] : mmax;
+      ave += amp[i];
+      if(fabs(amp[i] - 0.70711) < fabs(amp[j] - 0.70711))
+        j = i;
     }
-    for(; currFreq < MBAND_THRE; currFreq += MBAND_STEP)
+    ave /= tmp;
+    ep = freq[j];
+    
+    if(mmax - mmin < 0.2) // R / Open / Short
     {
-      measure(currFreq, &amp1, &amp2, &phase);
-      freq[i] = currFreq;
-      amp[i] = 100.0 * amp2 / amp1;
-      ph[i] = phase;
-      i++;
-      //printf("%d,%d,%f,%d,-%f\r\n", amp1, amp2, 100.0 * amp2 / amp1, phase, currFreq);
+      printf("%d,%f\r\n", i, amp[50]);
+      if(ave < 0.07)
+        printf("Short\r\n");
+      else if(ave > 0.97)
+        printf("Open\r\n");
+      else
+        printf("R:%f\r\n", calc_R(ave));
+      
     }
-    for(; currFreq < HBAND_THRE; currFreq += HBAND_STEP)
+    else // L/C
     {
-      measure(currFreq, &amp1, &amp2, &phase);
-      freq[i] = currFreq;
-      amp[i] = 100.0 * amp2 / amp1;
-      ph[i] = phase;
-      i++;
-      //printf("%d,%d,%f,%d,-%f\r\n", amp1, amp2, 100.0 * amp2 / amp1, phase, currFreq);
+      
+      printf("%d,%f,%f\r\n", i, amp[i], freq[i]);
+      if(amp[5] > amp[tmp - 5])
+        printf("C:%f\r\n", calc_C(ep));
+      else
+        printf("L:%f\r\n", calc_L(ep));
     }
-    for(; currFreq <= UBAND_THRE; currFreq += UBAND_STEP)
-    {
-      measure(currFreq, &amp1, &amp2, &phase);
-      freq[i] = currFreq;
-      amp[i] = 100.0 * amp2 / amp1;
-      ph[i] = phase;
-      i++;
-      //printf("%d,%d,%f,%d,-%f\r\n", amp1, amp2, 100.0 * amp2 / amp1, phase, currFreq);
-    }
-    tmp = i;
-    for(i = 0; i < tmp; i++)
-      printf("-%d,%f,%d\r\n", (uint32_t)freq[i], amp[i], (uint32_t)ph[i]);
-    //Delay_ms(2000);
+    
+//    for(i = 0; i < tmp; i++)
+//      printf("-%d,%f,%d\r\n", (uint32_t)freq[i], amp[i], (uint32_t)ph[i]);
+    //Delay_ms(500);
     
     
   }
