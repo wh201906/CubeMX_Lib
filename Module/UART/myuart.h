@@ -34,7 +34,7 @@ uint8_t MyUART_CanReadUntil(MyUARTHandle *handle, uint16_t endChar);
 uint8_t MyUART_CanReadStr(MyUARTHandle *handle);
 
 // for ReadStr(), ReadUntil() and ReadLine(), if the EndSequence doesn't match, they will return 0 and the bufferPos will not change.
-// ReadStr(), ReadUntil() and ReadLine() will NOT append \0, endChar and \r\n at the end of string
+// ReadStr(), ReadUntil() and ReadLine() will NOT append \0, endChar or \r\n at the end of string
 // ReadUntilWithEnd will append endChar, and len(ReadUntilWithEnd) = isResultEmpty ? 0 : (len(ReadUntil) + 1)
 // ReadUntilWithZero will append '\0', and len(ReadUntilWithZero) = isResultEmpty ? 0 : (len(ReadUntil) + 1)
 uint32_t MyUART_ReadStr(MyUARTHandle *handle, uint8_t *str);
