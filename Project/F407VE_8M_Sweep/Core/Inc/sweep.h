@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define SWEEP_LEN_MAX 500
+#define SWEEP_LEN_MAX 100
 #define ADC_LEN 4096
 #define ADC_PIPELINE_DELAY (7 + 1)
 #define R_REF 226.7
@@ -12,13 +12,13 @@
 #endif
 
 #define LBAND_THRE 300
-#define LBAND_STEP 10
+#define LBAND_STEP 60
 #define MBAND_THRE 20000
-#define MBAND_STEP 100
+#define MBAND_STEP 2000
 #define HBAND_THRE 100000
-#define HBAND_STEP 2000
+#define HBAND_STEP 20000
 #define UBAND_THRE 3000000
-#define UBAND_STEP 50000
+#define UBAND_STEP 200000
 
 typedef struct _AmpMean
 {
@@ -32,5 +32,6 @@ void calibrate(double start, double stop);
 double calc_R(double amplitude);
 double calc_C(double frequency);
 double calc_L(double frequency);
+double freqSearch(double freqL, double freqR, double ampL, double ampR, double requiredAmp, double precision);
 
 #endif

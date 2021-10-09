@@ -55,6 +55,7 @@ uint8_t uartBuf1[100];
 uint16_t adcBuf[ADC_LEN + ADC_PIPELINE_DELAY];
 uint16_t adcBuf2[ADC_LEN + ADC_PIPELINE_DELAY];
 double freq[SWEEP_LEN_MAX], amp[SWEEP_LEN_MAX], ph[SWEEP_LEN_MAX];
+double damp[SWEEP_LEN_MAX];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -144,21 +145,23 @@ int main(void)
     double ep=0;
     
     
-    for(i = 1; i < tmp; i++)
+    for(i = 0; i < tmp; i++)
     {
       mmin = amp[i] < mmin ? amp[i] : mmin;
       mmax = amp[i] > mmax ? amp[i] : mmax;
       ave += amp[i];
       if(fabs(amp[i] - 0.70711) < fabs(amp[j] - 0.70711))
+      {
+        //printf("update:%f,%f\r\n", freq[i], amp[i]);
         j = i;
+      }
     }
     ave /= tmp;
-    ep = freq[j];
     
-    if(mmax - mmin < 0.2) // R / Open / Short
+    if(ave - mmin < 0.1 || mmax - ave < 0.1) // R / Open / Short
     {
-      printf("%d,%f\r\n", i, amp[50]);
-      if(ave < 0.07)
+      printf("%d,%f\r\n", i, ave);
+      if(ave < 0.08)
         printf("Short\r\n");
       else if(ave > 0.97)
         printf("Open\r\n");
@@ -168,17 +171,28 @@ int main(void)
     }
     else // L/C
     {
+      // edge
+      if(j == 0)
+        ep = freqSearch(freq[0], freq[j+1], amp[0], amp[j+1], 0.70711, 0.001);
+      else if(j == tmp - 1)
+        ep = freqSearch(freq[j-1], freq[j], amp[j-1], amp[j], 0.70711, 0.001);
+      else
+        ep = freqSearch(freq[j-1], freq[j+1], amp[j-1], amp[j+1], 0.70711, 0.001);
       
-      printf("%d,%f,%f\r\n", i, amp[i], freq[i]);
+      printf("%d,%f,%f\r\n", i, ave, ep);
       if(amp[5] > amp[tmp - 5])
         printf("C:%f\r\n", calc_C(ep));
       else
         printf("L:%f\r\n", calc_L(ep));
     }
     
+//    damp[0] = amp[0];
 //    for(i = 0; i < tmp; i++)
-//      printf("-%d,%f,%d\r\n", (uint32_t)freq[i], amp[i], (uint32_t)ph[i]);
-    //Delay_ms(500);
+//    {
+//      damp[i+1] = damp[i]+amp[i+1];
+//      printf("-%d,%f,%f\r\n", (uint32_t)freq[i], amp[i], damp[i]);
+//    }
+    Delay_ms(500);
     
     
   }
