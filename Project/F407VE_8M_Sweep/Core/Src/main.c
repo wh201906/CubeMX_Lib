@@ -105,10 +105,15 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM8_Init();
   MX_SPI1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   //printf("Sweep Test\r\n");
+  
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  LED_off();
+  
   AD9834_Init(&hspi1);
   AD9834_SelectReg(0, 0);
   AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
@@ -162,15 +167,25 @@ int main(void)
     {
       printf("%d,%f\r\n", i, ave);
       if(ave < 0.08)
+      {
+        LED_fast();
         printf("Short\r\n");
+      }
       else if(ave > 0.97)
+      {
+        LED_slow();
         printf("Open\r\n");
+      }
       else
+      {
+        LED_off();
         printf("R:%f\r\n", calc_R(ave));
+      }
       
     }
     else // L/C
     {
+      LED_off();
       // edge
       if(j == 0)
         ep = freqSearch(freq[0], freq[j+1], amp[0], amp[j+1], 0.70711, 0.001);
@@ -186,13 +201,13 @@ int main(void)
         printf("L:%f\r\n", calc_L(ep));
     }
     
-//    damp[0] = amp[0];
-//    for(i = 0; i < tmp; i++)
-//    {
-//      damp[i+1] = damp[i]+amp[i+1];
-//      printf("-%d,%f,%f\r\n", (uint32_t)freq[i], amp[i], damp[i]);
-//    }
+    /*
+    for(i = 0; i < tmp; i++)
+    {
+      printf("-%d,%f,%f\r\n", (uint32_t)freq[i], amp[i], ph[i]);
+    }
     Delay_ms(500);
+    */
     
     
   }

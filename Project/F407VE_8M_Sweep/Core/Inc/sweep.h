@@ -34,4 +34,8 @@ double calc_C(double frequency);
 double calc_L(double frequency);
 double freqSearch(double freqL, double freqR, double ampL, double ampR, double requiredAmp, double precision);
 
+void LED_fast(void);
+void LED_slow(void);
+void LED_off(void);
+
 #endif

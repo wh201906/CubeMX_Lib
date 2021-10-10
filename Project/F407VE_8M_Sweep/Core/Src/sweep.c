@@ -2,6 +2,7 @@
 #include "arm_math.h"
 #include "AD9834/ad9834.h"
 #include "PARAIO/paraio.h"
+#include "tim.h"
 
 extern uint16_t adcBuf[ADC_LEN + ADC_PIPELINE_DELAY];
 extern uint16_t adcBuf2[ADC_LEN + ADC_PIPELINE_DELAY];
@@ -20,6 +21,7 @@ int32_t phaseDetect(uint32_t len, uint8_t filter)
   uint32_t i, z1 = 0, z2 = 0;
   uint16_t *bufPtr1 = adcBuf + ADC_PIPELINE_DELAY;
   uint16_t *bufPtr2 = adcBuf2 + ADC_PIPELINE_DELAY;
+  int32_t result;
 
   // find virtual zero, ignore the different amplitude
   arm_mean_q15(bufPtr1, len, &mean1);
@@ -58,7 +60,15 @@ int32_t phaseDetect(uint32_t len, uint8_t filter)
       break;
     }
   }
-  return ((int32_t)z1 - (int32_t)z2 + len) % len;
+  // len should be a even number
+  //printf("%d,%d,%d\r\n", z1, z2, z1-z2);
+  result = (int32_t)z1 - (int32_t)z2;
+  if (result > (int32_t)len / 2)
+    result -= len;
+  else if (result <= -(int32_t)len / 2)
+    result += len;
+
+  return result;
 }
 
 uint32_t measure(double freq, uint16_t *amp1, uint16_t *amp2, int32_t *phase)
@@ -99,12 +109,12 @@ uint32_t measure(double freq, uint16_t *amp1, uint16_t *amp2, int32_t *phase)
   if (tmp > ADC_LEN)
   {
     // sample 1.01% period
-    tmp = freq * ADC_LEN / 1.01;                      // required sample rate
+    tmp = freq * ADC_LEN / 1.01;                   // required sample rate
     tmp = 168000000 / tmp + 1;                     // (arr + 1) * (psc + 1)
     tmp /= (__HAL_TIM_GET_AUTORELOAD(&htim8) + 1); // psc + 1
     htim8.Instance->PSC = tmp;
   }
-  
+
   AD9834_SetFreq(freq, 0);
   Delay_us(1);
   htim8.Instance->EGR = TIM_EGR_UG; // update arr and psc
@@ -142,20 +152,20 @@ uint32_t sweep(double start, double stop, AmpMean *ampMean)
   uint16_t amp1, amp2;
   int32_t phase;
   uint32_t i = 0, j = 0, tmp = 0;
-  
+
   // necessary dummy read when the delta_freq is too high
   measure(currFreq, &amp1, &amp2, &phase);
   for (; currFreq < LBAND_THRE && currFreq <= stop; currFreq += LBAND_STEP)
   {
     measure(currFreq, &amp1, &amp2, &phase);
-    
+
     // check waveform
-//    if(currFreq == start)
-//    {
-//      for(j = 0; j < ADC_LEN; j++)
-//        printf("%d,%d\r\n",adcBuf[j], adcBuf2[j]);
-//      j = 0;
-//    }
+    //    if(currFreq == start)
+    //    {
+    //      for(j = 0; j < ADC_LEN; j++)
+    //        printf("%d,%d\r\n",adcBuf[j], adcBuf2[j]);
+    //      j = 0;
+    //    }
     freq[i] = currFreq;
     amp[i] = (double)amp2 / amp1 / LBand_ref;
     ph[i] = phase;
@@ -292,4 +302,21 @@ double freqSearch(double freqL, double freqH, double ampL, double ampH, double r
     }
   }
   return ((fabs(ampL - requiredAmp) < fabs(ampH - requiredAmp)) ? freqL : freqH);
+}
+
+void LED_fast(void)
+{
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (__HAL_TIM_GET_AUTORELOAD(&htim3) + 1) / 2);
+  htim3.Instance->PSC = 5000;
+}
+
+void LED_slow(void)
+{
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (__HAL_TIM_GET_AUTORELOAD(&htim3) + 1) / 2);
+  htim3.Instance->PSC = 10000;
+}
+
+void LED_off(void)
+{
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0xFFFF);
 }
