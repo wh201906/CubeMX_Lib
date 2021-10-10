@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DEBUG_MODE 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,6 +55,7 @@ uint8_t uartBuf1[100];
 uint16_t adcBuf[ADC_LEN + ADC_PIPELINE_DELAY];
 uint16_t adcBuf2[ADC_LEN + ADC_PIPELINE_DELAY];
 double freq[SWEEP_LEN_MAX], amp[SWEEP_LEN_MAX], ph[SWEEP_LEN_MAX];
+uint32_t sortedIndex[SWEEP_LEN_MAX];
 double sortedFreq[SWEEP_LEN_MAX], sortedAmp[SWEEP_LEN_MAX];
 double midTmp[30] = {0};
 /* USER CODE END PV */
@@ -77,7 +78,6 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  double currFreq;
   uint32_t i, j;
   uint16_t amp1, amp2;
   int32_t phase;
@@ -135,21 +135,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    currFreq = 30;
-    //    tmp = measure(currFreq, &amp1, &amp2, &phase);
-    //    if(phase < 500 && phase > -500)
-    //      continue;
-    //    for(i = 0; i<tmp; i++)
-    //      printf("%d,%d,%d\r\n", adcBuf[i] & 0xFFF, adcBuf2[i] & 0xFFF, phase);
+
     i = 0;
     j = 0;
 
     double ave = 0;
+    uint32_t refMaxId, refMinId;
+    double refMaxAmp, refMinAmp, refMaxFreq, refMinFreq, refDeltaAmp;
     double ep = 0, epAmp = 0;
     tmp = sweep(30, UBAND_THRE, NULL);
-
+    
+#if (DEBUG_MODE == 0)
     for (i = 0; i < tmp; i++)
     {
+      sortedIndex[i] = i;
       sortedAmp[i] = amp[i];
       sortedFreq[i] = freq[i];
       ave += amp[i];
@@ -161,14 +160,22 @@ int main(void)
     }
     ave /= tmp;
 
-    mySort(sortedAmp, sortedFreq, tmp);
-
-    if (sortedAmp[tmp - 1 - 1] < 0.08)
+    mySort(sortedIndex, sortedAmp, sortedFreq, tmp);
+    
+    refMaxId = sortedIndex[tmp - 1 - 1];
+    refMinId = sortedIndex[1];
+    refMaxAmp = sortedAmp[tmp - 1 - 1];
+    refMinAmp = sortedAmp[1];
+    refMaxFreq = sortedFreq[tmp - 1 - 1];
+    refMinFreq = sortedFreq[1];
+    refDeltaAmp = refMaxAmp - refMinAmp;
+    
+    if (refMaxAmp < 0.08)
     {
       LED_fast();
       printf("Short\r\n");
     }
-    else if (sortedAmp[1] > 0.97)
+    else if (refMinAmp > 0.97)
     {
       LED_slow();
       printf("Open\r\n");
@@ -176,44 +183,80 @@ int main(void)
     else
     {
       LED_off();
-      if (sortedAmp[tmp - 1 - 1] - sortedAmp[1] < 0.1)
+      if (refDeltaAmp < 0.1)
       {
         printf("R:%f\r\n", calc_R(ave));
       }
       else
       {
-        printf("Search:%f,%f\r\n", freq[j - 1], freq[j + 1]);
-        if (amp[5] > amp[tmp - 5])
+        // amp[0] is not always reliable
+        printf("Search:%f,%f\r\n", freq[j - 2], freq[j + 2]);
+        if(refMaxFreq < 1000000 && refMaxFreq > 2000 && amp[1] < ave && amp[tmp - 1 - 1] < ave)
         {
-          for (i = 0; i < 15; i++)
-          {
-            ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
-            midTmp[i] = calc_C(ep, epAmp);
-          }
-          simpleSort(midTmp, 15);
-          printf("C:%f\r\n", getAve(midTmp + 3, 9));
+          printf("LC parallel\r\n");
         }
-        else
+        else if(refMinFreq < 1000000 && refMinFreq > 2000 && amp[1] > ave && amp[tmp - 1 - 1] > ave)
         {
-          for (i = 0; i < 15; i++)
+          if(sortedAmp[0] < 0.1)
+            printf("LC serial\r\n");
+          else
+            printf("RLC serial\r\n");
+        }
+        
+        else if (amp[1] > amp[tmp - 1 - 1])
+        {
+          if(amp[1] < 0.9)
           {
-            ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
-            midTmp[i] = calc_L(ep, epAmp);
+            printf("RC parallel\r\n");
           }
-          simpleSort(midTmp, 15);
-          printf("L:%f\r\n", getAve(midTmp + 3, 9));
+          else if(amp[tmp - 1 - 1] > 0.1)
+          {
+            printf("RC serial\r\n");
+          }
+          else
+          {
+            for (i = 0; i < 15; i++)
+            {
+              ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
+              midTmp[i] = calc_C(ep, epAmp);
+            }
+            simpleSort(midTmp, 15);
+            printf("C:%f\r\n", getAve(midTmp + 3, 9));
+          }
+        }
+        else if (amp[1] < amp[tmp - 1 - 1])
+        {
+          if(amp[tmp - 1 - 1] < 0.9)
+          {
+            printf("RL parallel\r\n");
+          }
+          else if(amp[1] > 0.1)
+          {
+            printf("RL serial\r\n");
+          }
+          else
+          {
+            for (i = 0; i < 15; i++)
+            {
+              ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
+              midTmp[i] = calc_L(ep, epAmp);
+            }
+            simpleSort(midTmp, 15);
+            printf("L:%f\r\n", getAve(midTmp + 3, 9));
+          }
         }
       }
     }
 
     Delay_ms(500);
-
-    /*
+    
+#elif (DEBUG_MODE == 1)
     for(i = 0; i < tmp; i++)
     {
       printf("-%d,%f,%f\r\n", (uint32_t)freq[i], amp[i], ph[i]);
     }
-    */
+#endif
+    
     
     
     

@@ -332,9 +332,9 @@ void LED_off(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0xFFFF);
 }
 
-void mySort(double *ampL, double *freqL, uint32_t len)
+void mySort(uint32_t* iL, double *ampL, double *freqL, uint32_t len)
 {
-  uint32_t i, j;
+  uint32_t i, j, tmpId;
   double tmp;
   for (i = len - 1; i > 0; i--)
   {
@@ -348,6 +348,9 @@ void mySort(double *ampL, double *freqL, uint32_t len)
         tmp = freqL[j + 1];
         freqL[j + 1] = freqL[j];
         freqL[j] = tmp;
+        tmpId = iL[j + 1];
+        iL[j + 1] = iL[j];
+        iL[j] = tmpId;
       }
     }
   }
