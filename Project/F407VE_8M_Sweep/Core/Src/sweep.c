@@ -251,14 +251,16 @@ double calc_R(double amplitude) // ohm
   return amplitude / (1 - amplitude) * R_REF;
 }
 
-double calc_C(double frequency) // uF
+double calc_C(double frequency, double amplitude) // uF
 {
-  return 500000.0 / (PI * frequency * R_REF);
+  double factor = sqrt(1.0 - amplitude * amplitude) / amplitude;
+  return (500000.0 * factor) / (PI * frequency * R_REF);
 }
 
-double calc_L(double frequency) // uH
+double calc_L(double frequency, double amplitude) // uH
 {
-  return (500000.0 * R_REF) / (PI * frequency);
+  double factor = amplitude / sqrt(1.0 - amplitude * amplitude);
+  return (500000.0 * R_REF * factor) / (PI * frequency);
 }
 
 double freqSearch_helper(double currFreq)
@@ -279,7 +281,7 @@ double freqSearch_helper(double currFreq)
 }
 
 // monotonic
-double freqSearch(double freqL, double freqH, double ampL, double ampH, double requiredAmp, double precision)
+double freqSearch(double freqL, double freqH, double ampL, double ampH, double requiredAmp, double precision, double *ampResult)
 {
   double freqM, ampM;
   uint8_t isIncreasing;
@@ -287,7 +289,7 @@ double freqSearch(double freqL, double freqH, double ampL, double ampH, double r
   isIncreasing = (ampL < ampH);
   while (freqH - freqL > precision && fabs(ampL - requiredAmp) > 0.01 && fabs(ampH - requiredAmp) > 0.01)
   {
-    printf("L:%f,H:%f,aL:%f,aH:%f\r\n", freqL, freqH, ampL, ampH);
+    //printf("L:%f,H:%f,aL:%f,aH:%f\r\n", freqL, freqH, ampL, ampH);
     freqM = (freqL + freqH) / 2;
     ampM = freqSearch_helper(freqM);
     if (requiredAmp <= ampM && isIncreasing || requiredAmp > ampM && !isIncreasing)
@@ -301,7 +303,16 @@ double freqSearch(double freqL, double freqH, double ampL, double ampH, double r
       ampL = ampM;
     }
   }
-  return ((fabs(ampL - requiredAmp) < fabs(ampH - requiredAmp)) ? freqL : freqH);
+  if (fabs(ampL - requiredAmp) < fabs(ampH - requiredAmp))
+  {
+    *ampResult = ampL;
+    return freqL;
+  }
+  else
+  {
+    *ampResult = ampH;
+    return freqH;
+  }
 }
 
 void LED_fast(void)
@@ -319,4 +330,53 @@ void LED_slow(void)
 void LED_off(void)
 {
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0xFFFF);
+}
+
+void mySort(double *ampL, double *freqL, uint32_t len)
+{
+  uint32_t i, j;
+  double tmp;
+  for (i = len - 1; i > 0; i--)
+  {
+    for (j = 0; j < i; j++)
+    {
+      if (ampL[j] > ampL[j + 1])
+      {
+        tmp = ampL[j + 1];
+        ampL[j + 1] = ampL[j];
+        ampL[j] = tmp;
+        tmp = freqL[j + 1];
+        freqL[j + 1] = freqL[j];
+        freqL[j] = tmp;
+      }
+    }
+  }
+}
+
+void simpleSort(double *src, uint32_t len)
+{
+  uint32_t i, j;
+  double tmp;
+  for (i = len - 1; i > 0; i--)
+  {
+    for (j = 0; j < i; j++)
+    {
+      if (src[j] > src[j + 1])
+      {
+        tmp = src[j + 1];
+        src[j + 1] = src[j];
+        src[j] = tmp;
+      }
+    }
+  }
+}
+
+double getAve(double *src, uint32_t len)
+{
+  double result = 0;
+  uint32_t i;
+  for(i = 0; i< len; i++)
+    result += src[i];
+  result /= len;
+  return result;
 }

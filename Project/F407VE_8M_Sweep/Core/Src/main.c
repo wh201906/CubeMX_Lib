@@ -55,7 +55,8 @@ uint8_t uartBuf1[100];
 uint16_t adcBuf[ADC_LEN + ADC_PIPELINE_DELAY];
 uint16_t adcBuf2[ADC_LEN + ADC_PIPELINE_DELAY];
 double freq[SWEEP_LEN_MAX], amp[SWEEP_LEN_MAX], ph[SWEEP_LEN_MAX];
-double damp[SWEEP_LEN_MAX];
+double sortedFreq[SWEEP_LEN_MAX], sortedAmp[SWEEP_LEN_MAX];
+double midTmp[30] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,79 +136,86 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     currFreq = 30;
-//    tmp = measure(currFreq, &amp1, &amp2, &phase);
-//    if(phase < 500 && phase > -500)
-//      continue;
-//    for(i = 0; i<tmp; i++)
-//      printf("%d,%d,%d\r\n", adcBuf[i] & 0xFFF, adcBuf2[i] & 0xFFF, phase);
+    //    tmp = measure(currFreq, &amp1, &amp2, &phase);
+    //    if(phase < 500 && phase > -500)
+    //      continue;
+    //    for(i = 0; i<tmp; i++)
+    //      printf("%d,%d,%d\r\n", adcBuf[i] & 0xFFF, adcBuf2[i] & 0xFFF, phase);
     i = 0;
     j = 0;
+
+    double ave = 0;
+    double ep = 0, epAmp = 0;
     tmp = sweep(30, UBAND_THRE, NULL);
-    
-    double mmin=amp[0];
-    double mmax=amp[0];
-    double ave=0;
-    double ep=0;
-    
-    
-    for(i = 0; i < tmp; i++)
+
+    for (i = 0; i < tmp; i++)
     {
-      mmin = amp[i] < mmin ? amp[i] : mmin;
-      mmax = amp[i] > mmax ? amp[i] : mmax;
+      sortedAmp[i] = amp[i];
+      sortedFreq[i] = freq[i];
       ave += amp[i];
-      if(fabs(amp[i] - 0.70711) < fabs(amp[j] - 0.70711))
+      if (fabs(amp[i] - 0.70711) < fabs(amp[j] - 0.70711))
       {
         //printf("update:%f,%f\r\n", freq[i], amp[i]);
         j = i;
       }
     }
     ave /= tmp;
-    
-    if(ave - mmin < 0.1 || mmax - ave < 0.1) // R / Open / Short
+
+    mySort(sortedAmp, sortedFreq, tmp);
+
+    if (sortedAmp[tmp - 1 - 1] < 0.08)
     {
-      printf("%d,%f\r\n", i, ave);
-      if(ave < 0.08)
-      {
-        LED_fast();
-        printf("Short\r\n");
-      }
-      else if(ave > 0.97)
-      {
-        LED_slow();
-        printf("Open\r\n");
-      }
-      else
-      {
-        LED_off();
-        printf("R:%f\r\n", calc_R(ave));
-      }
-      
+      LED_fast();
+      printf("Short\r\n");
     }
-    else // L/C
+    else if (sortedAmp[1] > 0.97)
+    {
+      LED_slow();
+      printf("Open\r\n");
+    }
+    else
     {
       LED_off();
-      // edge
-      if(j == 0)
-        ep = freqSearch(freq[0], freq[j+1], amp[0], amp[j+1], 0.70711, 0.001);
-      else if(j == tmp - 1)
-        ep = freqSearch(freq[j-1], freq[j], amp[j-1], amp[j], 0.70711, 0.001);
+      if (sortedAmp[tmp - 1 - 1] - sortedAmp[1] < 0.1)
+      {
+        printf("R:%f\r\n", calc_R(ave));
+      }
       else
-        ep = freqSearch(freq[j-1], freq[j+1], amp[j-1], amp[j+1], 0.70711, 0.001);
-      
-      printf("%d,%f,%f\r\n", i, ave, ep);
-      if(amp[5] > amp[tmp - 5])
-        printf("C:%f\r\n", calc_C(ep));
-      else
-        printf("L:%f\r\n", calc_L(ep));
+      {
+        printf("Search:%f,%f\r\n", freq[j - 1], freq[j + 1]);
+        if (amp[5] > amp[tmp - 5])
+        {
+          for (i = 0; i < 15; i++)
+          {
+            ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
+            midTmp[i] = calc_C(ep, epAmp);
+          }
+          simpleSort(midTmp, 15);
+          printf("C:%f\r\n", getAve(midTmp + 3, 9));
+        }
+        else
+        {
+          for (i = 0; i < 15; i++)
+          {
+            ep = freqSearch(freq[j - 2], freq[j + 2], amp[j - 2], amp[j + 2], 0.70711, 0.001, &epAmp);
+            midTmp[i] = calc_L(ep, epAmp);
+          }
+          simpleSort(midTmp, 15);
+          printf("L:%f\r\n", getAve(midTmp + 3, 9));
+        }
+      }
     }
-    
+
+    Delay_ms(500);
+
     /*
     for(i = 0; i < tmp; i++)
     {
       printf("-%d,%f,%f\r\n", (uint32_t)freq[i], amp[i], ph[i]);
     }
-    Delay_ms(500);
     */
+    
+    
     
     
   }

@@ -26,13 +26,16 @@ typedef struct _AmpMean
 } AmpMean;
 
 int32_t phaseDetect(uint32_t len, uint8_t filter);
-uint32_t measure(double freq, uint16_t* amp1, uint16_t* amp2, int32_t* phase);
-uint32_t sweep(double start, double stop, AmpMean* ampMean);
+uint32_t measure(double freq, uint16_t *amp1, uint16_t *amp2, int32_t *phase);
+uint32_t sweep(double start, double stop, AmpMean *ampMean);
 void calibrate(double start, double stop);
 double calc_R(double amplitude);
-double calc_C(double frequency);
-double calc_L(double frequency);
-double freqSearch(double freqL, double freqR, double ampL, double ampR, double requiredAmp, double precision);
+double calc_C(double frequency, double amplitude);
+double calc_L(double frequency, double amplitude);
+double freqSearch(double freqL, double freqR, double ampL, double ampR, double requiredAmp, double precision, double *ampResult);
+void mySort(double *ampL, double *freqL, uint32_t len);
+void simpleSort(double *src, uint32_t len);
+double getAve(double *src, uint32_t len);
 
 void LED_fast(void);
 void LED_slow(void);
