@@ -19,14 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "WS2812/ws2812.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +47,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
-uint32_t buf[72];
+extern uint16_t pwmbuf[72];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,7 +90,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_DMA_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
@@ -99,21 +97,18 @@ int main(void)
   
   for(i = 0; i < 24; i++)
   {
-    buf[i] = 67;
+    pwmbuf[i] = 67;
   }
   for(i = 0; i < 24; i++)
   {
-    buf[24 + i] = 143;
+    pwmbuf[24 + i] = 143;
   }
   for(i = 0; i < 24; i++)
   {
-    buf[48 + i] = 67;
+    pwmbuf[48 + i] = 67;
   }
   Delay_ms(200);
-  HAL_TIM_PWM_Start_DMA(&htim1, TIM_CHANNEL_1, buf, 72);
-  while(HAL_DMA_GetState(htim1.hdma[1]) == HAL_DMA_STATE_BUSY)
-    ;
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+  Test1();
   /* USER CODE END 2 */
 
   /* Infinite loop */
