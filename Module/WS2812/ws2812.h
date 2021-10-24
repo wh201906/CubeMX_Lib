@@ -3,8 +3,6 @@
 
 #include "main.h"
 
-
-
-void Test1();
+void Test1(uint8_t* data, uint32_t len);
 
 #endif

@@ -47,7 +47,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
-extern uint16_t pwmbuf[72];
+uint8_t testBuf[5] = {0x55, 0x00, 0xAA};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,20 +95,8 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   
-  for(i = 0; i < 24; i++)
-  {
-    pwmbuf[i] = 67;
-  }
-  for(i = 0; i < 24; i++)
-  {
-    pwmbuf[24 + i] = 143;
-  }
-  for(i = 0; i < 24; i++)
-  {
-    pwmbuf[48 + i] = 67;
-  }
   Delay_ms(200);
-  Test1();
+  Test1(testBuf, 3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
