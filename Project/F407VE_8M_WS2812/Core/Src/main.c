@@ -47,7 +47,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
-uint8_t testBuf[5] = {0x55, 0x00, 0xAA};
+uint8_t testBuf[30];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,6 +99,11 @@ int main(void)
   WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
   WS2812_Init(&ws2812Dev2, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
   WS2812_Init(&ws2812Dev3, DMA1_Stream1, DMA_CHANNEL_3, DMA1_Stream1_IRQn, &htim2);
+  for(i = 0; i < 30; i += 2)
+  {
+    testBuf[i] = 0x00;
+    testBuf[i + 1] = 0x80;
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,9 +113,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 3);
-    WS2812_Write(&ws2812Dev2, TIM_CHANNEL_2, testBuf, 3);
-    WS2812_Write(&ws2812Dev3, TIM_CHANNEL_1, testBuf, 3);
+    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 30);
+    WS2812_Write(&ws2812Dev2, TIM_CHANNEL_2, testBuf, 30);
+    WS2812_Write(&ws2812Dev3, TIM_CHANNEL_1, testBuf, 30);
   }
   /* USER CODE END 3 */
 }

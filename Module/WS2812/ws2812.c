@@ -73,9 +73,12 @@ void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t 
 inline void WS2812_UpdateBuf(void)
 {
   uint8_t i;
-  if (WS2812_counter >= WS2812_currDev->len * 8 + 4)
+  if (WS2812_counter >= WS2812_currDev->len * 8 + 4) // boundary condition, modify this if necessary
   {
     __HAL_DMA_DISABLE(&WS2812_currDev->DMAHandle);
+    // wait for the last bit
+    while(__HAL_TIM_GET_COUNTER(WS2812_currDev->htim) >= __HAL_TIM_GET_COMPARE(WS2812_currDev->htim, WS2812_currTIMChannel)) // boundary condition, modify this if necessary
+      ;
     __HAL_TIM_SET_COMPARE(WS2812_currDev->htim, WS2812_currTIMChannel, 0);
   }
   i = 4;
