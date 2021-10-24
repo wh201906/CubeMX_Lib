@@ -69,6 +69,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t i;
+  WS2812_Dev ws2812Dev1, ws2812Dev2, ws2812Dev3; // TIM1CH1, TIM1CH2, TIM2CH1
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,12 +92,13 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  
-  Delay_ms(200);
-  Test1(testBuf, 3);
+  WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
+  WS2812_Init(&ws2812Dev2, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
+  WS2812_Init(&ws2812Dev3, DMA1_Stream1, DMA_CHANNEL_3, DMA1_Stream1_IRQn, &htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,7 +108,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(50);
+    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 3);
+    WS2812_Write(&ws2812Dev2, TIM_CHANNEL_2, testBuf, 3);
+    WS2812_Write(&ws2812Dev3, TIM_CHANNEL_1, testBuf, 3);
   }
   /* USER CODE END 3 */
 }
@@ -155,7 +159,14 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void DMA2_Stream5_IRQHandler(void)
+{
+  WS2812_UpdateBuf();
+}
+void DMA1_Stream1_IRQHandler(void)
+{
+  WS2812_UpdateBuf();
+}
 /* USER CODE END 4 */
 
 /**
