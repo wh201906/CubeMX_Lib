@@ -174,7 +174,7 @@ double AD7190_GetVoltage(void)
   return val;
 }
 
-void AD7190_SetPolar(uint8_t polar)
+void AD7190_SetPolar(uint32_t polar)
 {
   uint32_t conf = AD7190_GetConf();
   conf &= ~AD7190_POLAR_MASK;
@@ -182,12 +182,40 @@ void AD7190_SetPolar(uint8_t polar)
   AD7190_SetConf(conf);
 }
 
-void AD7190_SetGain(uint8_t gain)
+void AD7190_SetGain(uint32_t gain)
 {
   uint32_t conf = AD7190_GetConf();
   conf &= ~AD7190_GAIN_MASK;
   conf |= gain;
   AD7190_SetConf(conf);
+}
+
+void AD7190_SetChannel(uint32_t channel)
+{
+  uint32_t conf = AD7190_GetConf();
+  conf &= ~AD7190_CH_MASK;
+  conf |= channel;
+  AD7190_SetConf(conf);
+}
+
+void AD7190_SetCLKSource(uint32_t source)
+{
+  uint32_t mode = AD7190_GetMode();
+  mode &= ~AD7190_CLK_MASK;
+  mode |= source;
+  AD7190_SetMode(mode);
+}
+
+void AD7190_SetFS(uint32_t FS)
+{
+  if (FS == 0)
+    FS = 1;
+  else if (FS > 1023)
+    FS = 1023;
+  uint32_t mode = AD7190_GetMode();
+  mode &= ~AD7190_FS_MASK;
+  mode |= FS;
+  AD7190_SetMode(mode);
 }
 
 uint32_t AD7190_Read(uint8_t bitLen)

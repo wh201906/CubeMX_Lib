@@ -43,11 +43,18 @@ uint8_t myftoa_FD(double val, char *str, uint8_t precision)
   int64_t part;
   uint8_t len, i;
   double round = 0.5;
-
+  
+  // handle negative number
+  // if -1 < val < 0, myitoa() will consider it as a non-negative number(0 as integer part)
+  if(val<0)
+  {
+    *(str++) = '-';
+    val = -val;
+  }
   // for rounding
   for (i = 0; i < precision; i++)
     round /= 10;
-  val = (val < 0 ? val - round : val + round);
+  val += round;
 
   // for integer part
   part = val;
@@ -62,7 +69,7 @@ uint8_t myftoa_FD(double val, char *str, uint8_t precision)
     return len;
   }
   str[len++] = '.';
-  val = (val < 0 ? part - val : val - part);
+  val -= part;
   for (i = 0; i < precision; i++) // print decimal part from left to right
   {
     val *= 10;
@@ -165,4 +172,48 @@ double myatof(char *str)
   }
   val += val < 0 ? -floatPart : floatPart;
   return val;
+}
+
+void splitparam_hex(char *str, char spliter, int64_t *result, uint64_t num)
+{
+  uint64_t i;
+  char *ptr;
+  ptr = str;
+  for (i = 0; i < num - 1 && *ptr != '\0'; i++)
+  {
+    result[i] = myatoi_hex(ptr);
+    while (*ptr != spliter && *ptr != '\0')
+      ptr++;
+  }
+  if (*ptr == spliter)
+    ptr++;
+  result[i] = myatoi_hex(ptr);
+}
+
+void splitparam_f(char *str, char spliter, double *result, uint64_t num)
+{
+  uint64_t i;
+  char *ptr;
+  ptr = str;
+  for (i = 0; i < num - 1 && *ptr != '\0'; i++)
+  {
+    result[i] = myatof(ptr);
+    while (*ptr != spliter && *ptr != '\0')
+      ptr++;
+  }
+  if (*ptr == spliter)
+    ptr++;
+  result[i] = myatof(ptr);
+}
+
+int64_t mygcd(int64_t a, int64_t b)
+{
+  int64_t tmp;
+  while (b > 0)
+  {
+    tmp = a % b;
+    a = b;
+    b = tmp;
+  }
+  return a;
 }

@@ -1,0 +1,20 @@
+Template: Direct Rx
+base freq: 315.0M  
+crystal tolerance: 10ppm  
+Modulation type: OOK  
+Data rate: 2.5ksps 
+OOK bandwidth 300kHz
+(most of the 315M oscillators have a tolerance of center freq between +-150kHz)
+Rxdata rate error: 1%~10%
+Generate Rx1.h
+Template: Direct Tx
+GPIO0: RX_DATA_CLK
+GPIO1: INPUT
+Generate Tx1.h
+Copy Rx1.h->rxtx.h
+Work in rxtx.h
+Replace RF_PA_TC_1 properties with RF_PA_MODE_4 properties in Tx1.h,
+Replace related line in RADIO_CONFIGURATION_DATA_ARRAY
+Replace RF_MODEM_MOD_TYPE_12 properties with RF_MODEM_MOD_TYPE_12 properties in Tx1.h,
+Change 0x29(MODEM_MOD_TYPE) into 0xA9 to enable async Tx mode
+(Rx Test PASSED)

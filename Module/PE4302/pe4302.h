@@ -1,0 +1,20 @@
+#ifndef _PE4302_H
+#define _PE4302_H
+
+#include "main.h"
+
+#define PE4302_LE_PIN GPIO_PIN_7
+#define PE4302_CLK_PIN GPIO_PIN_8
+#define PE4302_DATA_PIN GPIO_PIN_9
+
+#define PE4302_LE_GPIO GPIOE
+#define PE4302_CLK_GPIO GPIOE
+#define PE4302_DATA_GPIO GPIOE
+
+#define PE4302_LE_CLKEN() __HAL_RCC_GPIOE_CLK_ENABLE()
+#define PE4302_CLK_CLKEN() __HAL_RCC_GPIOE_CLK_ENABLE()
+#define PE4302_DATA_CLKEN() __HAL_RCC_GPIOE_CLK_ENABLE()
+
+void PE4302_Init(void);
+void PE4302_Set(float val);
+#endif

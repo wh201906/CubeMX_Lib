@@ -37,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_LEN 32
+#define ADC_LEN 1024
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -70,7 +70,7 @@ void IOInit(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint16_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,6 +95,7 @@ int main(void)
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
   // HAL_TIM_PWM_Start_DMA(&htim8,TIM_CHANNEL_1, (uint32_t)adcVal, ADC_LEN);
+  MyUSART1_Init(&huart1);
   Delay_Init(168);
   HAL_TIM_PWM_Start(&htim8,TIM_CHANNEL_1);
   ParaIO_Init_In(&htim8,8,0);
@@ -111,8 +112,13 @@ int main(void)
     /* USER CODE BEGIN 3 */
     ParaIO_Start_In(adcVal,ADC_LEN);
     testVal=GPIOD->IDR;
-    Delay_ms(300);
-    MyUSART1_Write(adcVal,ADC_LEN);
+    while(!ParaIO_IsTranferCompleted_In())
+      ;
+    Delay_ms(200);
+    for(i = 0; i < ADC_LEN; i++)
+    {
+      printf("%d\r\n", adcVal[i]);
+    }
   }
   /* USER CODE END 3 */
 }

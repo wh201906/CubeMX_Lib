@@ -155,7 +155,7 @@ void AD9834_Init(SPI_HandleTypeDef *hspi)
 void AD9834_SendRaw(uint16_t data)
 {
   HAL_GPIO_WritePin(AD9834_NSS_GPIO, AD9834_NSS_PIN, 0);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)(&data), 1, 10);
+  HAL_SPI_Transmit(AD9834_hspi, (uint8_t *)(&data), 1, 10);
   HAL_GPIO_WritePin(AD9834_NSS_GPIO, AD9834_NSS_PIN, 1);
 }
 

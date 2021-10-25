@@ -15,4 +15,7 @@ DMA直接使用HAL库即可，此功能模块仅用于多字节传输
 
 4.记得调用MyUSARTx_Init()  
 ***
-其实是UART而不是USART，最开始写的时候没注意
+其实是UART而不是USART，最开始写的时候没注意  
+***
+务必拉高Rx口以避免干扰(例如复位时Tx端电压浮动)  
+已弃用，Module/UART基于LL库实现，使用自定义Handle，单套.c/.h文件即可用于所有USART外设的async模式  

@@ -7,11 +7,17 @@
 #define WCLK(x) (HAL_GPIO_WritePin(AD9850_WCLK_GPIO, AD9850_WCLK_PIN, x))
 #define D7(x) (HAL_GPIO_WritePin(AD9850_D_GPIO, AD9850_D7_PIN, x))
 
-uint32_t freqReg = 0;
-uint8_t phaseReg = 0;
+uint32_t AD9850_freqReg = 0;
+uint8_t AD9850_phaseReg = 0;
+uint16_t AD9850_delayTicks;
+
+// __NOP() is not recommended for delay, 
+// because a single instruction will take more than one clock cycle.
+// Plus, the instruction pipelining should be considered
+// Delay_ticks might not be fast enough, but it's more reliable.
+#define AD9850_Delay() Delay_ticks(AD9850_delayTicks)
 
 void AD9850_ToCmdBuf(void);
-void AD9850_Delay(void);
 void AD9850_ModeUpdate(void);
 void AD9850_WCLKPulse(void);
 void AD9850_FQUDPulse(void);
@@ -28,12 +34,12 @@ double AD9850_GetActuralFreq(uint32_t regVal)
 
 uint32_t AD9850_GetCurrentFreqReg(void)
 {
-  return freqReg;
+  return AD9850_freqReg;
 }
 
 void AD9850_SetFreq(double freq)
 {
-  freqReg = AD9850_Freq2Reg(freq);
+  AD9850_freqReg = AD9850_Freq2Reg(freq);
   AD9850_Update();
 }
 
@@ -57,12 +63,12 @@ double AD9850_GetActuralPhase(uint8_t regVal)
 
 uint8_t AD9850_GetCurrentPhaseReg()
 {
-  return phaseReg;
+  return AD9850_phaseReg;
 }
 
 void AD9850_SetPhase(double phase)
 {
-  phaseReg = AD9850_Phase2Reg(phase);
+  AD9850_phaseReg = AD9850_Phase2Reg(phase);
   AD9850_Update();
 }
 
@@ -72,17 +78,17 @@ void AD9850_Update(void) // An update with W34=0 will power up the chip
   AD9850_FQUDPulse();
 
 #if MODE_SERIAL
-  AD9850_SendByte(freqReg >> 0);
-  AD9850_SendByte(freqReg >> 8);
-  AD9850_SendByte(freqReg >> 16);
-  AD9850_SendByte(freqReg >> 24);
-  AD9850_SendByte(phaseReg);
+  AD9850_SendByte(AD9850_freqReg >> 0);
+  AD9850_SendByte(AD9850_freqReg >> 8);
+  AD9850_SendByte(AD9850_freqReg >> 16);
+  AD9850_SendByte(AD9850_freqReg >> 24);
+  AD9850_SendByte(AD9850_phaseReg);
 #else
-  AD9850_SendByte(phaseReg);
-  AD9850_SendByte(freqReg >> 24);
-  AD9850_SendByte(freqReg >> 16);
-  AD9850_SendByte(freqReg >> 8);
-  AD9850_SendByte(freqReg >> 0);
+  AD9850_SendByte(AD9850_phaseReg);
+  AD9850_SendByte(AD9850_freqReg >> 24);
+  AD9850_SendByte(AD9850_freqReg >> 16);
+  AD9850_SendByte(AD9850_freqReg >> 8);
+  AD9850_SendByte(AD9850_freqReg >> 0);
 #endif
 
 
@@ -156,15 +162,8 @@ void AD9850_Init()
   HAL_GPIO_Init(AD9850_WCLK_GPIO, &GPIO_InitStruct);
 
   AD9850_ModeUpdate();
-}
 
-void AD9850_Delay(void)
-{
-  // 2ns for single __nop(); at 480MHz, FQUD should be high for at least 7ns
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
+  AD9850_delayTicks = Delay_GetSYSFreq() * 0.000000007 + 1.0; // 7ns
 }
 
 void AD9850_ModeUpdate(void)
