@@ -3,8 +3,8 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'F407VE_8M_SPITest' 
- * Target:  'F407VE_8M_SPITest' 
+ * Project: 'F407VE_8M_ADF4002' 
+ * Target:  'F407VE_8M_ADF4002' 
  */
 
 #ifndef RTE_COMPONENTS_H
