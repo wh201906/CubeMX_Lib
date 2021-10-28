@@ -14,6 +14,7 @@ typedef struct _WS2812_Dev
   uint32_t comp1;
 } WS2812_Dev;
 
+// on STM32H7, treat DMAChannel as DMARequest
 void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ);
 void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim);
 void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t len);

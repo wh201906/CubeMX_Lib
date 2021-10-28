@@ -56,16 +56,18 @@ uint8_t Test(uint32_t val)
 {
   const uint8_t retry = 5;
   uint8_t i;
+  ADF4002_Write(3, 0x0D8093);
   ADF4002_Write(2, 0x0D8092);
-  ADF4002_Write(0, 0x001F40); // 40MHz ref, PFD at 20k
+  ADF4002_Write(0, 0x001F40);
   ADF4002_Write(1, val << 8 | 0x01);
   Delay_ms(50);
   for (i = 0; i < retry; i++)
   {
     if (ADF4002_MUX()) // already locked
       break;
+    ADF4002_Write(3, 0x0D8093);
     ADF4002_Write(2, 0x0D8092);
-    ADF4002_Write(0, 0x001F40); // 40MHz ref, PFD at 20k
+    ADF4002_Write(0, 0x001F40);
     ADF4002_Write(1, val << 8 | 0x01);
     Delay_ms(50);
   }

@@ -13,8 +13,12 @@ void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMA
   else if ((uint32_t)DMAStream > DMA1_BASE)
     __HAL_RCC_DMA1_CLK_ENABLE();
 
-  dev->DMAHandle.Instance = DMA2_Stream5;
-  dev->DMAHandle.Init.Channel = DMA_CHANNEL_6;
+  dev->DMAHandle.Instance = DMAStream;
+#if defined(STM32H750xx)
+  dev->DMAHandle.Init.Request = DMAChannel;
+#else
+  dev->DMAHandle.Init.Channel = DMAChannel;
+#endif
   dev->DMAHandle.Init.Direction = DMA_MEMORY_TO_PERIPH;
   dev->DMAHandle.Init.PeriphInc = DMA_PINC_DISABLE;
   dev->DMAHandle.Init.MemInc = DMA_MINC_ENABLE;
@@ -23,7 +27,7 @@ void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMA
   dev->DMAHandle.Init.Mode = DMA_CIRCULAR;
   dev->DMAHandle.Init.Priority = DMA_PRIORITY_VERY_HIGH;
   dev->DMAHandle.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-
+  
   HAL_DMA_DeInit(&dev->DMAHandle);
   HAL_DMA_Init(&dev->DMAHandle);
 
@@ -34,7 +38,7 @@ void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMA
 
   __HAL_DMA_CLEAR_FLAG(&dev->DMAHandle, __HAL_DMA_GET_TC_FLAG_INDEX(&dev->DMAHandle));
   __HAL_DMA_CLEAR_FLAG(&dev->DMAHandle, __HAL_DMA_GET_HT_FLAG_INDEX(&dev->DMAHandle));
-  dev->DMAHandle.Instance->CR |= DMA_IT_TC | DMA_IT_HT;
+  ((DMA_Stream_TypeDef *)dev->DMAHandle.Instance)->CR |= DMA_IT_TC | DMA_IT_HT;
 }
 
 void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim)
@@ -66,7 +70,7 @@ void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t 
   HAL_DMA_Init(&WS2812_currDev->DMAHandle); // necessary there
   __HAL_TIM_ENABLE_DMA(WS2812_currDev->htim, TIM_DMA_UPDATE);
   HAL_DMA_Start(&WS2812_currDev->DMAHandle, (uint32_t)WS2812_buf, (uint32_t) & (WS2812_currDev->htim->Instance->CCR1) + TIMChannel, 8);
-  while (WS2812_currDev->DMAHandle.Instance->CR & DMA_SxCR_EN)
+  while (((DMA_Stream_TypeDef *)WS2812_currDev->DMAHandle.Instance)->CR & DMA_SxCR_EN)
     ;
 }
 
