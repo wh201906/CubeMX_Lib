@@ -67,6 +67,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint8_t str[50];
+  uint32_t val;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,8 +106,14 @@ int main(void)
     /* USER CODE BEGIN 3 */
     if(MyUART_ReadUntilWithZero(&uart1, str, '\n'))
     {
-      Test(myatoi(str));
-      printf("ok\n");
+      val = myatoi(str);
+      val = Test(val);
+      if(val == 0)
+        printf("ok\n");
+      else if(val == 1)
+        printf("par\n");
+      else
+        printf("err\n");
     }
   }
   /* USER CODE END 3 */

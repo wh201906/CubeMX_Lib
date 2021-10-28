@@ -124,7 +124,7 @@ int main(void)
           buf[i] = LL_SPI_ReceiveData16(SPI3);
         }
         while(LL_SPI_IsActiveFlag_BSY(SPI3))
-            ;
+          ;
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, 1);
         MyUART_WriteLine(&uart1, "Received");
         for(i = 0; i < len; i++)
