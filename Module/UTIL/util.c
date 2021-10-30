@@ -95,7 +95,7 @@ uint8_t myftoa(double val, char *str)
 }
 
 // no overflow detect, skipping leading spaces
-int64_t myatoi(char *str)
+int64_t myatoi(const char *str)
 {
   int64_t val = 0;
   uint8_t i = 0, isPositive = 1;
@@ -118,7 +118,7 @@ int64_t myatoi(char *str)
   return val;
 }
 
-int64_t myatoi_hex(char *str)
+int64_t myatoi_hex(const char *str)
 {
   int64_t val = 0;
   uint8_t i = 0, isPositive = 1;

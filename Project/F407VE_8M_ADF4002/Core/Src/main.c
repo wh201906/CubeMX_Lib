@@ -104,6 +104,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(20); // NECESSARY
     if(MyUART_ReadUntilWithZero(&uart1, str, '\n'))
     {
       val = myatoi(str);
