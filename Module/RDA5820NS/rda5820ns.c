@@ -113,7 +113,7 @@ uint8_t RDA5820_SetFreq(double freq) //50~115, in MHz, maximum precision
   }
   RDA5820_ReadReg(0x07, &reg);
   reg &= 0xFDFF;
-  reg |= mode50;
+  reg |= mode50 << 9;
   RDA5820_WriteReg(0x07, reg);
   RDA5820_ReadReg(0x03, &reg);
   reg &= 0x20;                               //keep direct mode bit
@@ -131,39 +131,4 @@ uint8_t RDA5820_SetVolume(uint8_t volume) // 4bit, 0~15
   reg &= 0xFFF0;
   reg |= (volume & 0xF);
   return RDA5820_WriteReg(0x05, reg);
-}
-
-uint8_t RDA5820_test(int freq)
-{
-  uint16_t temp;
-  uint8_t spc = 0, band = 0;
-  uint16_t fbtm, chan;
-  RDA5820_ReadReg(0x03, &temp);
-  temp &= 0X001F;
-  band = (temp >> 2) & 0x03; //得到频带
-  spc = temp & 0x03;         //得到分辨率
-  if (spc == 0)
-    spc = 10;
-  else if (spc == 1)
-    spc = 20;
-  else
-    spc = 5;
-  if (band == 0)
-    fbtm = 8700;
-  else if (band == 1 || band == 2)
-    fbtm = 7600;
-  else
-  {
-    RDA5820_ReadReg(0x53, &fbtm);
-    fbtm *= 10;
-  }
-  if (freq < fbtm)
-    return 0;
-  chan = (freq - fbtm) / spc; //得到CHAN应该写入的值
-  chan &= 0X3FF;              //取低10位
-  temp |= chan << 6;
-  temp |= 1 << 4; //TONE ENABLE
-  RDA5820_WriteReg(0x03, temp);
-  Delay_ms(1000);
-  return 1;
 }

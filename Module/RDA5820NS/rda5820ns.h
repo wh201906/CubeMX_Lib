@@ -20,6 +20,5 @@ uint16_t RDA5820_ReadID(void);
 uint8_t RDA5820_SetWorkMode(uint8_t workMode);
 uint8_t RDA5820_SetFreq(double freq);      //50~115, in MHz, maximum precision
 uint8_t RDA5820_SetVolume(uint8_t volume); // 4bit, 0~15
-uint8_t RDA5820_test(int freq);
 
 #endif

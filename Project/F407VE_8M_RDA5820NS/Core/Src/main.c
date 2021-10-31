@@ -120,14 +120,26 @@ int main(void)
   
     if(MyUART_ReadUntilWithZero(&uart1, str, '>'))
     {
-      freq = myatof(str); // freq*10
-      freq /= 10.0;
-      printf("Freq: %f\r\n", freq);
-      //RDA5820_SetFreq(freq);
-      RDA5820_test(freq * 100);
+      if(str[0] == 't')
+      {
+        RDA5820_SetWorkMode(RDA5820_WORKMODE_TX);
+        printf("Tx mode\n");
+      }
+      else if(str[0] == 'r')
+      {      
+        RDA5820_SetWorkMode(RDA5820_WORKMODE_RX);
+        printf("Rx mode\n");
+      }
+      else
+      {
+        freq = myatof(str); // freq*10
+        freq /= 10.0;
+        printf("Freq: %f\r\n", freq);
+        RDA5820_SetFreq(freq);
+      }
     }
     RDA5820_ReadReg(0x0B, &tmpreg);
-    printf("RSSI: %d, ", tmpreg>>9);
+    printf("--------RSSI: %d, ", tmpreg>>9);
     RDA5820_ReadReg(0x0A, &tmpreg);
     printf("Seek/Tune Complete: %d, ", !!(tmpreg & 0x4000));
     
