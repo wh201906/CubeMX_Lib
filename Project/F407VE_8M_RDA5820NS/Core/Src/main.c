@@ -130,12 +130,17 @@ int main(void)
         RDA5820_SetWorkMode(RDA5820_WORKMODE_RX);
         printf("Rx mode\n");
       }
-      else
+      else if(str[0] == 'f')
       {
-        freq = myatof(str); // freq*10
+        freq = myatof(str + 1); // freq*10
         freq /= 10.0;
         printf("Freq: %f\r\n", freq);
         RDA5820_SetFreq(freq);
+      }
+      else if(str[0] == 'c')
+      {
+        printf("Channel: %d\r\n", str[1] - '0');
+        RDA5820_SetChannelSpace(str[1] - '0');
       }
     }
     RDA5820_ReadReg(0x0B, &tmpreg);

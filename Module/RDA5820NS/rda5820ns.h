@@ -13,12 +13,18 @@
 #define RDA5820_WORKMODE_CODEC 0xC
 #define RDA5820_WORKMODE_ADC 0xE
 
+#define RDA5820_CHSPACE_25K 0x3
+#define RDA5820_CHSPACE_50K 0x2
+#define RDA5820_CHSPACE_100K 0x0
+#define RDA5820_CHSPACE_200K 0x1
+
 uint16_t RDA5820_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO, uint8_t SDA_PinID);
 uint8_t RDA5820_ReadReg(uint8_t reg, uint16_t *data);
 uint8_t RDA5820_WriteReg(uint8_t reg, uint16_t data);
 uint16_t RDA5820_ReadID(void);
 uint8_t RDA5820_SetWorkMode(uint8_t workMode);
-uint8_t RDA5820_SetFreq(double freq);      //50~115, in MHz, maximum precision
+uint8_t RDA5820_SetFreq(double freq);      //50~115, in MHz
 uint8_t RDA5820_SetVolume(uint8_t volume); // 4bit, 0~15
+uint8_t RDA5820_SetChannelSpace(uint8_t channelSpace);
 
 #endif

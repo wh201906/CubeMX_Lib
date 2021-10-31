@@ -39,12 +39,14 @@ uint8_t RDA5820_ReadReg(uint8_t reg, uint16_t *data)
   if (!SoftI2C_Read(&RDA5820_port, RDA5820_ADDR, reg, tmp, 2))
     return 0;
   *data = ((uint16_t)tmp[0] << 8) | tmp[1];
+  // printf("*****read:0x%x,0x%x\n", reg, *data);
   return 1;
 }
 
 uint8_t RDA5820_WriteReg(uint8_t reg, uint16_t data)
 {
   uint8_t tmp[2] = {data >> 8, data & 0xFF};
+  // printf("*****write:0x%x,0x%x\n", reg, data);
   return SoftI2C_Write(&RDA5820_port, RDA5820_ADDR, reg, tmp, 2);
 }
 
@@ -66,41 +68,47 @@ uint8_t RDA5820_SetWorkMode(uint8_t workMode)
   return RDA5820_WriteReg(0x40, reg);
 }
 
-uint8_t RDA5820_SetFreq(double freq) //50~115, in MHz, maximum precision
+uint8_t RDA5820_SetFreq(double freq) //50~115, in MHz
 {
-  uint16_t reg;
+  uint16_t reg3, reg7;
   uint16_t chNb;
   uint8_t band, chSp, mode50;
 
+  RDA5820_ReadReg(0x03, &reg3);
+  chSp = reg3 & 0x3;
+  if (chSp == 0)
+    chSp = 10;
+  else if (chSp == 1)
+    chSp = 5;
+  else if (chSp == 2)
+    chSp = 20;
+  else // chSp == 3
+    chSp = 40;
+
   mode50 = 0x1;  // default
-  chSp = 0x0;    // 100k
   if (freq < 65) // 50~65
   {
     if (freq < 50)
       freq = 50;
     mode50 = 0x0; // 50M start
 
-    band = 0xC; // 50~65/65~76
+    band = 0x3; // 50~65/65~76
     freq -= 50;
-    chNb = freq * 10 + 0.5;
   }
   else if (freq < 76) // 65~76
   {
-    band = 0xC; // 50~65/65~76
+    band = 0x3; // 50~65/65~76
     freq -= 65;
-    chNb = freq * 10 + 0.5;
   }
   else if (freq < 101) // 76~101
   {
-    band = 0x8; // 76~108
+    band = 0x2; // 76~108
     freq -= 76;
-    chNb = freq * 10 + 0.5;
   }
   else if (freq < 112.5875) // 101~112.575(0.575---0.5875---0.600)
   {
     band = 0x0; // 87~108
     freq -= 87;
-    chNb = freq * 10 + 0.5;
   }
   else // 112.575~115
   {
@@ -109,17 +117,18 @@ uint8_t RDA5820_SetFreq(double freq) //50~115, in MHz, maximum precision
 
     band = 0x0; // 87~108
     freq -= 87;
-    chNb = freq * 10 + 0.5;
   }
-  RDA5820_ReadReg(0x07, &reg);
-  reg &= 0xFDFF;
-  reg |= mode50 << 9;
-  RDA5820_WriteReg(0x07, reg);
-  RDA5820_ReadReg(0x03, &reg);
-  reg &= 0x20;                               //keep direct mode bit
-  reg |= (chSp | band | 0x10 | (chNb << 6)); // tune
-  RDA5820_WriteReg(0x03, reg);
-  printf("chNb, band, chSp, 50: %d, %d, %d, %d\r\n", chNb, band >> 2, chSp, mode50);
+  chNb = freq * chSp + 0.5;
+
+  RDA5820_ReadReg(0x07, &reg7);
+  reg7 &= 0xFDFF;
+  reg7 |= mode50 << 9;
+  RDA5820_WriteReg(0x07, reg7);
+
+  reg3 &= 0x23;                             //keep direct mode bit and channel space
+  reg3 |= (band << 2 | 1 << 4 | chNb << 6); // tune
+  RDA5820_WriteReg(0x03, reg3);
+  printf("chNb, band, chSp, 50: %d, %d, %d, %d\r\n", chNb, band, 1000 / chSp, mode50);
   return 1; //TODO: Get tune status
 }
 
@@ -131,4 +140,14 @@ uint8_t RDA5820_SetVolume(uint8_t volume) // 4bit, 0~15
   reg &= 0xFFF0;
   reg |= (volume & 0xF);
   return RDA5820_WriteReg(0x05, reg);
+}
+
+uint8_t RDA5820_SetChannelSpace(uint8_t channelSpace)
+{
+  uint16_t reg;
+  if (!RDA5820_ReadReg(0x03, &reg))
+    return 0;
+  reg &= ~0x0003;
+  reg |= (channelSpace & 0x0003);
+  return RDA5820_WriteReg(0x03, reg);
 }
