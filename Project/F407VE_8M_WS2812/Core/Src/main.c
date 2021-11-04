@@ -96,8 +96,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
-  WS2812_Init(&ws2812Dev2, DMA2_Stream5, DMA_CHANNEL_7, DMA2_Stream5_IRQn, &htim1);
+  WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim1);
+  WS2812_Init(&ws2812Dev2, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim1);
   WS2812_Init(&ws2812Dev3, DMA1_Stream1, DMA_CHANNEL_3, DMA1_Stream1_IRQn, &htim2);
   for(i = 0; i < 30; i += 2)
   {
