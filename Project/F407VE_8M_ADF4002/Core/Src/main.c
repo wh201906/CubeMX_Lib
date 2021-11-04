@@ -107,14 +107,23 @@ int main(void)
     Delay_ms(20); // NECESSARY
     if(MyUART_ReadUntilWithZero(&uart1, str, '\n'))
     {
-      val = myatoi(str);
-      val = Test(val);
-      if(val == 0)
-        printf("ok\n");
-      else if(val == 1)
-        printf("par\n");
+      if(str[0] == 'r')
+      {
+        val = myatoi_hex(str);
+        printf("Write to Register: 0x%x\n", val);
+        ADF4002_Write(0, val);
+      }
       else
-        printf("err\n");
+      {
+        val = myatoi(str);
+        val = Test(val);
+        if(val == 0)
+          printf("ok\n");
+        else if(val == 1)
+          printf("par\n");
+        else
+          printf("err\n");
+      }
     }
   }
   /* USER CODE END 3 */

@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'F407VE_8M_WaveTransfer_1' 
+ * Project: 'F407VE_8M_WaveTransfer_0' 
  * Target:  'F407VE_8M_WaveTransfer' 
  */
 
