@@ -45,7 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+MyUARTHandle uart1;
+uint8_t uartBuf1[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,7 +67,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  char str[20];
+  double freq, duty;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -90,7 +92,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
-
+  Delay_Init(168);
+  MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  SigPara_PWM_Init();
+  Delay_ms(2000);
+  SigPara_PWM();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,6 +106,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Delay_ms(500);
+//    duty = SigPara_PWM(500, &freq);
+//    printf("freq: %f, duty cycle: %f\r\n", freq, duty);
   }
   /* USER CODE END 3 */
 }

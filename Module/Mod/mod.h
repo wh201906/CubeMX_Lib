@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+#define SIGPARA_HTIM1_CLK 84000000.0
+
 typedef struct _WS2812_Dev
 {
   DMA_HandleTypeDef DMAHandle;
@@ -19,6 +21,10 @@ void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMACha
 void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t len);
 void WS2812_UpdateBuf(void);
 
-void Test1(uint8_t *data, uint32_t len);
+static void SigPara_Freq_LF_GPIO_Init(void);
+static void SigPara_PWM_TIM_Init(void);
+static void SigPara_PWM_GPIO_Init(void);
+void SigPara_PWM_Init(void);
+void SigPara_PWM();
 
 #endif
