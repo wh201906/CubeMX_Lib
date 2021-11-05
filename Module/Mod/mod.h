@@ -5,21 +5,22 @@
 
 #define SIGPARA_HTIM1_CLK 84000000.0
 
-typedef struct _WS2812_Dev
+typedef struct _Mod_Tx_Dev
 {
   DMA_HandleTypeDef DMAHandle;
   TIM_HandleTypeDef *htim;
-  uint8_t *data;
-  uint32_t len;
+  uint16_t data;
 
   uint32_t comp0;
   uint32_t comp1;
-} WS2812_Dev;
+} Mod_Tx_Dev;
 
-void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ);
-void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim);
-void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t len);
-void WS2812_UpdateBuf(void);
+void Mod_Tx_DMAInit(Mod_Tx_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ);
+void Mod_Tx_Init(Mod_Tx_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim);
+void Mod_Tx_SetValue(Mod_Tx_Dev *dev, uint16_t data);
+void Mod_Tx_Start(Mod_Tx_Dev *dev, uint32_t TIMChannel);
+void Mod_Tx_UpdateBuf(void);
+uint8_t Mod_Tx_IsFinished(void);
 
 static void SigPara_Freq_LF_GPIO_Init(void);
 static void SigPara_PWM_TIM_Init(void);

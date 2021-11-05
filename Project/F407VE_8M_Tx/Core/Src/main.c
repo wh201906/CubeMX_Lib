@@ -74,11 +74,6 @@ void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
   OLED_ShowInt(x, y, val);
 }
 
-void Buf_Padding()
-{
-  testBuf[0] = num >> 8;
-  testBuf[1] = num & 0xFF;
-}
 /* USER CODE END 0 */
 
 /**
@@ -89,10 +84,10 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t i;
-  WS2812_Dev ws2812Dev1;
+  Mod_Tx_Dev ws2812Dev1;
   
   uint8_t sending = 0;
-  uint8_t digit;
+  uint16_t digit;
   
   uint16_t editNum = 0;
   uint8_t editState = 5; // 0~3: editing 4: finished 5: not editing
@@ -133,15 +128,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim1);
+  Mod_Tx_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim1);
   OLED_Init(GPIOE, 4, GPIOE, 5);
   OLED_SetTextSize(TEXTSIZE_BIG);
 
-  testBuf[0] = 0xF5;
-  testBuf[1] = 0xF0;
   OLED_ShowStr(0, 0, "Stopped");
   OLED_ShowStr(0, 2, "1234 ");
-  Buf_Padding();
+  
+  Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
+  Mod_Tx_Start(&ws2812Dev1, TIM_CHANNEL_1);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -152,8 +148,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    
-    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 2);
     digit = GridKey_Scan(2);
     if(digit != 0xFF)
     {
@@ -177,7 +171,8 @@ int main(void)
         else if(digit == 10) // ok, confirm
         {
           num = editNum;
-          Buf_Padding();
+          if(sending)
+            Mod_Tx_SetValue(&ws2812Dev1, num);
           OLED_ShowStr(0, 2, "     ");
           OLED_Show4digit(0, 2, num);
           editState = 5;
@@ -194,15 +189,17 @@ int main(void)
       if(digit == 12) // send
       {
         sending = 1;
+        Mod_Tx_SetValue(&ws2812Dev1, num);
         OLED_ShowStr(0, 0, "Sending     \x81\x81");
       }
       else if(digit == 15) // stop
       {
         sending = 0;
+        Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
         OLED_ShowStr(0, 0, "Stopped       ");
       }
     }
-    Delay_ms(100);
+    Delay_ms(200);
     
     if(digit != 0xFF)
       printf("%d\n", digit);
@@ -256,7 +253,7 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void DMA2_Stream5_IRQHandler(void)
 {
-  WS2812_UpdateBuf();
+  Mod_Tx_UpdateBuf();
 }
 /* USER CODE END 4 */
 

@@ -1,19 +1,19 @@
 #include "mod.h"
 #include "tim.h"
 
-uint8_t Mod_RxBuf[16];
+uint8_t Mod_RxBuf[32];
 uint8_t Mod_RxBufBegin, Mod_RxBufEnd;
-uint32_t Mod_RxThre = 2000;
+uint32_t Mod_RxThre = 250;
 uint8_t Mod_RxId;
 
-WS2812_Dev *WS2812_currDev;
+Mod_Tx_Dev *WS2812_currDev;
 uint32_t WS2812_counter;
-uint32_t WS2812_buf[8];
+uint32_t WS2812_buf[32];
 uint32_t WS2812_currTIMChannel;
 
 TIM_HandleTypeDef SigPara_myhtim1; // used as counter in Freq_LF and in Freq_HF
 
-void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ)
+void Mod_Tx_DMAInit(Mod_Tx_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ)
 {
   if ((uint32_t)DMAStream > DMA2_BASE)
     __HAL_RCC_DMA2_CLK_ENABLE();
@@ -48,7 +48,7 @@ void WS2812_DMAInit(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMA
   ((DMA_Stream_TypeDef *)dev->DMAHandle.Instance)->CR |= DMA_IT_TC | DMA_IT_HT;
 }
 
-void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim)
+void Mod_Tx_Init(Mod_Tx_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMAChannel, IRQn_Type DMAIRQ, TIM_HandleTypeDef *htim)
 {
   uint32_t tmp;
   dev->htim = htim;
@@ -57,48 +57,62 @@ void WS2812_Init(WS2812_Dev *dev, DMA_Stream_TypeDef *DMAStream, uint32_t DMACha
   tmp = __HAL_TIM_GET_AUTORELOAD(htim);
   dev->comp0 = tmp * 0.32;
   dev->comp1 = tmp - dev->comp0;
-  WS2812_DMAInit(dev, DMAStream, DMAChannel, DMAIRQ);
+  // another way
+  // dev->comp0 = 0;
+  // dev->comp1 = tmp / 2;
+  Mod_Tx_DMAInit(dev, DMAStream, DMAChannel, DMAIRQ);
 }
 
-void WS2812_Write(WS2812_Dev *dev, uint32_t TIMChannel, uint8_t *data, uint32_t len)
+void Mod_Tx_Start(Mod_Tx_Dev *dev, uint32_t TIMChannel)
 {
   uint8_t i;
   WS2812_currDev = dev;
-  WS2812_currDev->data = data;
-  WS2812_currDev->len = len;
   WS2812_currTIMChannel = TIMChannel;
   WS2812_counter = 0;
-  for (i = 0; i < 8; i++)
-    WS2812_buf[i] = WS2812_currDev->comp0;
+  for (i = 0; i < 32; i++)
+    WS2812_buf[i] = WS2812_currDev->comp1;
   __HAL_TIM_SET_COMPARE(WS2812_currDev->htim, TIMChannel, WS2812_currDev->comp0);
   WS2812_currDev->htim->Instance->EGR = TIM_EGR_UG; // force update
   __HAL_TIM_SET_COUNTER(WS2812_currDev->htim, 0);
   HAL_TIM_PWM_Start(WS2812_currDev->htim, TIMChannel);
   HAL_DMA_Init(&WS2812_currDev->DMAHandle); // necessary there
   __HAL_TIM_ENABLE_DMA(WS2812_currDev->htim, TIM_DMA_UPDATE);
-  HAL_DMA_Start(&WS2812_currDev->DMAHandle, (uint32_t)WS2812_buf, (uint32_t) & (WS2812_currDev->htim->Instance->CCR1) + TIMChannel, 8);
-  while (((DMA_Stream_TypeDef *)WS2812_currDev->DMAHandle.Instance)->CR & DMA_SxCR_EN)
-    ;
+  HAL_DMA_Start(&WS2812_currDev->DMAHandle, (uint32_t)WS2812_buf, (uint32_t) & (WS2812_currDev->htim->Instance->CCR1) + TIMChannel, 32);
 }
 
-inline void WS2812_UpdateBuf(void)
+void Mod_Tx_SetValue(Mod_Tx_Dev *dev, uint16_t data)
+{
+  dev->data = data;
+}
+
+inline uint8_t Mod_Tx_IsFinished(void)
+{
+  return !(((DMA_Stream_TypeDef *)WS2812_currDev->DMAHandle.Instance)->CR & DMA_SxCR_EN);
+}
+
+inline void Mod_Tx_UpdateBuf(void)
 {
   uint8_t i;
-  if (WS2812_counter >= (WS2812_currDev->len+1) * 8) // boundary condition, modify this if necessary
+  if(__HAL_DMA_GET_FLAG(&WS2812_currDev->DMAHandle, DMA_FLAG_TCIF1_5))
   {
-    __HAL_DMA_DISABLE(&WS2812_currDev->DMAHandle);
-    // wait for the last bit
-    while(__HAL_TIM_GET_COUNTER(WS2812_currDev->htim) <= __HAL_TIM_GET_COMPARE(WS2812_currDev->htim, WS2812_currTIMChannel)) // boundary condition, modify this if necessary
-      ;
-    __HAL_TIM_SET_COMPARE(WS2812_currDev->htim, WS2812_currTIMChannel, WS2812_currDev->comp0);
+    WS2812_buf[16] = WS2812_currDev->comp0;
+    for(i = 17; i < 31; i++)
+    {
+      WS2812_buf[i] = WS2812_currDev->comp1;
+    }
+    WS2812_buf[31] = WS2812_currDev->comp1;
+    __HAL_DMA_CLEAR_FLAG(&WS2812_currDev->DMAHandle, DMA_FLAG_TCIF1_5);
   }
-  i = 4;
-  while (i--)
+  else if(__HAL_DMA_GET_FLAG(&WS2812_currDev->DMAHandle, DMA_FLAG_HTIF1_5))
   {
-    WS2812_buf[WS2812_counter % 8] = WS2812_currDev->data[WS2812_counter / 8] << (WS2812_counter % 8) & 0x80 ? WS2812_currDev->comp1 : WS2812_currDev->comp0;
-    WS2812_counter++;
+    WS2812_buf[0] = WS2812_currDev->comp0;
+    for(i = 1; i < 15; i++)
+    {
+      WS2812_buf[i] = (WS2812_currDev->data << (i - 1) & 0x2000) ? WS2812_currDev->comp1 : WS2812_currDev->comp0;
+    }
+    WS2812_buf[15] = WS2812_currDev->comp1;
+    __HAL_DMA_CLEAR_FLAG(&WS2812_currDev->DMAHandle, DMA_FLAG_HTIF1_5);
   }
-  __HAL_DMA_CLEAR_FLAG(&WS2812_currDev->DMAHandle, __HAL_DMA_GET_HT_FLAG_INDEX(&WS2812_currDev->DMAHandle) | __HAL_DMA_GET_TC_FLAG_INDEX(&WS2812_currDev->DMAHandle));
 }
 
 static void SigPara_PWM_TIM_Init(void)
@@ -182,27 +196,27 @@ void SigPara_PWM()
 void TIM2_IRQHandler(void)
 {
   uint32_t i;
-  uint16_t data; 
-  Mod_RxBuf[Mod_RxBufEnd] = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2) > Mod_RxThre ? 0 : 1;
+  uint32_t data; 
+  Mod_RxBuf[Mod_RxBufEnd] = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2) < Mod_RxThre ? 0 : 1;
   Mod_RxBufEnd++;
-  Mod_RxBufEnd %= 16;
+  Mod_RxBufEnd %= 32;
   if(Mod_RxBufBegin == Mod_RxBufEnd) // full
   {
     data = 0;
-    for(i = Mod_RxBufBegin; (i + 1) % 16 != Mod_RxBufEnd; i++)
+    for(i = Mod_RxBufBegin; (i + 1) % 32 != Mod_RxBufEnd; i++)
     {
       data <<= 1;
-      data |= Mod_RxBuf[i % 16];
+      data |= Mod_RxBuf[i % 32];
     }
-    printf("%d\n", data);
+    data <<= 1;
+    data |= Mod_RxBuf[i % 32];
+    if(!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu) // pattern detected
+    {
+      data >>= 16 + 1;
+      data &= 0x3FFF;
+      printf("%u\n", data);
+    }
     Mod_RxBufBegin++;
-    Mod_RxBufBegin %= 16;
-  }
-  
-  if(Mod_RxId == 0)
-  {
-    for(i = 0; i < 16; i++)
-      printf("%d ", Mod_RxBuf[i]);
-    printf("\n");
+    Mod_RxBufBegin %= 32;
   }
 }
