@@ -73,21 +73,7 @@ void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
   }
   OLED_ShowInt(x, y, val);
 }
-void Coding(uint8_t data);
-inline void Coding(uint8_t data)
-{
-  if(data)
-  {
-    htim1.Instance->ARR = 7303;
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 7304/2);
-  }
-  else
-  {
-    htim1.Instance->ARR = 6999;
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 7000/2);
-  }
-  Delay_ms(10);
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -150,8 +136,7 @@ int main(void)
   OLED_ShowStr(0, 2, "1234 ");
   
   Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
-  __HAL_TIM_SET_PRESCALER(&htim1, 1);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  Mod_Tx_Start(&ws2812Dev1, TIM_CHANNEL_1);
   
   /* USER CODE END 2 */
 
@@ -162,47 +147,62 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Coding(1);
-    Coding(0);
-    Coding(1);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(1);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-    Coding(0);
-
+    
+    digit = GridKey_Scan(2);
+    if(digit != 0xFF)
+    {
+      if(editState == 5) // not editing
+      {
+        if(digit == 10) // ok, start editing
+        {
+          editNum = 0;
+          OLED_ShowStr(0, 2, ">    ");
+          editState = 0;
+        }
+      }
+      else // editing
+      {
+        if(digit == 11) // cancel
+        {
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, num);
+          editState = 5;
+        }
+        else if(digit == 10) // ok, confirm
+        {
+          num = editNum;
+          if(sending)
+            Mod_Tx_SetValue(&ws2812Dev1, num);
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, num);
+          editState = 5;
+        }
+        else if(digit < 10 && editState < 4)
+        {
+          editNum *= 10;
+          editNum += digit;
+          editState++;
+          OLED_ShowStr(0, 2, ">    ");
+          OLED_Show4digit(8, 2, editNum);
+        }
+      }
+      if(digit == 12) // send
+      {
+        sending = 1;
+        Mod_Tx_SetValue(&ws2812Dev1, num);
+        OLED_ShowStr(0, 0, "Sending     \x81\x81");
+      }
+      else if(digit == 15) // stop
+      {
+        sending = 0;
+        Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
+        OLED_ShowStr(0, 0, "Stopped       ");
+      }
+    }
+    Delay_ms(200);
+    
+    if(digit != 0xFF)
+      printf("%d\n", digit);
   }
   /* USER CODE END 3 */
 }
