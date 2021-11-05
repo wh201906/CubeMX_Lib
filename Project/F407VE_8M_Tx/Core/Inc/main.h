@@ -48,6 +48,7 @@ extern "C" {
 #include "UART/myuart.h"
 #include "UTIL/util.h"
 #include "Mod/mod.h"
+#include "OLED/oled.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

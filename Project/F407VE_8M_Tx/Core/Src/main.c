@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "GRIDKEY/gridkey.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +70,15 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t i;
   WS2812_Dev ws2812Dev1;
+  
+  uint8_t sending = 0;
+  uint8_t digit;
+  uint16_t num = 1234;
+  uint8_t currNum = 4; // 0~3: editing 4: finished
+  // 1 2 3 4
+  // 5 6 7 8
+  // 9 0 ok cancel
+  // Send x x Stop
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,9 +105,13 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   WS2812_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim1);
+  OLED_Init(GPIOE, 4, GPIOE, 5);
+  OLED_SetTextSize(TEXTSIZE_BIG);
 
-  testBuf[0] = 0xAA;
-  testBuf[1] = 0x55;
+  testBuf[0] = 0xF5;
+  testBuf[1] = 0xF0;
+  OLED_ShowStr(0, 0, "hello");
+  OLED_ShowStr(0, 0, "hello");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,8 +121,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 2);
-    Delay_ms(1000);
+    
+    //WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 2);
+    Delay_ms(100);
+    digit = GridKey_Scan(2);
+    if(digit != 0xFF)
+      printf("%d\n", digit);
   }
   /* USER CODE END 3 */
 }

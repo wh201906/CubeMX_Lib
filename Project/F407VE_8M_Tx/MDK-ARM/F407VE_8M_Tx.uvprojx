@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/STM32F4xx_HAL_Driver/Inc";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/CMSIS/Device/ST/STM32F4xx/Include";    "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/CMSIS/Include";    ../../../Module</IncludePath>
+              <IncludePath>../Core/Inc;        "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/STM32F4xx_HAL_Driver/Inc";        "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy";        "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/CMSIS/Device/ST/STM32F4xx/Include";        "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.2/Drivers/CMSIS/Include";        ../../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -577,6 +577,11 @@
               <FileName>mod.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\Mod\mod.c</FilePath>
+            </File>
+            <File>
+              <FileName>gridkey.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\GRIDKEY\gridkey.c</FilePath>
             </File>
           </Files>
         </Group>

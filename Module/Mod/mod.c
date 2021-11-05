@@ -2,6 +2,8 @@
 #include "tim.h"
 
 uint8_t Mod_RxBuf[16];
+uint8_t Mod_RxBufBegin, Mod_RxBufEnd;
+uint32_t Mod_RxThre = 2000;
 uint8_t Mod_RxId;
 
 WS2812_Dev *WS2812_currDev;
@@ -171,6 +173,8 @@ void SigPara_PWM_Init(void)
 void SigPara_PWM()
 {
   Mod_RxId = 0;
+  Mod_RxBufBegin = 0;
+  Mod_RxBufEnd = 0;
   HAL_TIM_IC_Start(&SigPara_myhtim1, TIM_CHANNEL_1);
   HAL_TIM_IC_Start(&SigPara_myhtim1, TIM_CHANNEL_2);
 }
@@ -178,8 +182,22 @@ void SigPara_PWM()
 void TIM2_IRQHandler(void)
 {
   uint32_t i;
-  Mod_RxBuf[Mod_RxId++] = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2);
-  Mod_RxId %= 16;
+  uint16_t data; 
+  Mod_RxBuf[Mod_RxBufEnd] = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2) > Mod_RxThre ? 0 : 1;
+  Mod_RxBufEnd++;
+  Mod_RxBufEnd %= 16;
+  if(Mod_RxBufBegin == Mod_RxBufEnd) // full
+  {
+    data = 0;
+    for(i = Mod_RxBufBegin; (i + 1) % 16 != Mod_RxBufEnd; i++)
+    {
+      data <<= 1;
+      data |= Mod_RxBuf[i % 16];
+    }
+    printf("%d\n", data);
+    Mod_RxBufBegin++;
+    Mod_RxBufBegin %= 16;
+  }
   
   if(Mod_RxId == 0)
   {

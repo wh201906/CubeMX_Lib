@@ -1,0 +1,5 @@
+8.33bit/s
+12bit/frame, ~1.5s
+BW=25~30Hz
+htim1.Init.Prescaler = 339;
+htim1.Init.Period = 59999;

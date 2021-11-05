@@ -6,8 +6,11 @@ uint8_t isAllKeyReleased = 1;
 uint8_t GridKey_Scan(uint8_t gridType)
 {
     GPIO_PinState gridState[4][4];
-
-    GPIO_PinState isKeyDown =
+  GPIO_PinState isKeyDown;
+    
+    for (int i = 0; i < 4; i++)
+      HAL_GPIO_WritePin(grp[i], pin[i], probeState[4][i]);
+    isKeyDown =
         HAL_GPIO_ReadPin(grp[4], pin[4]) ||
         HAL_GPIO_ReadPin(grp[5], pin[5]) ||
         HAL_GPIO_ReadPin(grp[6], pin[6]) ||

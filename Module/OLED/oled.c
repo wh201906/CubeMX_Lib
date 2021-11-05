@@ -59,7 +59,7 @@ void OLED_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO
   WriteCmd(0x40); //--set start line address
 
   OLED_Rotate(ROTATE_OFF);
-  OLED_SetBrightness(0xFF);
+  OLED_SetBrightness(0x20);
   OLED_SetGlobalReverse(REVERSE_OFF);
 
   WriteCmd(0xA8); //--set multiplex ratio(1 to 64)
@@ -70,7 +70,7 @@ void OLED_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO
   WriteCmd(0x00); //-not offset
 
   WriteCmd(0xD5); //--set display clock divide ratio/oscillator frequency
-  WriteCmd(0xF0); //--set divide ratio
+  WriteCmd(0x20); //--set divide ratio
 
   WriteCmd(0xD9); //--set pre-charge period
   WriteCmd(0x22); //
