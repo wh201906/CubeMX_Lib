@@ -48,6 +48,7 @@
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
 uint8_t testBuf[2];
+uint16_t num = 1234;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,7 +59,26 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
+{
+  uint16_t i;
+  uint8_t width = 8;
+  for(i = 10; i <= 1000; i *= 10)
+  {
+    if(val < i)
+    {
+      OLED_ShowChar(x, y, '0');
+      x += width;
+    }
+  }
+  OLED_ShowInt(x, y, val);
+}
 
+void Buf_Padding()
+{
+  testBuf[0] = num >> 8;
+  testBuf[1] = num & 0xFF;
+}
 /* USER CODE END 0 */
 
 /**
@@ -73,12 +93,21 @@ int main(void)
   
   uint8_t sending = 0;
   uint8_t digit;
-  uint16_t num = 1234;
-  uint8_t currNum = 4; // 0~3: editing 4: finished
-  // 1 2 3 4
-  // 5 6 7 8
-  // 9 0 ok cancel
-  // Send x x Stop
+  
+  uint16_t editNum = 0;
+  uint8_t editState = 5; // 0~3: editing 4: finished 5: not editing
+  // ------------------
+  // 0    1    2    3
+  // 4    5    6    7
+  // 8    9    Ok   Cancel
+  // Send x    x    Stop
+  // ------------------
+  // ------------------
+  // 0  1  2  3
+  // 4  5  6  7
+  // 8  9  10 11
+  // 12 13 14 15
+  // ------------------
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -110,8 +139,9 @@ int main(void)
 
   testBuf[0] = 0xF5;
   testBuf[1] = 0xF0;
-  OLED_ShowStr(0, 0, "hello");
-  OLED_ShowStr(0, 0, "hello");
+  OLED_ShowStr(0, 0, "Stopped");
+  OLED_ShowStr(0, 2, "1234 ");
+  Buf_Padding();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,9 +152,58 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     
-    //WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 2);
-    Delay_ms(100);
+    
+    WS2812_Write(&ws2812Dev1, TIM_CHANNEL_1, testBuf, 2);
     digit = GridKey_Scan(2);
+    if(digit != 0xFF)
+    {
+      if(editState == 5) // not editing
+      {
+        if(digit == 10) // ok, start editing
+        {
+          editNum = 0;
+          OLED_ShowStr(0, 2, ">    ");
+          editState = 0;
+        }
+      }
+      else // editing
+      {
+        if(digit == 11) // cancel
+        {
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, num);
+          editState = 5;
+        }
+        else if(digit == 10) // ok, confirm
+        {
+          num = editNum;
+          Buf_Padding();
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, num);
+          editState = 5;
+        }
+        else if(digit < 10 && editState < 4)
+        {
+          editNum *= 10;
+          editNum += digit;
+          editState++;
+          OLED_ShowStr(0, 2, ">    ");
+          OLED_Show4digit(8, 2, editNum);
+        }
+      }
+      if(digit == 12) // send
+      {
+        sending = 1;
+        OLED_ShowStr(0, 0, "Sending     \x81\x81");
+      }
+      else if(digit == 15) // stop
+      {
+        sending = 0;
+        OLED_ShowStr(0, 0, "Stopped       ");
+      }
+    }
+    Delay_ms(100);
+    
     if(digit != 0xFF)
       printf("%d\n", digit);
   }
