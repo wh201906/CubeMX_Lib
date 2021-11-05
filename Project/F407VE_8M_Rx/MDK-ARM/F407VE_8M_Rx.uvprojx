@@ -568,6 +568,21 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Module\DELAY\delay.c</FilePath>
             </File>
+            <File>
+              <FileName>tm1637.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\TM1637\tm1637.c</FilePath>
+            </File>
+            <File>
+              <FileName>softi2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\I2C\softi2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_tm1637.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Module\TM1637\stm32_tm1637.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

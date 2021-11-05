@@ -94,6 +94,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
+  TM1637_Init(GPIOE, 4, GPIOE, 5);
+  tm1637Init();
   SigPara_PWM_Init();
   Delay_ms(2000);
   SigPara_PWM();
@@ -107,6 +109,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(500);
+    tm1637DisplayDecimal(1234, 0);
 //    duty = SigPara_PWM(500, &freq);
 //    printf("freq: %f, duty cycle: %f\r\n", freq, duty);
   }
