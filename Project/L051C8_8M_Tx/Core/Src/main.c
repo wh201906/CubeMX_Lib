@@ -40,7 +40,7 @@
 /* USER CODE BEGIN PM */
 uint16_t currNum = 1234;
 uint8_t isSending = 0;
-uint16_t digit;
+uint16_t input;
 uint16_t editNum = 0;
 uint8_t editState = 5;
 // 0~3: editing 4: finished 5: not editing
@@ -123,6 +123,58 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    input = GridKey_Scan(2);
+    if(input != 0xFF)
+    {
+      if(editState == 5) // not editing
+      {
+        if(input == 10) // ok, start editing
+        {
+          editNum = 0;
+          OLED_ShowStr(0, 2, ">    ");
+          editState = 0;
+        }
+      }
+      else // editing
+      {
+        if(input == 11) // cancel
+        {
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, currNum);
+          editState = 5;
+        }
+        else if(input == 10) // ok, confirm
+        {
+          currNum = editNum;
+          if(isSending)
+            Mod_Tx_SetValue(currNum);
+          OLED_ShowStr(0, 2, "     ");
+          OLED_Show4digit(0, 2, currNum);
+          editState = 5;
+        }
+        else if(input < 10 && editState < 4)
+        {
+          editNum *= 10;
+          editNum += input;
+          editState++;
+          OLED_ShowStr(0, 2, ">    ");
+          OLED_Show4digit(8, 2, editNum);
+        }
+      }
+      if(input == 12) // send
+      {
+        isSending = 1;
+        Mod_Tx_SetValue(currNum);
+        OLED_ShowStr(0, 0, "Sending     \x81\x81");
+      }
+      else if(input == 15) // stop
+      {
+        isSending = 0;
+        Mod_Tx_SetValue(0xFFFF);
+        OLED_ShowStr(0, 0, "Stopped       ");
+      }
+    }
+    Delay_ms(100);
   }
   /* USER CODE END 3 */
 }
