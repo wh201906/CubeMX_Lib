@@ -49,7 +49,6 @@ extern "C" {
 #include "UTIL/util.h"
 #include "Mod/mod.h"
 #include "TM1637/tm1637.h"
-#include "TM1637/stm32_tm1637.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

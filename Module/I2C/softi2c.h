@@ -23,7 +23,7 @@ typedef struct _SoftI2C_Port
 #define SOFTI2C_READSDA(__PORT__) (((__PORT__)->SDA_GPIO->IDR >> (__PORT__)->SDA_PinID) & 1u)
 
 // Release SDA to read data
-#define SOFTI2C_SDA_IN(__PORT__) SOFTI2C_SDA((__PORT__), 1)
+#define SOFTI2C_SDA_IN(__PORT__) SOFTI2C_SDA((__PORT__), 0)
 
 #define SI2C_ACK 0
 #define SI2C_NACK 1

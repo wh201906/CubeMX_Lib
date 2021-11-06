@@ -47,6 +47,7 @@
 /* USER CODE BEGIN PV */
 MyUARTHandle uart1;
 uint8_t uartBuf1[100];
+uint8_t digit[4] = {1,2,3,4};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,10 +96,9 @@ int main(void)
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   TM1637_Init(GPIOE, 4, GPIOE, 5);
-  tm1637Init();
-  SigPara_PWM_Init();
+  //SigPara_PWM_Init();
   Delay_ms(2000);
-  SigPara_PWM();
+  //SigPara_PWM();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,7 +109,27 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Delay_ms(500);
-    tm1637DisplayDecimal(1234, 0);
+    //tm1637DisplayDecimal(1234, 0);
+    
+    TM1637_SetNum(digit);
+    TM1637_SetBrightness(8);
+    Delay_ms(100);
+    TM1637_SetBrightness(7);
+    Delay_ms(100);
+    TM1637_SetBrightness(6);
+    Delay_ms(100);
+    TM1637_SetBrightness(5);
+    Delay_ms(100);
+    TM1637_SetBrightness(4);
+    Delay_ms(100);
+    TM1637_SetBrightness(3);
+    Delay_ms(100);
+    TM1637_SetBrightness(2);
+    Delay_ms(100);
+    TM1637_SetBrightness(1);
+    Delay_ms(100);
+    TM1637_SetBrightness(0);
+    Delay_ms(100);
 //    duty = SigPara_PWM(500, &freq);
 //    printf("freq: %f, duty cycle: %f\r\n", freq, duty);
   }
