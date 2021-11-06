@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -92,12 +93,20 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_TIM9_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   TM1637_Init(GPIOE, 4, GPIOE, 5);
+  Init_ad9910();
+  AD9834_Init(&hspi2);
   //SigPara_PWM_Init();
-  Delay_ms(2000);
+  Delay_ms(1000);
+  
+  Freq_convert(25000000);
+  AD9834_SelectReg(0, 0);
+  AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
+  AD9834_SetFreq(400000, 0);
   //SigPara_PWM();
   /* USER CODE END 2 */
 
@@ -111,25 +120,12 @@ int main(void)
     Delay_ms(500);
     //tm1637DisplayDecimal(1234, 0);
     
+    digit[1] = 2;
     TM1637_SetNum(digit);
-    TM1637_SetBrightness(8);
-    Delay_ms(100);
-    TM1637_SetBrightness(7);
-    Delay_ms(100);
-    TM1637_SetBrightness(6);
-    Delay_ms(100);
-    TM1637_SetBrightness(5);
-    Delay_ms(100);
-    TM1637_SetBrightness(4);
-    Delay_ms(100);
-    TM1637_SetBrightness(3);
-    Delay_ms(100);
-    TM1637_SetBrightness(2);
-    Delay_ms(100);
-    TM1637_SetBrightness(1);
-    Delay_ms(100);
-    TM1637_SetBrightness(0);
-    Delay_ms(100);
+    Delay_ms(300);
+    digit[1] = 16;
+    TM1637_SetNum(digit);
+    
 //    duty = SigPara_PWM(500, &freq);
 //    printf("freq: %f, duty cycle: %f\r\n", freq, duty);
   }

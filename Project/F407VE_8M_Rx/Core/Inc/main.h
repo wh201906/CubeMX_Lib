@@ -49,6 +49,8 @@ extern "C" {
 #include "UTIL/util.h"
 #include "Mod/mod.h"
 #include "TM1637/tm1637.h"
+#include "AD9910/ad9910.h"
+#include "AD9834/ad9834.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

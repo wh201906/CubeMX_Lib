@@ -550,7 +550,7 @@ const unsigned char ramdata_Sawtooth[4096] = {
 
 };
 
-void AD9110_IOInit(void)
+void AD9910_IOInit(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -596,7 +596,7 @@ void Init_ad9910(void)
 {
   uchar k, m;
 
-  AD9110_IOInit(); //IO初始化
+  AD9910_IOInit(); //IO初始化
   AD9910_PWR(0);  //软件拉低
 
   AD9910_PROFILE2(0);
