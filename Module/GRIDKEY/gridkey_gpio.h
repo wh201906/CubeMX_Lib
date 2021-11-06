@@ -5,15 +5,20 @@
 // pin[3:0] should be configured as output
 // pin[7:4] should be configured as input and be pulled down
 
-#ifdef STM32H750xx
+#if defined(STM32H750xx)
 GPIO_TypeDef* const grp[8]={GPIOC,GPIOB,GPIOE,GPIOE,GPIOE,GPIOE,GPIOE,GPIOB};
 const uint16_t pin[8]={GPIO_PIN_5,GPIO_PIN_1,GPIO_PIN_7,GPIO_PIN_9,GPIO_PIN_11,GPIO_PIN_13,GPIO_PIN_15,GPIO_PIN_11};
-#endif
 
-#ifdef STM32F407xx
+#elif defined(STM32F407xx)
 GPIO_TypeDef* const grp[8]={GPIOB,GPIOE,GPIOE,GPIOE,GPIOE,GPIOB,GPIOB,GPIOB};
 const uint16_t pin[8]={GPIO_PIN_1,GPIO_PIN_8,GPIO_PIN_10,GPIO_PIN_12,GPIO_PIN_14,GPIO_PIN_10,GPIO_PIN_12,GPIO_PIN_14};
+
+#elif defined(STM32L051xx) || defined(STM32L071xx)
+GPIO_TypeDef* const grp[8]={GPIOB,GPIOB,GPIOB,GPIOB,GPIOA,GPIOA,GPIOA,GPIOA};
+const uint16_t pin[8]={GPIO_PIN_11,GPIO_PIN_10,GPIO_PIN_9,GPIO_PIN_8,GPIO_PIN_15,GPIO_PIN_14,GPIO_PIN_13,GPIO_PIN_12};
 #endif
+
+
 
 #define SET GPIO_PIN_SET
 #define RESET GPIO_PIN_RESET

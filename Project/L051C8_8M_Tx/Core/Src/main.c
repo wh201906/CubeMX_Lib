@@ -20,7 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "tim.h"
-#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -39,15 +38,30 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+uint16_t currNum = 1234;
+uint8_t isSending = 0;
+uint16_t digit;
+uint16_t editNum = 0;
+uint8_t editState = 5;
+// 0~3: editing 4: finished 5: not editing
+// ------------------
+// 0    1    2    3
+// 4    5    6    7
+// 8    9    Ok   Cancel
+// Send x    x    Stop
+// ------------------
+// ------------------
+// 0  1  2  3
+// 4  5  6  7
+// 8  9  10 11
+// 12 13 14 15
+// ------------------
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-MyUARTHandle uart1;
-uint8_t uartBuf1[100];
-uint16_t num = 1234;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,26 +82,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t i;
-  Mod_Tx_Dev ws2812Dev1;
-  
-  uint8_t sending = 0;
-  uint16_t digit;
-  
-  uint16_t editNum = 0;
-  uint8_t editState = 5; // 0~3: editing 4: finished 5: not editing
-  // ------------------
-  // 0    1    2    3
-  // 4    5    6    7
-  // 8    9    Ok   Cancel
-  // Send x    x    Stop
-  // ------------------
-  // ------------------
-  // 0  1  2  3
-  // 4  5  6  7
-  // 8  9  10 11
-  // 12 13 14 15
-  // ------------------
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -108,22 +103,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
   MX_TIM2_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  Delay_Init(168);
-  MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  HAL_TIM_PWM_Start(&htim2);
-  Mod_Tx_Init(&ws2812Dev1, DMA2_Stream5, DMA_CHANNEL_6, DMA2_Stream5_IRQn, &htim2);
-  OLED_Init(GPIOE, 4, GPIOE, 5);
+  Delay_Init(8);
+  OLED_Init(GPIOB, 9, GPIOB, 8);
+  Mod_Tx_Init(TIM2, TIM6, 665, 695);
   OLED_SetTextSize(TEXTSIZE_BIG);
 
   OLED_ShowStr(0, 0, "Stopped");
   OLED_ShowStr(0, 2, "1234 ");
-  
-  Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
-  Mod_Tx_Start(&ws2812Dev1, TIM_CHANNEL_1);
-  
+  Mod_Tx_Start();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -133,62 +123,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
-    digit = GridKey_Scan(2);
-    if(digit != 0xFF)
-    {
-      if(editState == 5) // not editing
-      {
-        if(digit == 10) // ok, start editing
-        {
-          editNum = 0;
-          OLED_ShowStr(0, 2, ">    ");
-          editState = 0;
-        }
-      }
-      else // editing
-      {
-        if(digit == 11) // cancel
-        {
-          OLED_ShowStr(0, 2, "     ");
-          OLED_Show4digit(0, 2, num);
-          editState = 5;
-        }
-        else if(digit == 10) // ok, confirm
-        {
-          num = editNum;
-          if(sending)
-            Mod_Tx_SetValue(&ws2812Dev1, num);
-          OLED_ShowStr(0, 2, "     ");
-          OLED_Show4digit(0, 2, num);
-          editState = 5;
-        }
-        else if(digit < 10 && editState < 4)
-        {
-          editNum *= 10;
-          editNum += digit;
-          editState++;
-          OLED_ShowStr(0, 2, ">    ");
-          OLED_Show4digit(8, 2, editNum);
-        }
-      }
-      if(digit == 12) // send
-      {
-        sending = 1;
-        Mod_Tx_SetValue(&ws2812Dev1, num);
-        OLED_ShowStr(0, 0, "Sending     \x81\x81");
-      }
-      else if(digit == 15) // stop
-      {
-        sending = 0;
-        Mod_Tx_SetValue(&ws2812Dev1, 0xFFFF);
-        OLED_ShowStr(0, 0, "Stopped       ");
-      }
-    }
-    Delay_ms(200);
-    
-    if(digit != 0xFF)
-      printf("%d\n", digit);
   }
   /* USER CODE END 3 */
 }
@@ -204,19 +138,13 @@ void SystemClock_Config(void)
 
   /** Configure the main internal regulator output voltage
   */
-  __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 168;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -225,22 +153,19 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
 }
 
 /* USER CODE BEGIN 4 */
-void DMA2_Stream5_IRQHandler(void)
-{
-  Mod_Tx_UpdateBuf();
-}
+
 /* USER CODE END 4 */
 
 /**
