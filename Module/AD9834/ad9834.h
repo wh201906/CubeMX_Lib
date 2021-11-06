@@ -5,9 +5,15 @@
 #include "spi.h"
 #include "DELAY/delay.h"
 
+#if defined(STM32L051xx) || defined(STM32L071xx) || defined(STM32F103xB)
+#define AD9834_NSS_PIN GPIO_PIN_6
+#define AD9834_NSS_GPIO GPIOA
+#define AD9834_NSS_CLKEN() __HAL_RCC_GPIOA_CLK_ENABLE()
+#else
 #define AD9834_NSS_PIN GPIO_PIN_14
 #define AD9834_NSS_GPIO GPIOB
 #define AD9834_NSS_CLKEN() __HAL_RCC_GPIOB_CLK_ENABLE()
+#endif
 
 #ifndef POW2_28
 #define POW2_28 268435456u

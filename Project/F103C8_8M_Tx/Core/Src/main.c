@@ -88,13 +88,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
-  MX_TIM6_Init();
+  MX_TIM3_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(8);
-  OLED_Init(GPIOB, 9, GPIOB, 8);
-  Mod_Tx_Init(TIM2, TIM6, 665, 695);
-  OLED_SetTextSize(TEXTSIZE_BIG);
+  Mod_Tx_Init(TIM2, TIM3, 665, 695);
 
   OLED_ShowStr(0, 0, "Stopped");
   OLED_ShowStr(0, 2, "1234 ");
@@ -123,9 +121,6 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */

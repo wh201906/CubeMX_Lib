@@ -11,5 +11,6 @@ void Mod_Tx_Send(void);
 void Mod_Rx_Read(uint8_t bit);
 
 void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val);
+void Mod_Tx_Process(void);
 
 #endif
