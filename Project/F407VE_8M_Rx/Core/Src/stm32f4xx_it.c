@@ -200,6 +200,45 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles TIM1 break interrupt and TIM9 global interrupt.
+  */
+void TIM1_BRK_TIM9_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_BRK_TIM9_IRQn 0 */
+  LL_TIM_ClearFlag_CC1(TIM9);
+  LL_TIM_ClearFlag_CC2(TIM9);
+  uint32_t val, cnt;
+  val = LL_TIM_GetAutoReload(TIM2);
+  cnt = LL_TIM_GetCounter(TIM2);
+  if(cnt < val * 0.3 || cnt > val * 0.6)
+  {
+    LL_TIM_SetCounter(TIM2, val * 0.5); // sync
+    printf("synced\n");
+  }
+  /* USER CODE END TIM1_BRK_TIM9_IRQn 0 */
+
+  /* USER CODE BEGIN TIM1_BRK_TIM9_IRQn 1 */
+
+  /* USER CODE END TIM1_BRK_TIM9_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM2 global interrupt.
+  */
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+  LL_TIM_ClearFlag_UPDATE(TIM2);
+  HAL_GPIO_TogglePin(AD9834_NSS_GPIO, AD9834_NSS_PIN);
+  //Mod_Rx_Read(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2));
+  //printf("%d ", HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2));
+  /* USER CODE END TIM2_IRQn 0 */
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART1 global interrupt.
   */
 void USART1_IRQHandler(void)

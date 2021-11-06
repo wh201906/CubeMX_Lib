@@ -94,6 +94,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM9_Init();
   MX_SPI2_Init();
+  MX_TIM2_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
@@ -107,6 +109,12 @@ int main(void)
   AD9834_SelectReg(0, 0);
   AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
   AD9834_SetFreq(400000, 0);
+  
+  LL_TIM_EnableIT_CC1(TIM9);
+  LL_TIM_CC_EnableChannel(TIM9,LL_TIM_CHANNEL_CH1);
+  LL_TIM_EnableIT_UPDATE(TIM2);
+  LL_TIM_EnableCounter(TIM9);
+  LL_TIM_EnableCounter(TIM2);
   //SigPara_PWM();
   /* USER CODE END 2 */
 

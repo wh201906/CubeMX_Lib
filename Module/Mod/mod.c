@@ -193,11 +193,41 @@ void SigPara_PWM()
   HAL_TIM_IC_Start(&SigPara_myhtim1, TIM_CHANNEL_2);
 }
 
+/*
 void TIM2_IRQHandler(void)
 {
   uint32_t i;
   uint32_t data; 
   Mod_RxBuf[Mod_RxBufEnd] = __HAL_TIM_GET_COMPARE(&SigPara_myhtim1, TIM_CHANNEL_2) < Mod_RxThre ? 0 : 1;
+  Mod_RxBufEnd++;
+  Mod_RxBufEnd %= 32;
+  if(Mod_RxBufBegin == Mod_RxBufEnd) // full
+  {
+    data = 0;
+    for(i = Mod_RxBufBegin; (i + 1) % 32 != Mod_RxBufEnd; i++)
+    {
+      data <<= 1;
+      data |= Mod_RxBuf[i % 32];
+    }
+    data <<= 1;
+    data |= Mod_RxBuf[i % 32];
+    if(!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu) // pattern detected
+    {
+      data >>= 16 + 1;
+      data &= 0x3FFF;
+      printf("%u\n", data);
+    }
+    Mod_RxBufBegin++;
+    Mod_RxBufBegin %= 32;
+  }
+}
+*/
+
+inline void Mod_Rx_Read(uint8_t bit)
+{
+  uint32_t i;
+  uint32_t data; 
+  Mod_RxBuf[Mod_RxBufEnd] = bit;
   Mod_RxBufEnd++;
   Mod_RxBufEnd %= 32;
   if(Mod_RxBufBegin == Mod_RxBufEnd) // full

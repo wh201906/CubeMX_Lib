@@ -27,5 +27,6 @@ static void SigPara_PWM_TIM_Init(void);
 static void SigPara_PWM_GPIO_Init(void);
 void SigPara_PWM_Init(void);
 void SigPara_PWM();
+void Mod_Rx_Read(uint8_t bit);
 
 #endif
