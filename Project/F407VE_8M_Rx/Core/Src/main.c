@@ -69,8 +69,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char str[20];
-  double freq, duty;
+  
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,24 +97,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
-  TM1637_Init(GPIOE, 4, GPIOE, 5);
-  TM1637_SetBrightness(8);
-  Init_ad9910();
-  AD9834_Init(&hspi2);
-  //SigPara_PWM_Init();
-  Delay_ms(1000);
   
-  Freq_convert(25000000);
-  AD9834_SelectReg(0, 0);
-  AD9834_SetWaveType(AD9834_Sine, AD9834_SOff);
-  AD9834_SetFreq(400000, 0);
-  
-  LL_TIM_EnableIT_CC1(TIM9);
-  LL_TIM_CC_EnableChannel(TIM9,LL_TIM_CHANNEL_CH1);
-  LL_TIM_EnableIT_UPDATE(TIM2);
-  LL_TIM_EnableCounter(TIM9);
-  LL_TIM_EnableCounter(TIM2);
-  //SigPara_PWM();
+  Mod_Rx_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,7 +108,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Delay_ms(500);
+    Mod_Rx_Process();
+    Delay_ms(100);
     //tm1637DisplayDecimal(1234, 0);
     
 //    duty = SigPara_PWM(500, &freq);

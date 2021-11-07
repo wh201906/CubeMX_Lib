@@ -9,10 +9,12 @@ void Mod_Tx_SetValue(uint16_t data);
 void Mod_Tx_SetBrightness(uint8_t brightness); // 0~3
 void Mod_Tx_SetRaw(uint16_t data);
 void Mod_Tx_Send(void);
+void Mod_Tx_Process(void);
 
+void Mod_Rx_Init(void);
 void Mod_Rx_Read(uint8_t bit);
+void Mod_Rx_Process(void);
 
 void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val);
-void Mod_Tx_Process(void);
 
 #endif
