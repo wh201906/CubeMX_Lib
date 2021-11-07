@@ -92,7 +92,7 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(8);
-  Mod_Tx_Init(TIM2, TIM3, 665, 695);
+  Mod_Tx_Init(TIM2, TIM3, 695, 665);
 
   Mod_Tx_Start();
   /* USER CODE END 2 */

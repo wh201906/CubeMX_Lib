@@ -93,11 +93,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Delay_Init(8);
   OLED_Init(GPIOB, 9, GPIOB, 8);
-  Mod_Tx_Init(TIM2, TIM6, 665, 695);
-  OLED_SetTextSize(TEXTSIZE_BIG);
+  Mod_Tx_Init(TIM2, TIM6, 695, 665);
 
-  OLED_ShowStr(0, 0, "Stopped");
-  OLED_ShowStr(0, 2, "1234 ");
   Mod_Tx_Start();
   /* USER CODE END 2 */
 
