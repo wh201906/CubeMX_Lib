@@ -95,11 +95,11 @@ int main(void)
   MX_TIM9_Init();
   MX_SPI2_Init();
   MX_TIM2_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   Delay_Init(168);
   MyUART_Init(&uart1, USART1, uartBuf1, 100);
   TM1637_Init(GPIOE, 4, GPIOE, 5);
+  TM1637_SetBrightness(8);
   Init_ad9910();
   AD9834_Init(&hspi2);
   //SigPara_PWM_Init();
@@ -127,12 +127,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
     Delay_ms(500);
     //tm1637DisplayDecimal(1234, 0);
-    
-    digit[1] = 2;
-    TM1637_SetNum(digit);
-    Delay_ms(300);
-    digit[1] = 16;
-    TM1637_SetNum(digit);
     
 //    duty = SigPara_PWM(500, &freq);
 //    printf("freq: %f, duty cycle: %f\r\n", freq, duty);

@@ -5,10 +5,12 @@
 #include "tim.h"
 
 #define MOD_FREQLIST_LEN 11
+#define MOD_NUM_OFFSET 3
 
 uint8_t Mod_RxBuf[32];
 uint8_t Mod_RxBufBegin, Mod_RxBufEnd;
 uint32_t Mod_RxThre = 250;
+uint8_t Mod_RxDigit[4] = {16, 16, 16, 16};
 
 uint8_t Mod_TxId; // next bit
 uint32_t Mod_TxBuf[32];
@@ -41,7 +43,7 @@ uint8_t Mod_freqId = 0; // current freq
 // 8  9  10 11
 // 12 13 14 15
 // ------------------
-
+#ifndef MOD_RX
 void Mod_Tx_Init(TIM_TypeDef *outTIM, TIM_TypeDef *clkTIM, uint32_t Larr, uint32_t Harr)
 {
   Mod_TxOutTIM = outTIM;
@@ -117,49 +119,6 @@ inline void Mod_Tx_Send(void)
   }
 }
 
-inline void Mod_Rx_Read(uint8_t bit)
-{
-  uint32_t i;
-  uint32_t data;
-  Mod_RxBuf[Mod_RxBufEnd] = bit;
-  Mod_RxBufEnd++;
-  Mod_RxBufEnd %= 32;
-  if (Mod_RxBufBegin == Mod_RxBufEnd) // full
-  {
-    data = 0;
-    for (i = Mod_RxBufBegin; (i + 1) % 32 != Mod_RxBufEnd; i++)
-    {
-      data <<= 1;
-      data |= Mod_RxBuf[i % 32];
-    }
-    data <<= 1;
-    data |= Mod_RxBuf[i % 32];
-    if (!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu) // pattern detected
-    {
-      data >>= 16 + 1;
-      data &= 0x3FFF;
-      printf("%u\n", data);
-    }
-    Mod_RxBufBegin++;
-    Mod_RxBufBegin %= 32;
-  }
-}
-
-void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
-{
-  uint16_t i;
-  uint8_t width = 8;
-  for (i = 10; i <= 1000; i *= 10)
-  {
-    if (val < i)
-    {
-      OLED_ShowChar(x, y, '0');
-      x += width;
-    }
-  }
-  OLED_ShowInt(x, y, val);
-}
-
 void Mod_Tx_Process(void)
 {
   Mod_TxInput = GridKey_Scan(2);
@@ -186,7 +145,7 @@ void Mod_Tx_Process(void)
       {
         Mod_TxCurrNum = Mod_TxEditNum;
         if (Mod_TxIsSending)
-          Mod_Tx_SetValue(Mod_TxCurrNum + 5);
+          Mod_Tx_SetValue(Mod_TxCurrNum + MOD_NUM_OFFSET);
         OLED_ShowStr(0, 2, "     ");
         OLED_Show4digit(0, 2, Mod_TxCurrNum);
         Mod_TxEditState = 5;
@@ -203,7 +162,7 @@ void Mod_Tx_Process(void)
     if (Mod_TxInput == 12) // send
     {
       Mod_TxIsSending = 1;
-      Mod_Tx_SetValue(Mod_TxCurrNum + 5);
+      Mod_Tx_SetValue(Mod_TxCurrNum + MOD_NUM_OFFSET);
       OLED_ShowStr(0, 0, "Sending     \x81\x81");
     }
     else if (Mod_TxInput == 15) // stop
@@ -222,3 +181,69 @@ void Mod_Tx_Process(void)
     }
   }
 }
+
+void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
+{
+  uint16_t i;
+  uint8_t width = 8;
+  for (i = 10; i <= 1000; i *= 10)
+  {
+    if (val < i)
+    {
+      OLED_ShowChar(x, y, '0');
+      x += width;
+    }
+  }
+  OLED_ShowInt(x, y, val);
+}
+
+#else
+inline void Mod_Rx_Read(uint8_t bit)
+{
+  uint8_t valid = 0, reversedValid = 0;
+  uint32_t i;
+  uint32_t data;
+  Mod_RxBuf[Mod_RxBufEnd] = bit;
+  Mod_RxBufEnd++;
+  Mod_RxBufEnd %= 32;
+  if (Mod_RxBufBegin == Mod_RxBufEnd) // full
+  {
+    data = 0;
+    for (i = Mod_RxBufBegin; (i + 1) % 32 != Mod_RxBufEnd; i++)
+    {
+      data <<= 1;
+      data |= Mod_RxBuf[i % 32];
+    }
+    data <<= 1;
+    data |= Mod_RxBuf[i % 32];
+    // valid = (!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu); // pattern detected
+    // reversedValid = ((data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu); // reversed pattern detected
+    if (!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu) // pattern detected
+    {
+      data >>= 16 + 1;
+      data &= 0x3FFF;
+      if(data == 0x3FFF) // off
+      {
+        Mod_RxDigit[0] = 16;
+        Mod_RxDigit[1] = 16;
+        Mod_RxDigit[2] = 16;
+        Mod_RxDigit[3] = 16;
+      }
+      else
+      {
+        data -= MOD_NUM_OFFSET;
+        Mod_RxDigit[0] = data / 1000;
+        data %= 1000;
+        Mod_RxDigit[1] = data / 100;
+        data %= 100;
+        Mod_RxDigit[2] = data / 10;
+        data %= 10;
+        Mod_RxDigit[3] = data;
+      }
+      TM1637_SetNum(Mod_RxDigit);
+    }
+    Mod_RxBufBegin++;
+    Mod_RxBufBegin %= 32;
+  }
+}
+#endif

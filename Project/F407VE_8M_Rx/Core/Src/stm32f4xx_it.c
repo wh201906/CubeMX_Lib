@@ -228,8 +228,8 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
   LL_TIM_ClearFlag_UPDATE(TIM2);
+  printf("%d ", HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2));
   Mod_Rx_Read(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2));
-  printf("%d\n", HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2));
   /* USER CODE END TIM2_IRQn 0 */
   /* USER CODE BEGIN TIM2_IRQn 1 */
 

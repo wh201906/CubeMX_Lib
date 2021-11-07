@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32L051xx,STM32_THREAD_SAFE_STRATEGY=2</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/STM32L0xx_HAL_Driver/Inc";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/STM32L0xx_HAL_Driver/Inc/Legacy";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/CMSIS/Device/ST/STM32L0xx/Include";   "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/CMSIS/Include";   ../../../Module</IncludePath>
+              <IncludePath>../Core/Inc;     "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/STM32L0xx_HAL_Driver/Inc";     "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/STM32L0xx_HAL_Driver/Inc/Legacy";     "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/CMSIS/Device/ST/STM32L0xx/Include";     "C:/Users/when how/STM32Cube/Repository/STM32Cube_FW_L0_V1.12.1/Drivers/CMSIS/Include";     ../../../Module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

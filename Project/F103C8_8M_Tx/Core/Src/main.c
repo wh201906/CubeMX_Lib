@@ -94,8 +94,6 @@ int main(void)
   Delay_Init(8);
   Mod_Tx_Init(TIM2, TIM3, 665, 695);
 
-  OLED_ShowStr(0, 0, "Stopped");
-  OLED_ShowStr(0, 2, "1234 ");
   Mod_Tx_Start();
   /* USER CODE END 2 */
 
