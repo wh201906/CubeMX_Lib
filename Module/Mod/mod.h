@@ -6,6 +6,8 @@
 void Mod_Tx_Init(TIM_TypeDef *outTIM, TIM_TypeDef *clkTIM, uint32_t Larr, uint32_t Harr);
 void Mod_Tx_Start(void);
 void Mod_Tx_SetValue(uint16_t data);
+void Mod_Tx_SetBrightness(uint8_t brightness); // 0~3
+void Mod_Tx_SetRaw(uint16_t data);
 void Mod_Tx_Send(void);
 
 void Mod_Rx_Read(uint8_t bit);

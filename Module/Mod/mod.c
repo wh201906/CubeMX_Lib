@@ -6,15 +6,17 @@
 
 #define MOD_FREQLIST_LEN 11
 #define MOD_NUM_OFFSET 3
+#define MOD_FRAME_LEN 36
 
-uint8_t Mod_RxBuf[32];
+uint8_t Mod_RxBuf[MOD_FRAME_LEN];
 uint8_t Mod_RxBufBegin, Mod_RxBufEnd;
-uint32_t Mod_RxThre = 250;
 uint8_t Mod_RxDigit[4] = {16, 16, 16, 16};
+uint8_t Mod_RxFailCnt = 0;
 
 uint8_t Mod_TxId; // next bit
-uint32_t Mod_TxBuf[32];
-uint16_t Mod_TxData = 0xFFFF;
+uint32_t Mod_TxBuf[MOD_FRAME_LEN];
+uint16_t Mod_TxData = 0xFFFF; // 14+2 bit
+uint8_t Mod_TxBrightness = 0x3; // 2 bit
 uint32_t Mod_TxL, Mod_TxH;
 TIM_TypeDef *Mod_TxOutTIM;
 TIM_TypeDef *Mod_TxClkTIM;
@@ -32,10 +34,10 @@ uint8_t Mod_freqId = 0; // current freq
      
 // 0~3: editing 4: finished 5: not editing
 // ------------------
-// 0    1    2    3
-// 4    5    6    7
-// 8    9    Ok   Cancel
-// Send Freq x    Stop
+// 0    1    2          3
+// 4    5    6          7
+// 8    9    Ok         Cancel
+// Send Freq Brightness Stop
 // ------------------
 // ------------------
 // 0  1  2  3
@@ -67,7 +69,7 @@ void Mod_Tx_Start(void)
   uint8_t i;
 
   Mod_TxId = 0;
-  for (i = 0; i < 32; i++)
+  for (i = 0; i < MOD_FRAME_LEN; i++)
     Mod_TxBuf[i] = Mod_TxH;
   LL_TIM_SetAutoReload(Mod_TxOutTIM, Mod_TxH);
   LL_TIM_OC_SetCompareCH1(Mod_TxOutTIM, (Mod_TxH + 1) / 2);
@@ -82,6 +84,25 @@ void Mod_Tx_Start(void)
 }
 
 void Mod_Tx_SetValue(uint16_t data)
+{
+  data <<= 2;
+  data &= 0xFFFC;
+  Mod_TxData &= ~0xFFFC;
+  Mod_TxData |= data;
+  LL_TIM_SetCounter(Mod_TxClkTIM, 0);
+  Mod_TxId = 0;
+}
+
+void Mod_Tx_SetBrightness(uint8_t brightness)
+{
+  brightness &= 0x3;
+  Mod_TxData &= ~0x3;
+  Mod_TxData |= brightness;
+  LL_TIM_SetCounter(Mod_TxClkTIM, 0);
+  Mod_TxId = 0;
+}
+
+void Mod_Tx_SetRaw(uint16_t data)
 {
   Mod_TxData = data;
   LL_TIM_SetCounter(Mod_TxClkTIM, 0);
@@ -98,24 +119,24 @@ inline void Mod_Tx_Send(void)
   LL_TIM_SetAutoReload(Mod_TxOutTIM, tmp);              // modulated
   LL_TIM_OC_SetCompareCH1(Mod_TxOutTIM, (tmp + 1) / 2); // modulated
   Mod_TxId++;
-  Mod_TxId %= 32;
-  if (Mod_TxId == 16)
+  Mod_TxId %= MOD_FRAME_LEN;
+  if (Mod_TxId == MOD_FRAME_LEN / 2)
   {
     Mod_TxBuf[0] = Mod_TxL;
-    for (i = 1; i < 15; i++)
+    for (i = 1; i < MOD_FRAME_LEN / 2 - 1; i++)
     {
-      Mod_TxBuf[i] = (Mod_TxData << (i - 1) & 0x2000) ? Mod_TxH : Mod_TxL;
+      Mod_TxBuf[i] = (Mod_TxData << (i - 1) & 0x8000) ? Mod_TxH : Mod_TxL;
     }
-    Mod_TxBuf[15] = Mod_TxH;
+    Mod_TxBuf[MOD_FRAME_LEN / 2 - 1] = Mod_TxH;
   }
   else if (Mod_TxId == 0)
   {
-    Mod_TxBuf[16] = Mod_TxL;
-    for (i = 17; i < 31; i++)
+    Mod_TxBuf[MOD_FRAME_LEN / 2] = Mod_TxL;
+    for (i = MOD_FRAME_LEN / 2 + 1; i < MOD_FRAME_LEN - 1; i++)
     {
       Mod_TxBuf[i] = Mod_TxH;
     }
-    Mod_TxBuf[31] = Mod_TxH;
+    Mod_TxBuf[MOD_FRAME_LEN - 1] = Mod_TxH;
   }
 }
 
@@ -179,6 +200,12 @@ void Mod_Tx_Process(void)
       OLED_ShowStr(0, 4, "     kHz");
       OLED_ShowInt(0, 4, Mod_freqList[Mod_freqId] / 1000);
     }
+    else if(Mod_TxInput == 14)
+    {
+      Mod_TxBrightness++;
+      Mod_TxBrightness %= 4;
+      Mod_Tx_SetBrightness(Mod_TxBrightness);
+    }
   }
 }
 
@@ -200,29 +227,35 @@ void OLED_Show4digit(uint8_t x, uint8_t y, int64_t val)
 #else
 inline void Mod_Rx_Read(uint8_t bit)
 {
-  uint8_t valid = 0, reversedValid = 0;
   uint32_t i;
-  uint32_t data;
+  uint64_t data, pattern1, pattern2, pattern3;
+  uint16_t val;
+  uint8_t brightness;
   Mod_RxBuf[Mod_RxBufEnd] = bit;
   Mod_RxBufEnd++;
-  Mod_RxBufEnd %= 32;
+  Mod_RxBufEnd %= MOD_FRAME_LEN;
   if (Mod_RxBufBegin == Mod_RxBufEnd) // full
   {
     data = 0;
-    for (i = Mod_RxBufBegin; (i + 1) % 32 != Mod_RxBufEnd; i++)
+    for (i = Mod_RxBufBegin; (i + 1) % MOD_FRAME_LEN != Mod_RxBufEnd; i++)
     {
       data <<= 1;
-      data |= Mod_RxBuf[i % 32];
+      data |= Mod_RxBuf[i % MOD_FRAME_LEN];
     }
     data <<= 1;
-    data |= Mod_RxBuf[i % 32];
-    // valid = (!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu); // pattern detected
-    // reversedValid = ((data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu); // reversed pattern detected
-    if (!(data & 0x80000000u) && (data & 0x1FFFFu) == 0x17FFFu) // pattern detected
+    data |= Mod_RxBuf[i % MOD_FRAME_LEN];
+    pattern1 = 1uLL << (MOD_FRAME_LEN - 1);
+    pattern2 = (1uLL << (MOD_FRAME_LEN / 2 + 1)) - 1;
+    pattern3 = 1uLL << (MOD_FRAME_LEN / 2 - 1);
+    if (!(data & pattern1) && (data & pattern2) == pattern2 - pattern3) // pattern detected
     {
-      data >>= 16 + 1;
-      data &= 0x3FFF;
-      if(data == 0x3FFF) // off
+      Mod_RxFailCnt = 0;
+      printf("%llu,", data);
+      data >>= MOD_FRAME_LEN / 2 + 1;
+      val = data >> 2 & 0x3FFF;
+      brightness = data & 0x3;
+      printf("%d,%d\n", val, brightness);
+      if(val == 0x3FFF) // off
       {
         Mod_RxDigit[0] = 16;
         Mod_RxDigit[1] = 16;
@@ -231,19 +264,32 @@ inline void Mod_Rx_Read(uint8_t bit)
       }
       else
       {
-        data -= MOD_NUM_OFFSET;
-        Mod_RxDigit[0] = data / 1000;
-        data %= 1000;
-        Mod_RxDigit[1] = data / 100;
-        data %= 100;
-        Mod_RxDigit[2] = data / 10;
-        data %= 10;
-        Mod_RxDigit[3] = data;
+        val -= MOD_NUM_OFFSET;
+        Mod_RxDigit[0] = val / 1000;
+        val %= 1000;
+        Mod_RxDigit[1] = val / 100;
+        val %= 100;
+        Mod_RxDigit[2] = val / 10;
+        val %= 10;
+        Mod_RxDigit[3] = val;
       }
       TM1637_SetNum(Mod_RxDigit);
+      TM1637_SetBrightness((brightness << 1) + 2);
+    }
+    else
+    {
+      Mod_RxFailCnt++;
+      if(Mod_RxFailCnt > MOD_FRAME_LEN * 3) // lost
+      {
+        Mod_RxDigit[0] = 16;
+        Mod_RxDigit[1] = 16;
+        Mod_RxDigit[2] = 16;
+        Mod_RxDigit[3] = 16;
+        TM1637_SetNum(Mod_RxDigit);
+      }
     }
     Mod_RxBufBegin++;
-    Mod_RxBufBegin %= 32;
+    Mod_RxBufBegin %= MOD_FRAME_LEN;
   }
 }
 #endif
