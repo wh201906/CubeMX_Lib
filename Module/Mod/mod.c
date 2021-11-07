@@ -8,6 +8,10 @@
 #define MOD_NUM_OFFSET 3
 #define MOD_FRAME_LEN 36
 
+#define MOD_NUM_DIGIT 4
+#define MOD_FREQ_DIGIT 8
+#define MOD_FREQ2_DIGIT 6
+
 uint8_t Mod_RxBuf[MOD_FRAME_LEN];
 uint8_t Mod_RxBufBegin, Mod_RxBufEnd;
 uint8_t Mod_RxDigit[4] = {16, 16, 16, 16};
@@ -25,19 +29,22 @@ uint16_t Mod_TxCurrNum = 1234;
 uint8_t Mod_TxIsSending = 0;
 uint16_t Mod_TxInput;
 uint16_t Mod_TxEditNum = 0;
-uint8_t Mod_TxEditState = 5;
-uint32_t Mod_freqList[MOD_FREQLIST_LEN] =
-    {29.00e6, 29.05e6, 29.10e6, 29.15e6,
-     29.20e6, 29.25e6, 29.30e6, 29.35e6,
-     29.40e6, 29.45e6, 29.50e6};
-uint8_t Mod_freqId = 0; // current freq
+uint8_t Mod_TxEditState = MOD_NUM_DIGIT + 1;
+
+uint32_t Mod_currFreq = 25000000;
+uint32_t Mod_editFreq = 0;
+uint8_t Mod_editFreqState = MOD_FREQ_DIGIT + 1;
+
+uint32_t Mod_currFreq2 = 400000;
+uint32_t Mod_editFreq2 = 0;
+uint8_t Mod_editFreqState2 = MOD_FREQ2_DIGIT + 1;
      
 // 0~3: editing 4: finished 5: not editing
 // ------------------
-// 0    1    2          3
-// 4    5    6          7
-// 8    9    Ok         Cancel
-// Send Freq Brightness Stop
+// 0    1    2           3
+// 4    5    6           7
+// 8    9    Ok(NumEdit) Cancel(FreqEdit)
+// Send x    Brightness  Stop
 // ------------------
 // ------------------
 // 0  1  2  3
@@ -56,12 +63,11 @@ void Mod_Tx_Init(TIM_TypeDef *outTIM, TIM_TypeDef *clkTIM, uint32_t Larr, uint32
   OLED_Init(GPIOB, 9, GPIOB, 8);
   OLED_SetTextSize(TEXTSIZE_BIG);
   AD9834_Init(&hspi1);
-  Mod_freqId = 0;
-  AD9834_SetFreq(Mod_freqList[Mod_freqId], 0);
+  AD9834_SetFreq(Mod_currFreq, 0);
   OLED_ShowStr(0, 0, "Stopped");
   OLED_ShowStr(0, 2, "1234 ");
-  OLED_ShowStr(0, 4, "     kHz");
-  OLED_ShowInt(0, 4, Mod_freqList[Mod_freqId] / 1000);
+  OLED_ShowStr(0, 4, "        Hz");
+  OLED_ShowInt(0, 4, Mod_currFreq);
 }
 
 void Mod_Tx_Start(void)
@@ -145,22 +151,38 @@ void Mod_Tx_Process(void)
   Mod_TxInput = GridKey_Scan(2);
   if (Mod_TxInput != 0xFF)
   {
-    if (Mod_TxEditState == 5) // not editing
+    // latch current state
+    uint8_t isNumEditing = Mod_TxEditState != MOD_NUM_DIGIT + 1;
+    uint8_t isFreqEditing = Mod_editFreqState != MOD_FREQ_DIGIT + 1;
+    uint8_t isFreq2Editing = Mod_editFreqState2 != MOD_FREQ2_DIGIT + 1;
+    uint8_t isEditing = isNumEditing || isFreqEditing;
+    
+    // edit num
+    if (!isEditing) // not editing
     {
       if (Mod_TxInput == 10) // ok, start editing
       {
         Mod_TxEditNum = 0;
         OLED_ShowStr(0, 2, ">    ");
         Mod_TxEditState = 0;
+        return;
+      }
+      if (Mod_TxInput == 11) // ok, start editing
+      {
+        Mod_editFreq = 0;
+        OLED_ShowStr(0, 4, ">         ");
+        Mod_editFreqState = 0;
+        return;
       }
     }
-    else // editing
+    else if(isNumEditing) // editing
     {
       if (Mod_TxInput == 11) // cancel
       {
         OLED_ShowStr(0, 2, "     ");
         OLED_Show4digit(0, 2, Mod_TxCurrNum);
         Mod_TxEditState = 5;
+        return;
       }
       else if (Mod_TxInput == 10) // ok, confirm
       {
@@ -170,6 +192,7 @@ void Mod_Tx_Process(void)
         OLED_ShowStr(0, 2, "     ");
         OLED_Show4digit(0, 2, Mod_TxCurrNum);
         Mod_TxEditState = 5;
+        return;
       }
       else if (Mod_TxInput < 10 && Mod_TxEditState < 4)
       {
@@ -178,8 +201,39 @@ void Mod_Tx_Process(void)
         Mod_TxEditState++;
         OLED_ShowStr(0, 2, ">    ");
         OLED_Show4digit(8, 2, Mod_TxEditNum);
+        return;
       }
     }
+    else if(isFreqEditing) // editing
+    {
+      if (Mod_TxInput == 11) // cancel
+      {
+        AD9834_SetFreq(Mod_currFreq, 0); // rewrite, just in case
+        OLED_ShowStr(0, 4, "        Hz");
+        OLED_Show4digit(0, 4, Mod_currFreq);
+        Mod_editFreqState = MOD_FREQ_DIGIT + 1;
+        return;
+      }
+      else if (Mod_TxInput == 10) // ok, confirm
+      {
+        Mod_currFreq = Mod_editFreq;
+        AD9834_SetFreq(Mod_currFreq, 0);
+        OLED_ShowStr(0, 4, "        Hz");
+        OLED_ShowInt(0, 4, Mod_currFreq);
+        Mod_editFreqState = MOD_FREQ_DIGIT+1;
+        return;
+      }
+      else if (Mod_TxInput < 10 && Mod_editFreqState < MOD_FREQ_DIGIT)
+      {
+        Mod_editFreq *= 10;
+        Mod_editFreq += Mod_TxInput;
+        Mod_editFreqState++;
+        OLED_ShowStr(0, 4, ">         ");
+        OLED_ShowInt(8, 4, Mod_editFreq);
+        return;
+      }
+    }
+    
     if (Mod_TxInput == 12) // send
     {
       Mod_TxIsSending = 1;
@@ -191,14 +245,6 @@ void Mod_Tx_Process(void)
       Mod_TxIsSending = 0;
       Mod_Tx_SetValue(0xFFFF);
       OLED_ShowStr(0, 0, "Stopped       ");
-    }
-    else if (Mod_TxInput == 13)
-    {
-      Mod_freqId++;
-      Mod_freqId %= MOD_FREQLIST_LEN;
-      AD9834_SetFreq(Mod_freqList[Mod_freqId], 0);
-      OLED_ShowStr(0, 4, "     kHz");
-      OLED_ShowInt(0, 4, Mod_freqList[Mod_freqId] / 1000);
     }
     else if(Mod_TxInput == 14)
     {

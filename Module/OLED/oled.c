@@ -85,6 +85,13 @@ void OLED_Init(GPIO_TypeDef *SCL_GPIO, uint8_t SCL_PinID, GPIO_TypeDef *SDA_GPIO
   WriteCmd(0x14); //
   WriteCmd(0xAF); //--turn on oled panel
   OLED_CLS();
+  // dumb way to cls
+  OLED_SetTextSize(TEXTSIZE_BIG);
+  OLED_ShowStr(0, 0, "                ");
+  OLED_ShowStr(0, 2, "                ");
+  OLED_ShowStr(0, 4, "                ");
+  OLED_ShowStr(0, 6, "                ");
+  OLED_SetTextSize(TEXTSIZE_SMALL);
 }
 
 void OLED_SetPos(uint8_t x, uint8_t y)
