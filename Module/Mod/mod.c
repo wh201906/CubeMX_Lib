@@ -31,11 +31,11 @@ uint16_t Mod_input;
 uint16_t Mod_TxEditNum = 0;
 uint8_t Mod_TxEditState = MOD_NUM_DIGIT + 1;
 
-uint32_t Mod_currFreq = 25000000;
+uint32_t Mod_currFreq = 15000000;
 uint32_t Mod_editFreq = 0;
 uint8_t Mod_editFreqState = MOD_FREQ_DIGIT + 1;
 
-uint32_t Mod_currFreq2 = 400000;
+uint32_t Mod_currFreq2 = 440000;
 uint32_t Mod_editFreq2 = 0;
 uint8_t Mod_editFreqState2 = MOD_FREQ2_DIGIT + 1;
      
@@ -350,7 +350,7 @@ inline void Mod_Rx_Read(uint8_t bit)
     else
     {
       Mod_RxFailCnt++;
-      if(Mod_RxFailCnt > MOD_FRAME_LEN * 3) // lost
+      if(Mod_RxFailCnt > 250 - MOD_FRAME_LEN / 2) // lost
       {
         Mod_RxDigit[0] = 16;
         Mod_RxDigit[1] = 16;
@@ -456,6 +456,38 @@ void Mod_Rx_Process(void)
       }
     }
     
+    if (Mod_input == 12) // + freq2
+    {
+      Mod_currFreq2 += 50;
+      AD9834_SetFreq(Mod_currFreq2, 0);
+      printf("Freq2:%u", Mod_currFreq2);
+      OLED_ShowStr(0, 6, "        Hz");
+      OLED_ShowInt(0, 6, Mod_currFreq2);
+    }
+    else if (Mod_input == 15) // -
+    {
+      Mod_currFreq2 -= 50;
+      AD9834_SetFreq(Mod_currFreq2, 0);
+      printf("Freq2:%u", Mod_currFreq2);
+      OLED_ShowStr(0, 6, "        Hz");
+      OLED_ShowInt(0, 6, Mod_currFreq2);
+    }
+    else if (Mod_input == 13) // + freq1
+    {
+      Mod_currFreq += 100000;
+      Freq_convert(Mod_currFreq);
+      printf("Freq2:%u", Mod_currFreq);
+      OLED_ShowStr(0, 2, "        Hz");
+      OLED_ShowInt(0, 2, Mod_currFreq);
+    }
+    else if (Mod_input == 14) // -
+    {
+      Mod_currFreq -= 100000;
+      Freq_convert(Mod_currFreq);
+      printf("Freq2:%u", Mod_currFreq);
+      OLED_ShowStr(0, 2, "        Hz");
+      OLED_ShowInt(0, 2, Mod_currFreq);
+    }
   }
 }
 #endif
