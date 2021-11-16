@@ -32,3 +32,4 @@ Project/F407VE_8M_Test
 Module/VL53L0X/TODO.txt
 Module/Test
 .mxproject
+*.dbgconf
